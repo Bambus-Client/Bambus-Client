@@ -260,9 +260,10 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		float aussen = basis + 0.10f + 0.30f * Mth.sin(t - 0.7f);
 		float hub = -0.07f * Mth.sin(t - 0.4f);
 		Identifier bild = Kosmetik.fluegelBild(fluegel.id());
+		int l = Kosmetik.fluegelLeuchtet(fluegel.id()) ? VOLL_HELL : licht;
 		sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(bild), (pose, vc) -> {
-			zweiFlaechen(pose, vc, licht, -1, innen, aussen, hub);
-			zweiFlaechen(pose, vc, licht, 1, innen, aussen, hub);
+			zweiFlaechen(pose, vc, l, -1, innen, aussen, hub);
+			zweiFlaechen(pose, vc, l, 1, innen, aussen, hub);
 		});
 	}
 
