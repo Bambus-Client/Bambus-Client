@@ -156,8 +156,7 @@ Alles Weitere – EULA, Code-Signierung, fremde Lizenzen – steht in [`RECHTLIC
 1. Neues Repository auf github.com anlegen und den Inhalt dieses Ordners hochladen.
 2. Unter **Actions** startet „Bambus Client bauen“ automatisch.
 3. Nach ein paar Minuten liegen unten bei *Artifacts* die Downloads (Setup.exe, Zip, Dmg, Jar).
-4. Für eine richtige Download-Seite: unter *Releases* → *Draft a new release* → Tag `v3.3.0` → veröffentlichen.
-   Dann landen alle Dateien automatisch im Release.
+4. Es wird kein Release erstellt – die Dateien gibt es nur bei *Artifacts* am jeweiligen Lauf.
 
 ### Am eigenen Computer
 Du brauchst **Java 21** (z. B. „Temurin 21“ von https://adoptium.net).
