@@ -63,6 +63,14 @@ public final class Kosmetik {
 		return LEUCHTENDE_FLUEGEL.contains(id);
 	}
 
+	/** Größere Flügel im einfachen Format (Faktor auf Breite und Höhe); alle anderen 1. */
+	private static final Map<String, Float> FLUEGEL_GROESSE = Map.of(
+			"engel_classic", 1.45f, "drache_classic", 1.45f, "fee", 1.35f, "phoenix_classic", 1.45f);
+
+	public static float fluegelGroesse(String id) {
+		return FLUEGEL_GROESSE.getOrDefault(id, 1f);
+	}
+
 	/** Ebene eines eingebauten 3D-Flügels: "hinten" (Schwungfedern) oder "vorne" (Deckfedern, Knochen). */
 	public static Identifier fluegelEbene(String id, String ebene) {
 		return Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "textures/fluegel/" + id + "_" + ebene + ".png");

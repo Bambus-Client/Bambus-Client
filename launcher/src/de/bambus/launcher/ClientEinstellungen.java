@@ -89,6 +89,15 @@ final class ClientEinstellungen {
 			{"phoenix_classic", "Phönix Classic", "FFB03D"},
 	};
 
+	/** Größere Flügel (wie Kosmetik.fluegelGroesse in der Mod); alle anderen 1. */
+	static double fluegelGroesse(String id) {
+		switch (id == null ? "" : id) {
+			case "engel_classic": case "drache_classic": case "phoenix_classic": return 1.45;
+			case "fee": return 1.35;
+			default: return 1;
+		}
+	}
+
 	/** {id, Name, Farbe} – wie Kosmetik.PARTIKEL in der Mod */
 	static final String[][] PARTIKEL = {
 			{"funken", "Neon-Funken", "00E5FF"},
