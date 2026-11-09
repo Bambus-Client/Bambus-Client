@@ -1,0 +1,28 @@
+BAMBUS CLIENT – SO GEHT'S
+=========================
+
+Du brauchst: Minecraft Java Edition (gekauft, mit deinem Microsoft-Konto).
+Java musst du NICHT installieren – das ist schon eingebaut.
+
+INSTALLIEREN
+  Windows: "Bambus-Launcher-Setup.exe" doppelklicken -> Weiter -> Fertig.
+           Falls Windows warnt ("Der Computer wurde durch Windows geschützt"):
+           "Weitere Informationen" -> "Trotzdem ausführen".
+  Mac:     Die passende .dmg öffnen (AppleSilicon = M1/M2/M3/M4, Intel = ältere Macs)
+           -> "Bambus Launcher" in den Ordner "Programme" ziehen.
+           Beim ersten Start: Rechtsklick auf die App -> "Öffnen" -> "Öffnen".
+
+SPIELEN
+  1. Bambus Launcher öffnen -> grüner Knopf SPIELEN.
+  2. Der offizielle Minecraft Launcher öffnet sich mit dem Profil "Bambus Client"
+     -> dort auf "Spielen" klicken (beim ersten Mal mit deinem Konto anmelden).
+  3. Im Spiel: RECHTS-SHIFT öffnet das Bambus-Menü (Module, Kosmetik, HUD verschieben).
+
+GUT ZU WISSEN
+  - Updates kommen automatisch: Oben im Launcher erscheint dann "UPDATE".
+  - Kosmetik (Capes, Flügel, Hüte) sieht nur man selbst.
+  - Bambus fragt nie nach deinem Passwort. Die Anmeldung läuft nur über Microsoft.
+  - Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt.
+
+Etwas klappt nicht? Schreib auf, was passiert ist (oder mach ein Bildschirmfoto),
+und schick es mir – dann kommt die Lösung mit dem nächsten Update.
