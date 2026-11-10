@@ -57,7 +57,7 @@ public class BambusTitelScreen extends Screen {
 				() -> minecraft.setScreen(new SelectWorldScreen(this))));
 		knoepfe.add(new Knopf("MEHRSPIELER", "Server & LAN", Farben.NEON_CYAN,
 				() -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
-		knoepfe.add(new Knopf("BAMBUS-MENÜ", "Module · Kosmetik · Fadenkreuz", Farben.NEON_PINK,
+		knoepfe.add(new Knopf("BAMBUS-MENÜ", "Module · Texturen · Fadenkreuz", Farben.NEON_PINK,
 				() -> minecraft.setScreen(new BambusMenuScreen(this))));
 		if (FabricLoader.getInstance().isModLoaded("modmenu")) {
 			knoepfe.add(new Knopf("MODS", "Alle Mods ansehen und einstellen", 0xFFFFC846, this::oeffneModMenu));

@@ -82,6 +82,8 @@ public class BambusMenuScreen extends Screen {
 	private Tab tab = letzterTab;
 	/** Modul, dessen Einstellungen (⋮) gerade offen sind – oder null. */
 	private HudModul einstellungsModul;
+	private int einstellungsScroll;
+	private int[] einstellungsListe = new int[4];   // Bereich der Schalterliste {x, y, b, h} fürs Mausrad
 	private int scroll = 0;
 	private int inhaltHoehe = 0;
 
@@ -292,7 +294,10 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		String hinweis = "[TAB] wechseln";
-		Neon.text(g, font, hinweis, px + pb - 12 - (int) (font.width(hinweis) * 0.75f), y + 5, 0.75f, Farben.GRAU, false);
+		int hx = px + pb - 12 - (int) (font.width(hinweis) * 0.75f);
+		if (hx > x + 4) {   // nur, wenn er nicht mit den Tabs zusammenstößt
+			Neon.text(g, font, hinweis, hx, y + 5, 0.75f, Farben.GRAU, false);
+		}
 	}
 
 	private void fuss(GuiGraphics g, int mx, int my) {
@@ -329,7 +334,10 @@ public class BambusMenuScreen extends Screen {
 			if (passt && kat) {
 				k.add(new Karte(m.name, text, () -> m.pos().an, () -> m.pos().an = !m.pos().an,
 						m.kategorie.equals("PVP") ? Farben.NEON_PINK : m.kategorie.equals("INFO") ? Farben.NEON_CYAN : Farben.NEON, m.id,
-						() -> einstellungsModul = m));
+						() -> {
+							einstellungsModul = m;
+							einstellungsScroll = 0;
+						}));
 			}
 		}
 		if (!suche.isEmpty() || !kategorie.equals("ALLE")) {
@@ -440,7 +448,7 @@ public class BambusMenuScreen extends Screen {
 			}
 
 			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF5A6A7E);
-			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 74 : 52));
+			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 82 : 52));
 			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFC8D2DE, false);
 			String text = font.plainSubstrByWidth(k.text(), (int) ((kb - (k.einstellungen() != null ? 28 : 14)) / 0.75f));
 			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, Farben.GRAU, false);
@@ -487,14 +495,12 @@ public class BambusMenuScreen extends Screen {
 
 	// ------------------------------------------------------ Modul-Einstellungen (⋮)
 
-	/** Fenster mit Live-Vorschau und allen Schaltern des Moduls. */
+	/** Fenster mit Live-Vorschau (links) und allen Schaltern des Moduls (rechts, mit dem Mausrad scrollbar). */
 	private void modulEinstellungen(GuiGraphics g, int mx, int my, HudModul m) {
 		List<HudModul.Option> optionen = m.optionen();
-		int fb = Math.min(280, pb - 40);
-		int vorschauH = 64;
 		int zeile = 20;
-		int fh = 34 + vorschauH + 8 + optionen.size() * zeile + 30;
-		fh = Math.min(fh, ph - 16);
+		int fb = Math.min(360, pb - 30);
+		int fh = Math.min(ph - 16, 34 + Math.max(optionen.size() * zeile, 96) + 30);
 		int fx = px + (pb - fb) / 2;
 		int fy = py + (ph - fh) / 2;
 
@@ -512,42 +518,48 @@ public class BambusMenuScreen extends Screen {
 		g.drawString(font, "✕", sx + 2, sy + 2, zuHover ? Farben.ROT : Farben.GRAU, false);
 		klick(sx, sy, 12, 12, () -> einstellungsModul = null, false);
 
-		// Live-Vorschau: so sieht das Modul mit den aktuellen Schaltern aus
-		int vx = fx + 8, vy = fy + 32, vb = fb - 16;
-		vorschauBox(g, vx, vy, vb, vorschauH);
-		int mb = m.breite(minecraft, true), mh = m.hoehe(minecraft, true);
-		if (mb > 0 && mh > 0) {
-			float s = Math.min(1.5f, Math.min((vb - 12) / (float) mb, (vorschauH - 10) / (float) mh));
-			g.enableScissor(vx + 1, vy + 1, vx + vb - 1, vy + vorschauH - 1);
-			g.pose().pushMatrix();
-			g.pose().translate(vx + (vb - mb * s) / 2f, vy + (vorschauH - mh * s) / 2f);
-			g.pose().scale(s, s);
-			m.zeichne(g, minecraft, 0, 0, true);
-			g.pose().popMatrix();
-			g.disableScissor();
-		} else {
-			String leer = "Alles ausgeschaltet";
-			Neon.text(g, font, leer, vx + (vb - (int) (font.width(leer) * 0.75f)) / 2, vy + vorschauH / 2 - 3, 0.75f, Farben.GRAU, false);
-		}
+		int inhaltY = fy + 32;
+		int inhaltH = fh - 32 - 30;
 
-		// Schalter
-		int oy = vy + vorschauH + 8;
-		int sichtbar = Math.max(0, (fy + fh - 30 - oy) / zeile);
-		for (int i = 0; i < Math.min(optionen.size(), sichtbar); i++) {
+		// Live-Vorschau links: so sieht das Modul mit den aktuellen Schaltern aus
+		int vb = Math.max(90, Math.min(130, fb * 2 / 5));
+		einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
+
+		// Schalter rechts
+		int ox = fx + 8 + vb + 8, ob = fb - vb - 24;
+		einstellungsListe = new int[]{ox, inhaltY, ob, inhaltH};
+		int maxScroll = Math.max(0, optionen.size() * zeile - inhaltH);
+		einstellungsScroll = Math.max(0, Math.min(einstellungsScroll, maxScroll));
+		g.enableScissor(ox, inhaltY, ox + ob, inhaltY + inhaltH);
+		for (int i = 0; i < optionen.size(); i++) {
 			HudModul.Option o = optionen.get(i);
-			int zy = oy + i * zeile;
-			boolean hover = Neon.ueber(mx, my, fx + 8, zy, fb - 16, zeile - 2);
-			g.fill(fx + 8, zy, fx + fb - 8, zy + zeile - 2, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+			int zy = inhaltY + i * zeile - einstellungsScroll;
+			if (zy + zeile < inhaltY || zy > inhaltY + inhaltH) {
+				continue;
+			}
+			boolean sichtbar = zy >= inhaltY && zy + zeile - 2 <= inhaltY + inhaltH;
+			boolean hover = Neon.ueber(mx, my, ox, Math.max(zy, inhaltY), ob, zeile - 2) && my < inhaltY + inhaltH;
+			g.fill(ox, zy, ox + ob, zy + zeile - 2, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 			boolean an = o.an();
 			if (an) {
-				g.fill(fx + 8, zy, fx + 10, zy + zeile - 2, Farben.NEON);
+				g.fill(ox, zy, ox + 2, zy + zeile - 2, Farben.NEON);
 			}
-			g.drawString(font, o.name, fx + 16, zy + 5, an ? Farben.WEISS : 0xFFC8D2DE, false);
-			Neon.schalter(g, fx + fb - 34, zy + 4, an, m.id + ":" + o.schluessel);
-			klick(fx + 8, zy, fb - 16, zeile - 2, () -> {
-				o.umschalten();
-				speichern();
-			}, false);
+			String name = font.plainSubstrByWidth(o.name, ob - 36);
+			g.drawString(font, name, ox + 8, zy + 5, an ? Farben.WEISS : 0xFFC8D2DE, false);
+			Neon.schalter(g, ox + ob - 26, zy + 4, an, m.id + ":" + o.schluessel);
+			if (sichtbar) {
+				klick(ox, zy, ob, zeile - 2, () -> {
+					o.umschalten();
+					speichern();
+				}, false);
+			}
+		}
+		g.disableScissor();
+		if (maxScroll > 0) {   // Scrollbalken
+			int balkenH = Math.max(10, inhaltH * inhaltH / (optionen.size() * zeile));
+			int balkenY = inhaltY + (inhaltH - balkenH) * einstellungsScroll / maxScroll;
+			g.fill(fx + fb - 5, inhaltY, fx + fb - 3, inhaltY + inhaltH, Farben.LINIE);
+			g.fill(fx + fb - 5, balkenY, fx + fb - 3, balkenY + balkenH, Farben.NEON);
 		}
 
 		// Fuß
@@ -557,6 +569,28 @@ public class BambusMenuScreen extends Screen {
 			speichern();
 		});
 		knopf(g, mx, my, "FERTIG", fx + fb - 78, knopfY, 70, 16, true, true, () -> einstellungsModul = null);
+	}
+
+	/** Das Modul selbst, eingepasst in die Box (wie im HUD, mit Beispielwerten). */
+	private void einstellungsVorschau(GuiGraphics g, HudModul m, int x, int y, int b, int h) {
+		vorschauBox(g, x, y, b, h);
+		int mb = m.breite(minecraft, true), mh = m.hoehe(minecraft, true);
+		if (mb <= 0 || mh <= 0) {
+			String[] leer = {"Alles", "ausgeschaltet"};
+			for (int i = 0; i < leer.length; i++) {
+				int tb = (int) (font.width(leer[i]) * 0.75f);
+				Neon.text(g, font, leer[i], x + (b - tb) / 2, y + h / 2 - 8 + i * 9, 0.75f, Farben.GRAU, false);
+			}
+			return;
+		}
+		float s = Math.min(1.5f, Math.min((b - 12) / (float) mb, (h - 12) / (float) mh));
+		g.enableScissor(x + 1, y + 1, x + b - 1, y + h - 1);
+		g.pose().pushMatrix();
+		g.pose().translate(x + (b - mb * s) / 2f, y + (h - mh * s) / 2f);
+		g.pose().scale(s, s);
+		m.zeichne(g, minecraft, 0, 0, true);
+		g.pose().popMatrix();
+		g.disableScissor();
 	}
 
 	private int katBreite(String kat) {
@@ -956,6 +990,10 @@ public class BambusMenuScreen extends Screen {
 	@Override
 	public boolean mouseScrolled(double mx, double my, double horizontal, double vertikal) {
 		if (einstellungsModul != null) {
+			int[] l = einstellungsListe;
+			if (Neon.ueber(mx, my, l[0], l[1], l[2], l[3])) {
+				einstellungsScroll -= (int) (vertikal * 20);   // begrenzt wird beim Zeichnen
+			}
 			return true;
 		}
 		if (imInhalt(mx, my)) {
