@@ -93,7 +93,7 @@ public class HudEditorScreen extends Screen {
 			m.zeichneAnPosition(g, minecraft, true);
 			int x = bx(m), y = by(m), b = bb(m), h = bh(m);
 			boolean aktiv = m == hover;
-			float k = Anim.zu("editor:" + m.id, aktiv ? 1f : 0f, 18f);
+			float k = Anim.zu("editor:" + m.id, aktiv ? 1f : 0f, Anim.GLEITEN);
 			g.renderOutline(x - 1, y - 1, b + 2, h + 2, Anim.mische(0x60FFFFFF, Farben.NEON, k));
 			if (k > 0.02f) {
 				Neon.leuchtRahmen(g, x - 1, y - 1, b + 2, h + 2, Farben.alpha(Farben.NEON, (int) (200 * k)), 0.6f * k);

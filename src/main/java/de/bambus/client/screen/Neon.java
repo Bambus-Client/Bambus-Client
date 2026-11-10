@@ -48,7 +48,7 @@ public final class Neon {
 			schalter(g, x, y, an);
 			return;
 		}
-		float k = Anim.zu("schalter:" + schluessel, an ? 1f : 0f, 16f);
+		float k = Anim.zu("schalter:" + schluessel, an ? 1f : 0f, Anim.HOVER);
 		int b = 18;
 		int h = 9;
 		int spur = Anim.mische(0xFF2A3445, Farben.alpha(Farben.NEON, 90), k);

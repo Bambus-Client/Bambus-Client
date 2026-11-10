@@ -1,11 +1,14 @@
 package de.bambus.launcher;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 
 /** Animierte Hintergründe für den Launcher (in den Einstellungen wählbar). */
 final class Hintergruende {
@@ -111,9 +114,61 @@ final class Hintergruende {
 		}
 	}
 
-	/** Weiche Nordlicht-Bänder, die langsam wogen. */
+	// Zwischenbilder: das Eckenlicht ändert sich nie (nur bei neuer Größe/Farbe), die Aurora nur langsam
+	private static BufferedImage lichtBild;
+	private static long lichtSchluessel;
+	private static BufferedImage auroraKlein;
+	private static BufferedImage auroraVoll;
+	private static long auroraStand;
+	private static final long AURORA_MS = 66;   // Bänder 15-mal pro Sekunde erneuern – sie wogen ohnehin langsam
+
+	/**
+	 * Weiche Nordlicht-Bänder, die langsam wogen. Die Bänder sind ohnehin weich – darum in halber Auflösung
+	 * malen, weich hochskalieren und nur 15-mal pro Sekunde erneuern; jedes Bild kopiert nur das fertige Bild.
+	 */
 	private static void aurora(Graphics2D g, int x, int y, int b, int h, double t) {
 		NeonUI.gitter(g, x, y, b, h, 28, new Color(255, 255, 255, 3));
+		if (b <= 0 || h <= 0) return;
+		long jetzt = System.currentTimeMillis();
+		if (auroraVoll == null || auroraVoll.getWidth() != b || auroraVoll.getHeight() != h || jetzt - auroraStand >= AURORA_MS) {
+			auroraErneuern(b, h, t);
+			auroraStand = jetzt;
+		}
+		g.drawImage(auroraVoll, x, y, null);
+		// funkelnde Sterne (scharf, in voller Auflösung)
+		for (int i = 0; i < 40; i++) {
+			float sx = PUNKTE[i][0] * b, sy = PUNKTE[i][1] * h * 0.5f;
+			int al = (int) (60 + 60 * Math.sin(t * 2 + i));
+			g.setColor(new Color(255, 255, 255, Math.max(0, al)));
+			g.fillRect(x + (int) sx, y + (int) sy, 2, 2);
+		}
+	}
+
+	private static void auroraErneuern(int b, int h, double t) {
+		int hb = Math.max(1, b / 2), hh = Math.max(1, h / 2);
+		if (auroraKlein == null || auroraKlein.getWidth() != hb || auroraKlein.getHeight() != hh) {
+			auroraKlein = new BufferedImage(hb, hh, BufferedImage.TYPE_INT_ARGB_PRE);
+		}
+		if (auroraVoll == null || auroraVoll.getWidth() != b || auroraVoll.getHeight() != h) {
+			auroraVoll = new BufferedImage(b, h, BufferedImage.TYPE_INT_ARGB_PRE);
+		}
+		Graphics2D k = auroraKlein.createGraphics();
+		k.setComposite(AlphaComposite.Clear);
+		k.fillRect(0, 0, hb, hh);
+		k.setComposite(AlphaComposite.SrcOver);
+		k.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		k.scale(hb / (double) b, hh / (double) h);
+		auroraBaender(k, b, h, t);
+		k.dispose();
+		Graphics2D v = auroraVoll.createGraphics();
+		v.setComposite(AlphaComposite.Src);   // ersetzt das alte Bild komplett
+		v.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		v.drawImage(auroraKlein, 0, 0, b, h, null);
+		v.dispose();
+	}
+
+	private static void auroraBaender(Graphics2D g, int b, int h, double t) {
+		int x = 0, y = 0;
 		Color[] farben = {NeonUI.NEON, NeonUI.CYAN, new Color(0xB06BFF)};
 		for (int band = 0; band < 3; band++) {
 			Path2D.Float p = new Path2D.Float();
@@ -130,13 +185,6 @@ final class Hintergruende {
 			g.fill(p);
 			g.setPaint(new GradientPaint(0, basis, NeonUI.alpha(farben[band], 28), 0, y + h, NeonUI.alpha(farben[band], 0)));
 			g.fill(p);
-		}
-		// funkelnde Sterne
-		for (int i = 0; i < 40; i++) {
-			float sx = PUNKTE[i][0] * b, sy = PUNKTE[i][1] * h * 0.5f;
-			int a = (int) (60 + 60 * Math.sin(t * 2 + i));
-			g.setColor(new Color(255, 255, 255, Math.max(0, a)));
-			g.fillRect(x + (int) sx, y + (int) sy, 2, 2);
 		}
 	}
 
@@ -160,13 +208,22 @@ final class Hintergruende {
 		}
 	}
 
-	/** Für das Licht in den Ecken bei allen Arten. */
+	/** Für das Licht in den Ecken bei allen Arten – einmal gemalt und danach nur noch als Bild kopiert. */
 	static void eckenLicht(Graphics2D g, int x, int b, int h) {
-		g.setPaint(new RadialGradientPaint(x + b - 120f, 90f, 420f, new float[]{0f, 1f},
-				new Color[]{NeonUI.alpha(NeonUI.CYAN, 38), NeonUI.alpha(NeonUI.CYAN, 0)}));
-		g.fillRect(x, 0, b, h);
-		g.setPaint(new RadialGradientPaint(x + 160f, h - 40f, 460f, new float[]{0f, 1f},
-				new Color[]{NeonUI.alpha(NeonUI.NEON, 30), NeonUI.alpha(NeonUI.NEON, 0)}));
-		g.fillRect(x, 0, b, h);
+		if (b <= 0 || h <= 0) return;
+		long schluessel = ((long) b << 48) ^ ((long) h << 32) ^ (NeonUI.CYAN.getRGB() * 31L + NeonUI.NEON.getRGB());
+		if (lichtBild == null || schluessel != lichtSchluessel) {
+			lichtBild = new BufferedImage(b, h, BufferedImage.TYPE_INT_ARGB_PRE);
+			Graphics2D l = lichtBild.createGraphics();
+			l.setPaint(new RadialGradientPaint(b - 120f, 90f, 420f, new float[]{0f, 1f},
+					new Color[]{NeonUI.alpha(NeonUI.CYAN, 38), NeonUI.alpha(NeonUI.CYAN, 0)}));
+			l.fillRect(0, 0, b, h);
+			l.setPaint(new RadialGradientPaint(160f, h - 40f, 460f, new float[]{0f, 1f},
+					new Color[]{NeonUI.alpha(NeonUI.NEON, 30), NeonUI.alpha(NeonUI.NEON, 0)}));
+			l.fillRect(0, 0, b, h);
+			l.dispose();
+			lichtSchluessel = schluessel;
+		}
+		g.drawImage(lichtBild, x, 0, null);
 	}
 }

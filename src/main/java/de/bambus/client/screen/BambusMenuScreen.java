@@ -146,11 +146,11 @@ public class BambusMenuScreen extends Screen {
 		py = (height - ph) / 2;
 		float sichtbar = 1f;
 		if (cfg().menueAnimation) {
-			float k = Math.min(1f, (System.currentTimeMillis() - offenSeit) / 220f);
+			float k = Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS);
 			py += (int) ((1 - Anim.aus(k)) * 14);   // weich von unten einschweben
 			sichtbar = Anim.aus(k);
 			if (schliessSeit > 0) {
-				float z = (System.currentTimeMillis() - schliessSeit) / 140f;
+				float z = (System.currentTimeMillis() - schliessSeit) / Anim.SCHLIESSEN_MS;
 				if (z >= 1f) {
 					speichern();
 					minecraft.setScreen(eltern);
@@ -188,7 +188,7 @@ public class BambusMenuScreen extends Screen {
 
 		// Inhalt (scrollbar)
 		g.enableScissor(ix, iy, ix + ib, iy + ih);
-		float wechsel = cfg().menueAnimation ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - tabSeit) / 180f)) : 1f;
+		float wechsel = cfg().menueAnimation ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - tabSeit) / Anim.WECHSEL_MS)) : 1f;
 		int y0 = iy - scroll + (int) ((1 - wechsel) * 10);
 		inhaltHoehe = switch (tab) {
 			case MODULE -> karten(g, mx, my, moduleKarten(), ix, y0, ib);
@@ -258,8 +258,8 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		boolean weich = cfg().menueAnimation;
-		int ux = weich ? Math.round(Anim.zu("tab-x", aktivX, 18f)) : aktivX;
-		int ub = weich ? Math.round(Anim.zu("tab-b", aktivB, 18f)) : aktivB;
+		int ux = weich ? Math.round(Anim.zu("tab-x", aktivX, Anim.GLEITEN)) : aktivX;
+		int ub = weich ? Math.round(Anim.zu("tab-b", aktivB, Anim.GLEITEN)) : aktivB;
 		g.fill(ux, y, ux + ub, y + 16, Farben.alpha(Farben.NEON, 22));
 		g.fill(ux, y + 15, ux + ub, y + 17, Farben.NEON);
 		g.fill(ux, y + 17, ux + ub, y + 18, Farben.alpha(Farben.NEON, 60));
@@ -269,7 +269,7 @@ public class BambusMenuScreen extends Screen {
 			int b = font.width(t.titel) + 25;
 			boolean aktiv = t == tab;
 			boolean hover = Neon.ueber(mx, my, x, y, b, 16);
-			float h = weich ? Anim.zu("tab-hover:" + t, hover || aktiv ? 1f : 0f, 14f) : (hover || aktiv ? 1f : 0f);
+			float h = weich ? Anim.zu("tab-hover:" + t, hover || aktiv ? 1f : 0f, Anim.HOVER) : (hover || aktiv ? 1f : 0f);
 			int farbe = aktiv ? Farben.NEON : Anim.mische(Farben.GRAU, Farben.WEISS, h);
 			Symbole.zeichne(g, tabSymbol(t), x + 6, y + 4, 1, farbe);
 			g.drawString(font, t.titel, x + 18, y + 4, farbe, aktiv);
@@ -415,7 +415,7 @@ public class BambusMenuScreen extends Screen {
 			boolean an = k.an().getAsBoolean();
 			boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, kx, ky, kb, kh);
 
-			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, 16f) : (hover ? 1f : 0f);
+			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			g.fill(kx, ky, kx + kb, ky + kh, Anim.mische(Farben.KARTE, Farben.KARTE_HOVER, hk));
 			if (an) {
 				g.fill(kx, ky, kx + 2, ky + kh, k.akzent());
@@ -488,8 +488,8 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		boolean weich = cfg().menueAnimation;
-		int mxk = weich ? Math.round(Anim.zu("kat-x", aktivX, 18f)) : aktivX;
-		int mbk = weich ? Math.round(Anim.zu("kat-b", aktivB, 18f)) : aktivB;
+		int mxk = weich ? Math.round(Anim.zu("kat-x", aktivX, Anim.GLEITEN)) : aktivX;
+		int mbk = weich ? Math.round(Anim.zu("kat-b", aktivB, Anim.GLEITEN)) : aktivB;
 		g.fill(mxk, y, mxk + mbk, y + 16, Farben.alpha(Farben.NEON, 40));
 		g.renderOutline(mxk, y, mbk, 16, Farben.NEON);
 		x = ix + 128;

@@ -58,7 +58,7 @@ public class NeonKarte extends AbstractButton {
 		int x = getX(), y = getY(), b = getWidth(), h = getHeight();
 		boolean hover = isHoveredOrFocused();
 		float k = BambusClient.config.menueAnimation
-				? Anim.zu("neon-karte:" + titel, hover ? 1f : 0f, 14f) : (hover ? 1f : 0f);
+				? Anim.zu("neon-karte:" + titel, hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 
 		// Fläche
 		g.fillGradient(x, y, x + b, y + h, 0xF00B1626, 0xF0050A10);

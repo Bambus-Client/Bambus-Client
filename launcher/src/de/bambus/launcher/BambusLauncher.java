@@ -194,22 +194,45 @@ public final class BambusLauncher extends JFrame {
 		setLocationRelativeTo(null);
 		runderRahmen();
 
-		// Animationen (Leuchten, Partikel)
-		new Timer(33, e -> {
-			if (isVisible() && getState() != ICONIFIED) {
-				inhalt.repaint();
-				if (updateChip != null && updateChip.isVisible()) updateChip.repaint();
-				for (NavPunkt p : nav) {
-					if (p.id.equals(seite)) {
-						p.repaint();
-					}
-				}
-			}
-		}).start();
+		// Animationen (Leuchten, Partikel) – Bildrate passt sich an, siehe animationsSchritt()
+		animation = new Timer(BILD_MS, e -> animationsSchritt());
+		animation.start();
 
 		zeige("start");
 		if (autoUpdate && Updater.aktiv()) {
 			pruefeUpdates(false);
+		}
+	}
+
+	// ---------------------------------------------------------------- Animation
+
+	private static final int BILD_MS = 33;           // 30 Bilder pro Sekunde, wenn genug Luft ist
+	private static final int BILD_MS_LANGSAM = 50;   // 20 Bilder pro Sekunde
+	private static final int BILD_MS_SPARSAM = 66;   // 15 Bilder pro Sekunde auf sehr langsamen PCs
+	private static final int BILD_MS_HINTERGRUND = 250;   // Fenster nicht im Vordergrund (z. B. während Minecraft läuft)
+
+	private Timer animation;
+	/** Gleitender Mittelwert: wie lange ein Bild zum Zeichnen braucht (ms). */
+	private double zeichenMs;
+
+	/**
+	 * Ein Animationsschritt. Damit Klicks und Hover sofort ankommen, bekommt das Zeichnen nie mehr als etwa
+	 * ein Drittel der Zeit: braucht ein Bild länger, sinkt die Bildrate. Liegt das Fenster im Hintergrund,
+	 * läuft die Animation nur noch ganz langsam weiter und lässt Minecraft die Rechenzeit.
+	 */
+	private void animationsSchritt() {
+		if (!isVisible() || getState() == ICONIFIED) return;
+		int ziel = !isActive() ? BILD_MS_HINTERGRUND
+				: zeichenMs > 22 ? BILD_MS_SPARSAM
+				: zeichenMs > 12 ? BILD_MS_LANGSAM
+				: BILD_MS;
+		if (animation.getDelay() != ziel) animation.setDelay(ziel);
+		inhalt.repaint();
+		if (updateChip != null && updateChip.isVisible()) updateChip.repaint();
+		for (NavPunkt p : nav) {
+			if (p.id.equals(seite)) {
+				p.repaint();
+			}
 		}
 	}
 
@@ -507,6 +530,15 @@ public final class BambusLauncher extends JFrame {
 
 	/** Hintergrund mit Seitenleiste, Gitter und Neon-Licht. */
 	private final class Hintergrund extends JPanel {
+		/** Misst jedes Bild (inklusive aller Seiten darauf) für die anpassbare Bildrate. */
+		@Override
+		public void paint(Graphics graphics) {
+			long start = System.nanoTime();
+			super.paint(graphics);
+			double ms = (System.nanoTime() - start) / 1e6;
+			zeichenMs = zeichenMs == 0 ? ms : zeichenMs * 0.9 + ms * 0.1;
+		}
+
 		@Override
 		protected void paintComponent(Graphics graphics) {
 			Graphics2D g = NeonUI.glatt(graphics);
