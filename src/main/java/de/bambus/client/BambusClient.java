@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.hud.*;
 import de.bambus.client.screen.BambusMenuScreen;
 import de.bambus.client.screen.BambusTitelScreen;
+import de.bambus.client.screen.GarderobeScreen;
 import de.bambus.client.screen.HudEditorScreen;
 import de.bambus.client.screen.Neon;
 import net.fabricmc.api.ClientModInitializer;
@@ -23,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
@@ -152,6 +154,12 @@ public class BambusClient implements ClientModInitializer {
 						.bounds(breite - 84, 6, 78, 20).build());
 				ScreenEvents.afterRender(screen).register(
 						(s, grafik, mausX, mausY, d) -> zeichneTitelLogo(grafik));
+			}
+			// Escape-Menü: Garderobe an der linken Seite
+			if (screen instanceof PauseScreen pause && pause.showsPauseMenu()) {
+				Screens.getButtons(screen).add(Button.builder(Component.literal("§bGarderobe"),
+								b -> client.setScreen(new GarderobeScreen(screen)))
+						.bounds(8, hoehe / 2 - 10, 90, 20).build());
 			}
 		});
 	}

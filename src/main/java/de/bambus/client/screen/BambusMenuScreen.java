@@ -12,6 +12,7 @@ import de.bambus.client.EigeneKosmetik;
 import de.bambus.client.Fadenkreuz;
 import de.bambus.client.Farben;
 import de.bambus.client.Funktionen;
+import de.bambus.client.Garderobe;
 import de.bambus.client.Kosmetik;
 import de.bambus.client.hud.HudModul;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,7 +22,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -839,20 +839,13 @@ public class BambusMenuScreen extends Screen {
 					gewaehlt = id.equals(kosmetikArt == 4 ? c.killEffekt : c.spur);
 					aktion = kosmetikArt == 4 ? () -> c.killEffekt = e.id() : () -> c.spur = e.id();
 				}
-				partikelSymbol(g, tx + tb / 2, ty + 28, farbe, i);
+				KosmetikSymbole.zeichne(g, Garderobe.Art.values()[kosmetikArt], id, farbe, tx + tb / 2, ty + 28, i);
 			} else if (kosmetikArt == 1) {
 				Kosmetik.Fluegel f = alleFluegel.get(i - 1);
 				name = f.name();
 				farbe = f.farbe();
 				gewaehlt = fluegel != null && fluegel.id().equals(f.id());
-				g.fill(tx + 4, ty + 4, tx + tb - 4, ty + 44, Farben.alpha(f.farbe(), 30));
-				if (Kosmetik.fluegelForm(f.id()) != null) {   // 3D-Flügel: Bild 2:1
-					g.blit(RenderPipelines.GUI_TEXTURED, Kosmetik.fluegelBild(f.id()),
-							tx + tb / 2 - 22, ty + 13, 0f, 0f, 44, 22, 64, 32, 64, 32);
-				} else {
-					g.blit(RenderPipelines.GUI_TEXTURED, Kosmetik.fluegelBild(f.id()),
-							tx + tb / 2 - 18, ty + 6, 0f, 0f, 36, 36, 64, 64, 64, 64);
-				}
+				KosmetikSymbole.zeichne(g, Garderobe.Art.FLUEGEL, f.id(), f.farbe(), tx + tb / 2, ty + 28, i);
 				if (Kosmetik.istEigen(f.id())) {
 					eigenMarke(g, tx, ty);
 				}
@@ -862,17 +855,14 @@ public class BambusMenuScreen extends Screen {
 				name = p.name();
 				farbe = p.farbe();
 				gewaehlt = partikel != null && partikel.id().equals(p.id());
-				partikelSymbol(g, tx + tb / 2, ty + 28, p.farbe(), i);
+				KosmetikSymbole.zeichne(g, Garderobe.Art.PARTIKEL, p.id(), p.farbe(), tx + tb / 2, ty + 28, i);
 				aktion = () -> c.partikel = p.id();
 			} else {
 				Kosmetik.Cape k = alleCapes.get(i - 1);
 				name = k.name();
 				farbe = k.farbe();
 				gewaehlt = k.id().equals(c.capeDesign);
-				// Vorderseite des Capes (10×16 Pixel im 64×32-Bild), doppelt groß
-				g.fill(tx + tb / 2 - 11, ty + 5, tx + tb / 2 + 11, ty + 39, Farben.alpha(k.farbe(), 40));
-				g.blit(RenderPipelines.GUI_TEXTURED, Kosmetik.capeBild(k.id()),
-						tx + tb / 2 - 10, ty + 6, 1f, 1f, 20, 32, 10, 16, 64, 32);
+				KosmetikSymbole.zeichne(g, Garderobe.Art.CAPES, k.id(), k.farbe(), tx + tb / 2, ty + 28, i);
 				if (Kosmetik.istEigen(k.id())) {
 					eigenMarke(g, tx, ty);
 				}
@@ -931,20 +921,6 @@ public class BambusMenuScreen extends Screen {
 		int tb = (int) (font.width(text) * 0.75f);
 		Neon.text(g, font, text, x + (b - tb) / 2, y + 5, 0.75f, aktiv ? Farben.NEON_CYAN : Farben.GRAU, false);
 		klick(x, y, b, 15, aktion, true);
-	}
-
-	private static void partikelSymbol(GuiGraphics g, int cx, int cy, int farbe, int saat) {
-		float p = Farben.puls();
-		g.fill(cx - 10, cy - 10, cx + 10, cy + 10, Farben.alpha(farbe, (int) (18 + 22 * p)));
-		g.fill(cx - 6, cy - 6, cx + 6, cy + 6, Farben.alpha(farbe, 50));
-		int[][] punkte = {{-8, -6}, {6, -9}, {9, 4}, {-5, 8}, {1, -1}, {-10, 2}};
-		long zeit = System.currentTimeMillis() / 120;
-		for (int i = 0; i < punkte.length; i++) {
-			int dy = (int) ((zeit + i * 3 + saat) % 6) - 3;
-			int x = cx + punkte[i][0];
-			int y = cy + punkte[i][1] + dy;
-			g.fill(x, y, x + 2, y + 2, farbe);
-		}
 	}
 
 	private void vorschauBox(GuiGraphics g, int x, int y, int b, int h) {
