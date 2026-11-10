@@ -8,9 +8,12 @@
 		"ClientLevelDataMixin",
 		"CameraMixin",
 		"EntityMixin",
+		"GuiMixin",
+		"ItemInHandRendererMixin",
 		"LevelWetterAccessor",
 		"MouseHandlerMixin",
-		"OptionInstanceAccessor"
+		"OptionInstanceAccessor",
+		"ScreenEffectRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0
