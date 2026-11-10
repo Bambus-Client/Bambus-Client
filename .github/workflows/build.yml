@@ -1,0 +1,79 @@
+# Baut den Bambus Launcher als Windows-Programm (Java eingebaut) und das Installationsprogramm.
+# Start: von Hand unter „Actions → Windows-Launcher bauen → Run workflow“ oder automatisch bei einem Tag v*.
+# Bei einem Tag werden die Dateien zusätzlich an das GitHub-Release gehängt.
+name: Windows-Launcher bauen
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Mod und Launcher bauen
+        shell: bash
+        run: bash ./gradlew build --no-daemon
+
+      - name: Version lesen
+        id: version
+        shell: bash
+        run: echo "nummer=$(grep '^mod_version=' gradle.properties | cut -d= -f2 | tr -d '\r')" >> "$GITHUB_OUTPUT"
+
+      - name: Launcher als Windows-Programm (jpackage, Java eingebaut)
+        shell: bash
+        run: |
+          mkdir -p eingabe
+          cp build/libs/BambusLauncher.jar eingabe/
+          jpackage --type app-image \
+            --name "Bambus Launcher" \
+            --input eingabe \
+            --main-jar BambusLauncher.jar \
+            --main-class de.bambus.launcher.BambusLauncher \
+            --icon launcher/packaging/bambus.ico \
+            --app-version "${{ steps.version.outputs.nummer }}" \
+            --vendor Bambus \
+            --add-modules java.se,jdk.crypto.ec,jdk.charsets,jdk.localedata,jdk.unsupported,jdk.zipfs,jdk.accessibility \
+            --dest ausgabe
+
+      - name: Installationsprogramm (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.nummer }}" "/O$PWD\ausgabe" "launcher\packaging\windows\bambus.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Zip ohne Installation
+        shell: pwsh
+        run: Compress-Archive -Path "ausgabe\Bambus Launcher" -DestinationPath "ausgabe\Bambus-Launcher-Windows.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bambus-Launcher-Windows
+          path: |
+            ausgabe/Bambus-Launcher-Setup.exe
+            ausgabe/Bambus-Launcher-Windows.zip
+            build/libs/BambusLauncher.jar
+
+      - name: An das Release hängen
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ausgabe/Bambus-Launcher-Setup.exe
+            ausgabe/Bambus-Launcher-Windows.zip
+            build/libs/BambusLauncher.jar
