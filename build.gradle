@@ -33,9 +33,13 @@ tasks.withType(JavaCompile).configureEach {
 // ---------------------------------------------------------------- Bambus Launcher
 // "gradlew build" baut zusätzlich build/libs/BambusLauncher.jar – mit der Mod darin.
 
+// Gemeinsamer Code für Mod und Launcher (Bambus-Helfer-Wissen) – Java-8-kompatibel halten
 sourceSets {
+	main {
+		java { srcDir 'gemeinsam/src' }
+	}
 	launcher {
-		java { srcDirs = ['launcher/src'] }
+		java { srcDirs = ['launcher/src', 'gemeinsam/src'] }
 		resources { srcDirs = ['launcher/resources'] }
 	}
 }

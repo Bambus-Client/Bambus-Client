@@ -1,5 +1,7 @@
 package de.bambus.launcher;
 
+import de.bambus.helfer.HelferWissen;
+
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -24,10 +26,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** HELFER: Offline-Hilfe-Chat zum Client und zu Minecraft (keine KI, kein Internet). */
 final class SeiteHelfer extends JPanel {
@@ -82,7 +81,7 @@ final class SeiteHelfer extends JPanel {
 		add(los);
 
 		baueChips();
-		helfer(HelferWissen.begruessung(), null);
+		helfer(HelferWissen.begruessung(Sprache.englisch()), null);
 	}
 
 	void fokus() {
@@ -96,7 +95,7 @@ final class SeiteHelfer extends JPanel {
 		chipSprache = Sprache.code();
 		if (blasen.size() == 1 && blasen.get(0).eintrag == null) {   // Begrüßung in der neuen Sprache
 			blasen.clear();
-			helfer(HelferWissen.begruessung(), null);
+			helfer(HelferWissen.begruessung(Sprache.englisch()), null);
 		}
 		String[] v = Sprache.englisch() ? HelferWissen.VORSCHLAEGE_EN : HelferWissen.VORSCHLAEGE_DE;
 		Font f = NeonUI.normal(12);
@@ -143,8 +142,8 @@ final class SeiteHelfer extends JPanel {
 			return;
 		}
 		HelferWissen.Eintrag e = HelferWissen.finde(frage);
-		if (e == null) helfer(HelferWissen.unbekannt(), null);
-		else helfer(e.text(), e);
+		if (e == null) helfer(HelferWissen.unbekannt(Sprache.englisch()), null);
+		else helfer(e.text(Sprache.englisch()), e);
 	}
 
 	private void helfer(String text, HelferWissen.Eintrag e) {
@@ -175,28 +174,8 @@ final class SeiteHelfer extends JPanel {
 
 	// ============================================================ Nether-Rechner
 
-	private static final Pattern ZAHL = Pattern.compile("(-?\\d+)");
-
-	/** „x 800 z -240 im Nether“ → Nether-Koordinaten; „… aus dem Nether / in die Oberwelt“ → ×8. */
 	static String netherRechner(String frage) {
-		String n = frage.toLowerCase(Locale.ROOT);
-		if (!n.contains("nether")) return null;
-		List<Integer> z = new ArrayList<>();
-		Matcher m = ZAHL.matcher(n.replace("−", "-"));
-		while (m.find()) {
-			try { z.add(Integer.parseInt(m.group(1))); } catch (NumberFormatException ignoriert) { return null; }
-		}
-		if (z.size() < 2 || z.size() > 3) return null;
-		int x = z.get(0), zz = z.get(z.size() - 1);
-		boolean zurueck = n.contains("oberwelt") || n.contains("overworld") || n.contains("aus dem nether") || n.contains("from the nether") || n.contains("from nether");
-		boolean en = Sprache.englisch();
-		if (zurueck) {
-			return en ? "Nether X " + x + " / Z " + zz + " is in the overworld: X " + (x * 8) + " / Z " + (zz * 8) + ". (Nether × 8)"
-					: "Nether X " + x + " / Z " + zz + " ist in der Oberwelt: X " + (x * 8) + " / Z " + (zz * 8) + ". (Nether × 8)";
-		}
-		int nx = Math.floorDiv(x, 8), nz = Math.floorDiv(zz, 8);
-		return en ? "Overworld X " + x + " / Z " + zz + " is in the Nether: X " + nx + " / Z " + nz + ". Build your Nether portal there and it links to your portal in the overworld. (Overworld ÷ 8)"
-				: "Oberwelt X " + x + " / Z " + zz + " ist im Nether: X " + nx + " / Z " + nz + ". Baue dein Netherportal dort, dann verbindet es sich mit deinem Portal in der Oberwelt. (Oberwelt ÷ 8)";
+		return HelferWissen.netherRechner(frage, Sprache.englisch());
 	}
 
 	// ============================================================ Zeichnen

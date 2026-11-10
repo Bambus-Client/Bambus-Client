@@ -52,7 +52,8 @@ public final class Symbole {
 			"person", 0x183C3C187EFFFF00L,
 			"update", 0x183C7E181818007EL,
 			"signal", 0x03030F0F3F3FFFFFL,
-			"karte", 0xFF9195F18FA989FFL
+			"karte", 0xFF9195F18FA989FFL,
+			"helfer", 0x7E81A5817E302000L
 		};
 		for (int i = 0; i < daten.length; i += 2) BILDER.put((String) daten[i], (Long) daten[i + 1]);
 	}

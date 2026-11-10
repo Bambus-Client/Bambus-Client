@@ -1,22 +1,26 @@
-package de.bambus.launcher;
+package de.bambus.helfer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Wissen des Bambus-Helfers: Fragen zum Client und zu Minecraft (Java Edition 1.21).
  * Läuft komplett offline – keine KI, kein Internet, keine Kosten.
+ * Gemeinsam genutzt vom Launcher (Seite HELFER) und vom Spiel (Rechts-Shift → Helfer),
+ * darum ohne Abhängigkeiten und Java-8-kompatibel; die Sprache wird jeweils übergeben.
  * Neue Antworten: einfach unten einen Eintrag mit Stichworten ergänzen.
  */
-final class HelferWissen {
+public final class HelferWissen {
 
-	static final class Eintrag {
+	public static final class Eintrag {
 		final String[] stichworte;
-		final String de, en;
-		String[] rezept;          // 9 Felder (Gegenstand oder "") für ein 3×3-Rezept
-		String rezeptDe, rezeptEn;
-		final List<String[]> aktionen = new ArrayList<>();   // {Text de, Text en, Seite}
+		public final String de, en;
+		public String[] rezept;          // 9 Felder (Gegenstand oder "") für ein 3×3-Rezept
+		public String rezeptDe, rezeptEn;
+		public final List<String[]> aktionen = new ArrayList<>();   // {Text de, Text en, Launcher-Seite}
 
 		Eintrag(String stichworte, String de, String en) {
 			this.stichworte = stichworte.split(",");
@@ -37,23 +41,23 @@ final class HelferWissen {
 			return this;
 		}
 
-		String text() { return Sprache.englisch() ? en : de; }
+		public String text(boolean englisch) { return englisch ? en : de; }
 	}
 
 	static final List<Eintrag> WISSEN = new ArrayList<>();
 
-	static final String[] VORSCHLAEGE_DE = {"Wie bekomme ich mehr FPS?", "HUD verschieben", "Rezept Zaubertisch", "Was ist ein W-Tap?", "Diamanten finden", "Ist Bambus erlaubt?"};
-	static final String[] VORSCHLAEGE_EN = {"How do I get more FPS?", "Move the HUD", "Enchanting table recipe", "What is a W-tap?", "Find diamonds", "Is Bambus allowed?"};
+	public static final String[] VORSCHLAEGE_DE = {"Wie bekomme ich mehr FPS?", "HUD verschieben", "Rezept Zaubertisch", "Was ist ein W-Tap?", "Diamanten finden", "Ist Bambus erlaubt?"};
+	public static final String[] VORSCHLAEGE_EN = {"How do I get more FPS?", "Move the HUD", "Enchanting table recipe", "What is a W-tap?", "Find diamonds", "Is Bambus allowed?"};
 
 	private HelferWissen() {}
 
-	static String norm(String s) {
+	public static String norm(String s) {
 		return s.toLowerCase(Locale.ROOT).replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
 				.replaceAll("[^a-z0-9 ]", " ").replaceAll("\\s+", " ").trim();
 	}
 
 	/** Beste Antwort zur Frage oder null. */
-	static Eintrag finde(String frage) {
+	public static Eintrag finde(String frage) {
 		String n = " " + norm(frage) + " ";
 		String[] woerter = n.trim().split(" ");
 		Eintrag beste = null;
@@ -100,16 +104,39 @@ final class HelferWissen {
 		return v[b.length()];
 	}
 
-	static String unbekannt() {
-		return Sprache.englisch()
+	public static String unbekannt(boolean englisch) {
+		return englisch
 				? "Hmm, I don't know that one yet. I know a lot about the Bambus Client (HUD, FPS, cosmetics, servers, updates) and about Minecraft (recipes, diamonds, Nether, enchanting, PvP). Try one of the suggestions above!"
 				: "Hmm, das weiß ich leider noch nicht. Ich kenne mich gut aus mit dem Bambus Client (HUD, FPS, Kosmetik, Server, Updates) und mit Minecraft (Rezepte, Diamanten, Nether, Zaubern, PvP). Probier einen der Vorschläge oben!";
 	}
 
-	static String begruessung() {
-		return Sprache.englisch()
+	public static String begruessung(boolean englisch) {
+		return englisch
 				? "Hi! I'm the Bambus Helper. Ask me anything about the client or Minecraft – for example how to get more FPS, how to craft an enchanting table, or what a W-tap is. I work completely offline."
 				: "Hi! Ich bin der Bambus-Helfer. Frag mich alles zum Client oder zu Minecraft – zum Beispiel, wie du mehr FPS bekommst, wie man einen Zaubertisch baut oder was ein W-Tap ist. Ich funktioniere komplett ohne Internet.";
+	}
+
+	private static final Pattern ZAHL = Pattern.compile("(-?\\d+)");
+
+	/** Nether-Rechner: „nether 800 -240“ → Koordinaten umrechnen. null, wenn die Frage keine Rechnung ist. */
+	public static String netherRechner(String frage, boolean en) {
+		String n = frage.toLowerCase(Locale.ROOT);
+		if (!n.contains("nether")) return null;
+		List<Integer> z = new ArrayList<>();
+		Matcher m = ZAHL.matcher(n.replace("−", "-"));
+		while (m.find()) {
+			try { z.add(Integer.parseInt(m.group(1))); } catch (NumberFormatException ignoriert) { return null; }
+		}
+		if (z.size() < 2 || z.size() > 3) return null;
+		int x = z.get(0), zz = z.get(z.size() - 1);
+		boolean zurueck = n.contains("oberwelt") || n.contains("overworld") || n.contains("aus dem nether") || n.contains("from the nether") || n.contains("from nether");
+		if (zurueck) {
+			return en ? "Nether X " + x + " / Z " + zz + " is in the overworld: X " + (x * 8) + " / Z " + (zz * 8) + ". (Nether × 8)"
+					: "Nether X " + x + " / Z " + zz + " ist in der Oberwelt: X " + (x * 8) + " / Z " + (zz * 8) + ". (Nether × 8)";
+		}
+		int nx = Math.floorDiv(x, 8), nz = Math.floorDiv(zz, 8);
+		return en ? "Overworld X " + x + " / Z " + zz + " is in the Nether: X " + nx + " / Z " + nz + ". Build your Nether portal there and it links to your portal in the overworld. (Overworld ÷ 8)"
+				: "Oberwelt X " + x + " / Z " + zz + " ist im Nether: X " + nx + " / Z " + nz + ". Baue dein Netherportal dort, dann verbindet es sich mit deinem Portal in der Oberwelt. (Oberwelt ÷ 8)";
 	}
 
 	private static Eintrag e(String stichworte, String de, String en) {
@@ -127,8 +154,8 @@ final class HelferWissen {
 				"Gern geschehen! Wenn du noch etwas wissen willst, frag einfach.",
 				"You're welcome! If you want to know anything else, just ask.");
 		e("wer bist du,was bist du,bist du eine ki,who are you,are you an ai,was kannst du,what can you do",
-				"Ich bin der Bambus-Helfer, ein Hilfe-Chat direkt im Launcher. Ich bin keine echte KI, sondern kenne viele Antworten zum Client und zu Minecraft – dafür funktioniere ich ohne Internet und kostenlos.",
-				"I'm the Bambus Helper, a help chat right inside the launcher. I'm not a real AI, but I know lots of answers about the client and Minecraft – and I work offline and for free.");
+				"Ich bin der Bambus-Helfer, ein Hilfe-Chat im Launcher und im Spiel (RECHTS-SHIFT → HELFER). Ich bin keine echte KI, sondern kenne viele Antworten zum Client und zu Minecraft – dafür funktioniere ich ohne Internet und kostenlos.",
+				"I'm the Bambus Helper, a help chat in the launcher and in game (RIGHT SHIFT → HELPER). I'm not a real AI, but I know lots of answers about the client and Minecraft – and I work offline and for free.");
 
 		// ====================================================== Client
 		e("installieren,installation,einrichten,starten,spielen,install,setup,start,play,how to play",
@@ -139,8 +166,8 @@ final class HelferWissen {
 				"Zum Spielen brauchst du Minecraft: Java Edition (die PC-Version von minecraft.net). Mit der Bedrock-Version (Handy, Konsole, Windows-Store-„Minecraft für Windows“) funktioniert Bambus nicht.",
 				"To play you need Minecraft: Java Edition (the PC version from minecraft.net). Bambus doesn't work with the Bedrock version (phone, console, “Minecraft for Windows”).");
 		e("menue,menu,rechts shift,right shift,bambus menue,einstellungen im spiel,oeffnen im spiel,open menu",
-				"Im Spiel öffnest du das Bambus-Menü mit RECHTS-SHIFT. Mit Tab wechselst du die Reiter. Hat deine Tastatur kein rechtes Shift (oft beim Mac), kannst du die Taste unter Optionen → Steuerung → Tastenbelegung → „Bambus Client“ ändern.",
-				"In game you open the Bambus menu with RIGHT SHIFT. Tab switches the tabs. If your keyboard has no right Shift (common on Macs), change the key under Options → Controls → Key Binds → “Bambus Client”.");
+				"Im Spiel drückst du RECHTS-SHIFT und wählst dann GARDEROBE (Kosmetik), MOD-MENÜ (Module, Funktionen, HUD) oder HELFER. Im Mod-Menü wechselst du mit Tab die Reiter. Hat deine Tastatur kein rechtes Shift (oft beim Mac), kannst du die Taste unter Optionen → Steuerung → Tastenbelegung → „Bambus Client“ ändern.",
+				"In game press RIGHT SHIFT and pick WARDROBE (cosmetics), MOD MENU (modules, features, HUD) or HELPER. In the mod menu Tab switches the tabs. If your keyboard has no right Shift (common on Macs), change the key under Options → Controls → Key Binds → “Bambus Client”.");
 		e("hud,verschieben,position,anzeige verschieben,groesse,groesser,kleiner,move hud,resize,hud editor",
 				"Öffne im Spiel das Bambus-Menü (RECHTS-SHIFT) und klick auf HUD BEARBEITEN. Dann kannst du jede Anzeige mit der Maus ziehen – sie rastet an Kanten ein (mit Shift frei schieben). Größe ändern: Ecke unten rechts ziehen oder Mausrad, Rechtsklick setzt auf 100 %.",
 				"Open the Bambus menu in game (RIGHT SHIFT) and click EDIT HUD. Then drag any display with the mouse – it snaps to edges (hold Shift to move freely). Resize: drag the bottom-right corner or use the mouse wheel; right-click resets to 100%.");
@@ -157,9 +184,15 @@ final class HelferWissen {
 				"4–6 GB is enough for most computers. Never pick more than half of your real memory, or the computer gets slower. You can change it under SETTINGS.")
 				.aktion("EINSTELLUNGEN öffnen", "Open SETTINGS", "einstellungen");
 		e("cape,umhang,fluegel,wings,kosmetik,cosmetics,hut,hat,partikel,particles",
-				"Kosmetik wählst du auf der Seite KOSMETIK: Umhänge, 3D-Flügel, Hüte, Partikel, Kill-Effekte und Pfeil-Spuren. Die Figur kannst du mit der Maus drehen. Im Spiel siehst du sie mit F5 (3. Person).",
-				"You pick cosmetics on the COSMETICS page: capes, 3D wings, hats, particles, kill effects and arrow trails. Rotate the figure with the mouse. In game press F5 (third person) to see them.")
+				"Kosmetik wählst du auf der Seite KOSMETIK: Umhänge, 3D-Flügel, Hüte, Partikel, Kill-Effekte und Pfeil-Spuren. Die Figur kannst du mit der Maus drehen. Im Spiel geht es in der Garderobe: RECHTS-SHIFT → GARDEROBE oder ESC → GARDEROBE. Sehen kannst du sie mit F5 (3. Person).",
+				"You pick cosmetics on the COSMETICS page: capes, 3D wings, hats, particles, kill effects and arrow trails. Rotate the figure with the mouse. In game use the wardrobe: RIGHT SHIFT → WARDROBE or ESC → WARDROBE. Press F5 (third person) to see them.")
 				.aktion("KOSMETIK öffnen", "Open COSMETICS", "kosmetik");
+		e("garderobe,wardrobe,kosmetik im spiel,kosmetik ingame,cosmetics in game,umziehen",
+				"Die Garderobe öffnest du im Spiel mit RECHTS-SHIFT → GARDEROBE oder im Escape-Menü über die Karte mit deinem Avatar. Links wählst du die Art (Capes, Flügel, Partikel, Hüte, Kill-Effekte, Pfeil-Spuren), rechts das Design – es wird sofort gespeichert.",
+				"Open the wardrobe in game with RIGHT SHIFT → WARDROBE or in the pause menu via the card with your avatar. Pick the type on the left (capes, wings, particles, hats, kill effects, arrow trails) and the design on the right – it saves instantly.");
+		e("helfer ausschalten,helfer deaktivieren,helfer weg,disable helper,turn off helper,hide helper",
+				"Im Spiel kannst du mich ausblenden: RECHTS-SHIFT → MOD-MENÜ → MEHR → EXTRAS → „Bambus-Helfer“ ausschalten. Dann zeigt RECHTS-SHIFT nur noch Garderobe und Mod-Menü. Im Launcher bleibe ich auf der Seite HELFER.",
+				"You can hide me in game: RIGHT SHIFT → MOD MENU → MORE → EXTRAS → turn off “Bambus Helper”. Then RIGHT SHIFT only shows wardrobe and mod menu. In the launcher I stay on the HELPER page.");
 		e("sehen andere,andere spieler,others see,can others see,sichtbar fuer andere",
 				"Die Bambus-Kosmetik siehst nur du selbst. Andere Spieler sehen sie nicht – dafür bräuchte Bambus einen eigenen Server.",
 				"Only you can see Bambus cosmetics. Other players can't see them – that would need a Bambus server.");

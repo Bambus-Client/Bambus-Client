@@ -625,7 +625,8 @@ public class BambusMenuScreen extends Screen {
 		String discordText = DiscordStatus.moeglich() ? "Zeigt in Discord „Spielt Bambus Client“" : "Braucht eine Discord-App-ID (siehe Anleitung)";
 		zy += karten(g, mx, my, List.of(
 				new Karte("Auto-Screenshot", "Screenshot bei jedem Spieler-Kill", () -> c.autoScreenshot, () -> c.autoScreenshot = !c.autoScreenshot, Farben.NEON_CYAN),
-				new Karte("Discord-Status", discordText, () -> c.discordAn, () -> c.discordAn = !c.discordAn, Farben.NEON_PINK)),
+				new Karte("Discord-Status", discordText, () -> c.discordAn, () -> c.discordAn = !c.discordAn, Farben.NEON_PINK),
+				new Karte("Bambus-Helfer", "Hilfe-Chat bei Rechts-Shift anbieten", () -> c.helferAn, () -> c.helferAn = !c.helferAn, Farben.NEON)),
 				x, zy, b, 2);
 		kleinKnopf(g, mx, my, "SCREENSHOTS ANSEHEN", x, zy, 110, () -> minecraft.setScreen(new ScreenshotScreen(this)));
 		kleinKnopf(g, mx, my, "RESSOURCENPAKETE", x + 114, zy, 100, () ->
