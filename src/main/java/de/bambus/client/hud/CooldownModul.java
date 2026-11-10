@@ -12,6 +12,8 @@ import java.util.List;
 /** Abklingzeiten von Items in der Schnellleiste (Enderperle, Schild, Windkugel, Chorusfrucht …). */
 public class CooldownModul extends HudModul {
 
+	private final Option farbig = option("farbig", "Balken farbig (rot → grün)", true);
+
 	public CooldownModul() {
 		super("cooldown", "Item-Cooldowns", 10000, 200, true, "Enderperle, Schild und Co. mit Restzeit-Balken", "PVP");
 	}
@@ -67,7 +69,7 @@ public class CooldownModul extends HudModul {
 			float rest = mc.player.getCooldowns().getCooldownPercent(s, 0f);
 			int bb = 80;
 			g.fill(x + 24, zy + 7, x + 24 + bb, zy + 11, 0xFF1E2C3D);
-			g.fill(x + 24, zy + 7, x + 24 + (int) (bb * rest), zy + 11, rest > 0.5f ? Farben.ROT : rest > 0.2f ? Farben.GELB : Farben.NEON);
+			g.fill(x + 24, zy + 7, x + 24 + (int) (bb * rest), zy + 11, !farbig.an() ? Farben.NEON : rest > 0.5f ? Farben.ROT : rest > 0.2f ? Farben.GELB : Farben.NEON);
 		}
 	}
 }

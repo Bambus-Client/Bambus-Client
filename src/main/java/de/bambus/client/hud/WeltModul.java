@@ -20,10 +20,19 @@ public class WeltModul extends TextModul {
 	private static double tempo;
 
 	private final Art art;
+	/** Ein passender Schalter je Art (⋮ im Mod-Menü). */
+	private final Option extra;
 
 	public WeltModul(Art art) {
 		super(id(art), name(art), 4, 60 + art.ordinal() * 14, art == Art.RICHTUNG, text(art), "INFO");
 		this.art = art;
+		this.extra = switch (art) {
+			case RICHTUNG -> option("grad", "Gradzahl", true);
+			case BIOM -> option("titel", "Text „Biom:“ davor", true);
+			case TEMPO -> option("kmh", "In km/h statt Blöcke/s", false);
+			case UHR -> option("sekunden", "Sekunden", false);
+			case SPEICHER -> option("prozent", "Prozent", true);
+		};
 	}
 
 	private static String id(Art a) {
@@ -78,7 +87,8 @@ public class WeltModul extends TextModul {
 				if (p != null) {
 					float yaw = Mth.wrapDegrees(p.getYRot());
 					int i = Math.floorMod(Math.round(yaw / 90f), 4);
-					z.add(new Zeile(RICHTUNGEN[i] + "  " + Math.round(yaw < 0 ? yaw + 360 : yaw) + "°", Farben.WEISS));
+					String grad = extra.an() ? "  " + Math.round(yaw < 0 ? yaw + 360 : yaw) + "°" : "";
+					z.add(new Zeile(RICHTUNGEN[i] + grad, Farben.WEISS));
 				}
 			}
 			case BIOM -> {
@@ -86,19 +96,22 @@ public class WeltModul extends TextModul {
 					String n = mc.level.getBiome(p.blockPosition()).unwrapKey()
 							.map(k -> Component.translatable("biome." + k.identifier().getNamespace() + "." + k.identifier().getPath()).getString())
 							.orElse("?");
-					z.add(new Zeile("Biom: " + n, Farben.WEISS));
+					z.add(new Zeile((extra.an() ? "Biom: " : "") + n, Farben.WEISS));
 				}
 			}
-			case TEMPO -> z.add(new Zeile(String.format("Tempo: %.1f B/s", tempo), Farben.WEISS));
+			case TEMPO -> z.add(new Zeile(extra.an() ? String.format("Tempo: %.1f km/h", tempo * 3.6)
+					: String.format("Tempo: %.1f B/s", tempo), Farben.WEISS));
 			case UHR -> {
 				LocalTime t = LocalTime.now();
-				z.add(new Zeile(String.format("%02d:%02d", t.getHour(), t.getMinute()), Farben.WEISS));
+				z.add(new Zeile(extra.an() ? String.format("%02d:%02d:%02d", t.getHour(), t.getMinute(), t.getSecond())
+						: String.format("%02d:%02d", t.getHour(), t.getMinute()), Farben.WEISS));
 			}
 			case SPEICHER -> {
 				Runtime r = Runtime.getRuntime();
 				long belegt = (r.totalMemory() - r.freeMemory()) >> 20, max = r.maxMemory() >> 20;
 				int prozent = (int) (belegt * 100 / Math.max(1, max));
-				z.add(new Zeile(String.format("RAM: %.1f / %.1f GB (%d %%)", belegt / 1024.0, max / 1024.0, prozent),
+				String anteil = extra.an() ? String.format(" (%d %%)", prozent) : "";
+				z.add(new Zeile(String.format("RAM: %.1f / %.1f GB", belegt / 1024.0, max / 1024.0) + anteil,
 						prozent > 85 ? Farben.ROT : Farben.WEISS));
 			}
 		}

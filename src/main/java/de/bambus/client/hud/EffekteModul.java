@@ -13,6 +13,9 @@ public class EffekteModul extends TextModul {
 
 	private static final String[] ROEMISCH = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
 
+	private final Option restzeit = option("restzeit", "Restzeit", true);
+	private final Option schlechte = option("schlechte", "Schlechte Effekte (rot)", true);
+
 	public EffekteModul() {
 		// x = 10000 bedeutet: ganz rechts am Bildschirmrand
 		super("effekte", "Trank-Effekte", 10000, 100);
@@ -24,12 +27,17 @@ public class EffekteModul extends TextModul {
 		if (mc.player != null) {
 			for (MobEffectInstance e : mc.player.getActiveEffects()) {
 				MobEffect effekt = e.getEffect().value();
+				if (!effekt.isBeneficial() && !schlechte.an()) {
+					continue;
+				}
 				StringBuilder text = new StringBuilder(effekt.getDisplayName().getString());
 				int stufe = e.getAmplifier() + 1;
 				if (stufe > 1) {
 					text.append(' ').append(stufe < ROEMISCH.length ? ROEMISCH[stufe] : String.valueOf(stufe));
 				}
-				text.append("  ").append(zeit(e));
+				if (restzeit.an()) {
+					text.append("  ").append(zeit(e));
+				}
 				z.add(new Zeile(text.toString(), effekt.isBeneficial() ? Farben.WEISS : Farben.ROT));
 			}
 		}

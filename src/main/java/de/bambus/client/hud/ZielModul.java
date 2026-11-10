@@ -16,6 +16,10 @@ public class ZielModul extends HudModul {
 
 	private static final int B = 140, H = 40;
 
+	private final Option abstandZeigen = option("abstand", "Abstand", true);
+	private final Option balken = option("balken", "Lebensbalken", true);
+	private final Option schaden = option("schaden", "Letzter Schaden / Combo", true);
+
 	public ZielModul() {
 		super("ziel", "Target-HUD", 10000, 60, true, "Name, Leben, Abstand und Schaden deines Ziels", "PVP");
 	}
@@ -48,13 +52,18 @@ public class ZielModul extends HudModul {
 			name = "♥ " + name;
 		}
 		g.drawString(mc.font, mc.font.plainSubstrByWidth(name, B - 50), x + 6, y + 4, Farben.WEISS, true);
-		g.drawString(mc.font, String.format("%.1f m", abstand), x + B - 6 - mc.font.width(String.format("%.1f m", abstand)), y + 4, Farben.GRAU, true);
+		if (abstandZeigen.an()) {
+			String a = String.format("%.1f m", abstand);
+			g.drawString(mc.font, a, x + B - 6 - mc.font.width(a), y + 4, Farben.GRAU, true);
+		}
 
-		int bx = x + 6, by = y + 16, bb = B - 12;
 		float anteil = Mth.clamp(leben / max, 0, 1);
-		int farbe = anteil > 0.5f ? Farben.NEON : anteil > 0.25f ? Farben.GELB : Farben.ROT;
-		g.fill(bx, by, bx + bb, by + 6, 0xFF1E2C3D);
-		g.fill(bx, by, bx + (int) (bb * anteil), by + 6, farbe);
+		if (balken.an()) {
+			int bx = x + 6, by = y + 16, bb = B - 12;
+			int farbe = anteil > 0.5f ? Farben.NEON : anteil > 0.25f ? Farben.GELB : Farben.ROT;
+			g.fill(bx, by, bx + bb, by + 6, 0xFF1E2C3D);
+			g.fill(bx, by, bx + (int) (bb * anteil), by + 6, farbe);
+		}
 
 		String unten;
 		if (BambusClient.config.gegnerLebenZahl) {
@@ -63,6 +72,9 @@ public class ZielModul extends HudModul {
 			unten = (int) (anteil * 100) + " %";
 		}
 		g.drawString(mc.font, unten, x + 6, y + 26, Farben.WEISS, true);
+		if (!schaden.an()) {
+			return;
+		}
 		if (System.currentTimeMillis() - Kampf.schadenZeit < 1500 && Kampf.letzterSchaden > 0) {
 			String s = String.format("-%.1f", Kampf.letzterSchaden);
 			g.drawString(mc.font, s, x + B - 6 - mc.font.width(s), y + 26, Farben.ROT, true);

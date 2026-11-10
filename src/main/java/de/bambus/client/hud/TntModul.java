@@ -11,6 +11,8 @@ import java.util.List;
 /** Gezündetes TNT in der Nähe mit Restzeit bis zur Explosion. */
 public class TntModul extends TextModul {
 
+	private final Option abstand = option("abstand", "Abstand anzeigen", true);
+
 	public TntModul() {
 		super("tnt", "TNT-Timer", 10000, 260, true, "Gezündetes TNT in der Nähe mit Restzeit", "PVP");
 	}
@@ -29,11 +31,12 @@ public class TntModul extends TextModul {
 			for (int i = 0; i < Math.min(4, tnt.size()); i++) {
 				PrimedTnt t = tnt.get(i);
 				float s = t.getFuse() / 20f;
-				z.add(new Zeile(String.format("TNT %.1f s · %.0f m", s, t.distanceTo(mc.player)), s < 1.0f ? Farben.ROT : Farben.GELB));
+				String text = abstand.an() ? String.format("TNT %.1f s · %.0f m", s, t.distanceTo(mc.player)) : String.format("TNT %.1f s", s);
+				z.add(new Zeile(text, s < 1.0f ? Farben.ROT : Farben.GELB));
 			}
 		}
 		if (z.isEmpty() && editor) {
-			z.add(new Zeile("TNT 2.4 s · 5 m", Farben.GELB));
+			z.add(new Zeile(abstand.an() ? "TNT 2.4 s · 5 m" : "TNT 2.4 s", Farben.GELB));
 		}
 		return z;
 	}

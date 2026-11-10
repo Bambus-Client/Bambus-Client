@@ -23,6 +23,8 @@ public class BambusConfig {
 		public int y;
 		/** Größe im HUD (1 = 100 %), im HUD-Editor mit Ecke oder Mausrad änderbar. */
 		public float groesse = 1f;
+		/** Einstellungen des Moduls (⋮ im Mod-Menü), z. B. "cps" → false. Fehlt ein Eintrag, gilt der Standard. */
+		public Map<String, Boolean> optionen = new LinkedHashMap<>();
 
 		public ModulPos() {}
 

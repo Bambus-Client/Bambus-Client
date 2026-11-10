@@ -17,31 +17,38 @@ public class RuestungModul extends HudModul {
 			EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
 	};
 
+	private final Option ruestung = option("ruestung", "Rüstung", true);
+	private final Option hand = option("hand", "Item in der Hand", true);
+	private final Option haltbarkeit = option("haltbarkeit", "Haltbarkeit als Zahl", true);
+
 	public RuestungModul() {
 		// x = 10000 bedeutet: ganz rechts am Bildschirmrand
 		super("ruestung", "Rüstungsanzeige", 10000, 4);
 	}
 
-	private static List<ItemStack> items(Minecraft mc) {
+	private List<ItemStack> items(Minecraft mc) {
 		List<ItemStack> liste = new ArrayList<>();
 		if (mc.player == null) {
 			return liste;
 		}
-		for (EquipmentSlot slot : SLOTS) {
+		for (EquipmentSlot slot : ruestung.an() ? SLOTS : new EquipmentSlot[0]) {
 			ItemStack s = mc.player.getItemBySlot(slot);
 			if (!s.isEmpty()) {
 				liste.add(s);
 			}
 		}
-		ItemStack hand = mc.player.getMainHandItem();
-		if (!hand.isEmpty()) {
-			liste.add(hand);
+		ItemStack inHand = mc.player.getMainHandItem();
+		if (hand.an() && !inHand.isEmpty()) {
+			liste.add(inHand);
 		}
 		return liste;
 	}
 
-	private static String text(ItemStack s) {
+	private String text(ItemStack s) {
 		if (s.isDamageableItem()) {
+			if (!haltbarkeit.an()) {
+				return "";
+			}
 			return String.valueOf(s.getMaxDamage() - s.getDamageValue());
 		}
 		return s.getCount() > 1 ? String.valueOf(s.getCount()) : "";

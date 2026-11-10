@@ -11,6 +11,9 @@ import java.util.List;
 /** Koordinaten mit Umrechnung Oberwelt ↔ Nether. Mit einer eigenen Taste in die Zwischenablage. */
 public class KoordinatenModul extends TextModul {
 
+	private final Option hoehe = option("y", "Höhe (Y)", true);
+	private final Option nether = option("nether", "Nether-/Oberwelt-Umrechnung", true);
+
 	public KoordinatenModul() {
 		super("koordinaten", "Koordinaten", 4, 190, false, "Mit Nether-Umrechnung, Taste zum Kopieren", "INFO");
 	}
@@ -20,12 +23,15 @@ public class KoordinatenModul extends TextModul {
 		List<Zeile> z = new ArrayList<>();
 		LocalPlayer p = mc.player;
 		if (p == null) {
-			z.add(new Zeile("X 128  Y 64  Z -340", Farben.WEISS));
-			z.add(new Zeile("Nether: X 16  Z -42", Farben.ROT));
+			z.add(new Zeile(hoehe.an() ? "X 128  Y 64  Z -340" : "X 128  Z -340", Farben.WEISS));
+			if (nether.an()) z.add(new Zeile("Nether: X 16  Z -42", Farben.ROT));
 			return z;
 		}
 		int x = (int) Math.floor(p.getX()), y = (int) Math.floor(p.getY()), zz = (int) Math.floor(p.getZ());
-		z.add(new Zeile("X " + x + "  Y " + y + "  Z " + zz, Farben.WEISS));
+		z.add(new Zeile(hoehe.an() ? "X " + x + "  Y " + y + "  Z " + zz : "X " + x + "  Z " + zz, Farben.WEISS));
+		if (!nether.an()) {
+			return z;
+		}
 		boolean nether = mc.level != null && mc.level.dimension() == Level.NETHER;
 		boolean ende = mc.level != null && mc.level.dimension() == Level.END;
 		if (nether) {

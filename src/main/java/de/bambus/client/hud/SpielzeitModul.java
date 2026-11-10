@@ -11,6 +11,9 @@ public class SpielzeitModul extends TextModul {
 
 	private static long sitzungSeit = 0;
 
+	private final Option tagZeile = option("tag", "Ingame-Tag", true);
+	private final Option pause = option("pause", "Gelb nach 2 Stunden (Pause!)", true);
+
 	public SpielzeitModul() {
 		super("spielzeit", "Spielzeit", 4, 214, false, "Zeit seit dem Betreten und Ingame-Tag", "INFO");
 	}
@@ -34,10 +37,12 @@ public class SpielzeitModul extends TextModul {
 	protected List<Zeile> zeilen(Minecraft mc, boolean editor) {
 		List<Zeile> z = new ArrayList<>();
 		long ms = sitzungSeit == 0 ? 42 * 60_000L + 7_000L : System.currentTimeMillis() - sitzungSeit;
-		int farbe = ms > 2 * 3_600_000L ? Farben.GELB : Farben.WEISS;   // nach 2 Stunden: kleine Pausen-Erinnerung per Farbe
+		int farbe = pause.an() && ms > 2 * 3_600_000L ? Farben.GELB : Farben.WEISS;   // nach 2 Stunden: kleine Pausen-Erinnerung per Farbe
 		z.add(new Zeile("Spielzeit: " + dauer(ms), farbe));
-		long tag = mc.level != null ? mc.level.getDayTime() / 24000L + 1 : 12;
-		z.add(new Zeile("Tag " + tag + " in dieser Welt", Farben.GRAU));
+		if (tagZeile.an()) {
+			long tag = mc.level != null ? mc.level.getDayTime() / 24000L + 1 : 12;
+			z.add(new Zeile("Tag " + tag + " in dieser Welt", Farben.GRAU));
+		}
 		return z;
 	}
 }

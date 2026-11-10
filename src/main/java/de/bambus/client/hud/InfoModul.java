@@ -11,6 +11,11 @@ import java.util.List;
 /** FPS, Koordinaten und CPS. */
 public class InfoModul extends TextModul {
 
+	private final Option titel = option("titel", "Titel „Bambus Client“", true);
+	private final Option fps = option("fps", "FPS", true);
+	private final Option xyz = option("xyz", "Koordinaten", true);
+	private final Option cps = option("cps", "CPS", true);
+
 	public InfoModul() {
 		super("info", "Info (FPS, XYZ, CPS)", 4, 4);
 	}
@@ -18,13 +23,13 @@ public class InfoModul extends TextModul {
 	@Override
 	protected List<Zeile> zeilen(Minecraft mc, boolean editor) {
 		List<Zeile> z = new ArrayList<>();
-		z.add(new Zeile("Bambus Client", Farben.GRUEN));
-		z.add(new Zeile("FPS: " + mc.getFps(), Farben.WEISS));
+		if (titel.an()) z.add(new Zeile("Bambus Client", Farben.GRUEN));
+		if (fps.an()) z.add(new Zeile("FPS: " + mc.getFps(), Farben.WEISS));
 		LocalPlayer p = mc.player;
-		if (p != null) {
+		if (p != null && xyz.an()) {
 			z.add(new Zeile("XYZ: " + p.getBlockX() + " / " + p.getBlockY() + " / " + p.getBlockZ(), Farben.WEISS));
 		}
-		z.add(new Zeile("CPS: " + Funktionen.cpsLinks() + " | " + Funktionen.cpsRechts(), Farben.WEISS));
+		if (cps.an()) z.add(new Zeile("CPS: " + Funktionen.cpsLinks() + " | " + Funktionen.cpsRechts(), Farben.WEISS));
 		return z;
 	}
 }
