@@ -8,24 +8,19 @@ import de.bambus.client.Statistik;
 import de.bambus.client.Visuals;
 import de.bambus.client.BambusClient;
 import de.bambus.client.BambusConfig;
-import de.bambus.client.EigeneKosmetik;
 import de.bambus.client.Fadenkreuz;
 import de.bambus.client.Farben;
 import de.bambus.client.Funktionen;
-import de.bambus.client.Garderobe;
-import de.bambus.client.Kosmetik;
 import de.bambus.client.hud.HudModul;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +29,13 @@ import java.util.function.BooleanSupplier;
 
 /**
  * Das Bambus-Menü im Neon-Look (Rechts-Shift).
- * Tabs: Module · Funktionen · Fadenkreuz · Kosmetik – mit der TAB-Taste wechseln.
+ * Tabs: Module · Funktionen · Fadenkreuz · Mehr – mit der TAB-Taste wechseln.
+ * Kosmetik gibt es in der Garderobe (GarderobeScreen).
  */
 public class BambusMenuScreen extends Screen {
 
 	private enum Tab {
-		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), KOSMETIK("KOSMETIK"), MEHR("MEHR");
+		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), MEHR("MEHR");
 
 		final String titel;
 
@@ -76,13 +72,11 @@ public class BambusMenuScreen extends Screen {
 	);
 
 	private static Tab letzterTab = Tab.MODULE;
-	private static int letzteKosmetikArt = 0; // 0 Capes, 1 Flügel, 2 Partikel
 
 	private final Screen eltern;
 	private final List<Bereich> bereiche = new ArrayList<>();
 
 	private Tab tab = letzterTab;
-	private int kosmetikArt = letzteKosmetikArt;
 	private int scroll = 0;
 	private int inhaltHoehe = 0;
 
@@ -199,7 +193,6 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> karten(g, mx, my, moduleKarten(), ix, y0, ib);
 			case FUNKTIONEN -> funktionen(g, mx, my, ix, y0, ib);
 			case FADENKREUZ -> fadenkreuz(g, mx, my, ix, y0, ib);
-			case KOSMETIK -> kosmetik(g, mx, my, ix, y0, ib);
 			case MEHR -> mehr(g, mx, my, ix, y0, ib);
 		};
 		if (wechsel < 1f) {
@@ -247,7 +240,6 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> "alle";
 			case FUNKTIONEN -> "blitz";
 			case FADENKREUZ -> "fadenkreuz";
-			case KOSMETIK -> "kosmetik";
 			case MEHR -> "mehr";
 		};
 	}
@@ -736,190 +728,12 @@ public class BambusMenuScreen extends Screen {
 		}, true);
 	}
 
-	// ------------------------------------------------------------- Kosmetik
-
-	private int kosmetik(GuiGraphics g, int mx, int my, int x, int y, int b) {
-		BambusConfig c = cfg();
-
-		// Vorschau mit Spielerfigur
-		int vb = 96;
-		int vh = Math.max(110, Math.min(ih - 20, 150));
-		vorschauBox(g, x, y, vb, vh);
-		if (minecraft.player != null) {
-			InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 4, y + 4, x + vb - 4, y + vh - 4,
-					(int) (vh * 0.36f), 0.0625f, mx, my, minecraft.player);
-		} else {
-			String[] zeilen = {"Betritt eine", "Welt für die", "3D-Vorschau"};
-			for (int i = 0; i < zeilen.length; i++) {
-				int tb = (int) (font.width(zeilen[i]) * 0.75f);
-				Neon.text(g, font, zeilen[i], x + (vb - tb) / 2, y + vh / 2 - 12 + i * 9, 0.75f, Farben.GRAU, false);
-			}
-		}
-		List<Kosmetik.Cape> alleCapes = Kosmetik.alleCapes();
-		List<Kosmetik.Fluegel> alleFluegel = Kosmetik.alleFluegel();
-		Kosmetik.Cape cape = alleCapes.stream().filter(k -> k.id().equals(c.capeDesign)).findFirst().orElse(null);
-		Kosmetik.Partikel partikel = Kosmetik.gewaehltePartikel();
-		Kosmetik.Fluegel fluegel = Kosmetik.gewaehlteFluegel();
-		Neon.text(g, font, "CAPE", x + 2, y + vh + 5, 0.75f, Farben.GRAU, false);
-		Neon.text(g, font, cape != null ? cape.name() : "Keins", x + 34, y + vh + 5, 0.75f, Farben.NEON, false);
-		Neon.text(g, font, "FLÜGEL", x + 2, y + vh + 15, 0.75f, Farben.GRAU, false);
-		Neon.text(g, font, fluegel != null ? fluegel.name() : "Keine", x + 34, y + vh + 15, 0.75f, Farben.NEON_PINK, false);
-		Neon.text(g, font, "SPUR", x + 2, y + vh + 25, 0.75f, Farben.GRAU, false);
-		Neon.text(g, font, partikel != null ? partikel.name() : "Keine", x + 34, y + vh + 25, 0.75f, Farben.NEON_CYAN, false);
-
-		// Unter-Tabs
-		int rx = x + vb + 12;
-		int rb = b - vb - 18;
-		unterTab(g, mx, my, "CAPES", rx, y, kosmetikArt == 0, () -> kosmetikArt = 0);
-		unterTab(g, mx, my, "FLÜGEL", rx + 54, y, kosmetikArt == 1, () -> kosmetikArt = 1);
-		unterTab(g, mx, my, "PARTIKEL", rx + 108, y, kosmetikArt == 2, () -> kosmetikArt = 2);
-		unterTab(g, mx, my, "HÜTE", rx + 162, y, kosmetikArt == 3, () -> kosmetikArt = 3);
-		unterTab(g, mx, my, "KILL", rx + 216, y, kosmetikArt == 4, () -> kosmetikArt = 4);
-		unterTab(g, mx, my, "PFEIL", rx + 270, y, kosmetikArt == 5, () -> kosmetikArt = 5);
-		letzteKosmetikArt = kosmetikArt;
-		// Eigene Kosmetik: Ordner öffnen + neu laden (unter der Vorschau)
-		kleinKnopf(g, mx, my, "ORDNER", x, y + vh + 36, 46, () -> Util.getPlatform().openPath(EigeneKosmetik.ordner()));
-		kleinKnopf(g, mx, my, "⟳ LADEN", x + 50, y + vh + 36, 46, EigeneKosmetik::neuLaden);
-
-		// Kacheln
-		int tb = 54;
-		int th = 70;
-		int abstand = 6;
-		int spalten = Math.max(1, (rb + abstand) / (tb + abstand));
-		int ty0 = y + 22;
-		int anzahl = (kosmetikArt == 5 ? Kosmetik.SPUREN.size() : kosmetikArt == 4 ? Kosmetik.KILL_EFFEKTE.size()
-				: kosmetikArt == 3 ? Kosmetik.HUETE.size() : kosmetikArt == 2 ? Kosmetik.PARTIKEL.size()
-				: kosmetikArt == 1 ? alleFluegel.size() : alleCapes.size()) + 1;
-
-		for (int i = 0; i < anzahl; i++) {
-			int tx = rx + (i % spalten) * (tb + abstand);
-			int ty = ty0 + (i / spalten) * (th + abstand);
-			boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, tx, ty, tb, th);
-			g.fill(tx, ty, tx + tb, ty + th, hover ? Farben.KARTE_HOVER : Farben.KARTE);
-
-			String name;
-			int farbe;
-			boolean gewaehlt;
-			Runnable aktion;
-
-			if (i == 0) {
-				name = "Keins";
-				farbe = Farben.GRAU;
-				gewaehlt = switch (kosmetikArt) {
-					case 5 -> Kosmetik.effekt(Kosmetik.SPUREN, c.spur) == null;
-					case 4 -> Kosmetik.effekt(Kosmetik.KILL_EFFEKTE, c.killEffekt) == null;
-					case 3 -> Kosmetik.gewaehlterHut() == null;
-					case 2 -> partikel == null;
-					case 1 -> fluegel == null;
-					default -> Kosmetik.AUS.equals(c.capeDesign);
-				};
-				g.drawString(font, "∅", tx + tb / 2 - 3, ty + 24, Farben.GRAU, false);
-				aktion = switch (kosmetikArt) {
-					case 5 -> () -> c.spur = Kosmetik.AUS;
-					case 4 -> () -> c.killEffekt = Kosmetik.AUS;
-					case 3 -> () -> c.hut = Kosmetik.AUS;
-					case 2 -> () -> c.partikel = Kosmetik.AUS;
-					case 1 -> () -> c.fluegel = Kosmetik.AUS;
-					default -> () -> c.capeDesign = Kosmetik.AUS;
-				};
-			} else if (kosmetikArt >= 3) {
-				String id;
-				if (kosmetikArt == 3) {
-					Kosmetik.Hut h = Kosmetik.HUETE.get(i - 1);
-					id = h.id();
-					name = h.name();
-					farbe = h.farbe();
-					gewaehlt = id.equals(c.hut);
-					aktion = () -> c.hut = h.id();
-				} else {
-					Kosmetik.Effekt e = (kosmetikArt == 4 ? Kosmetik.KILL_EFFEKTE : Kosmetik.SPUREN).get(i - 1);
-					id = e.id();
-					name = e.name();
-					farbe = e.farbe();
-					gewaehlt = id.equals(kosmetikArt == 4 ? c.killEffekt : c.spur);
-					aktion = kosmetikArt == 4 ? () -> c.killEffekt = e.id() : () -> c.spur = e.id();
-				}
-				KosmetikSymbole.zeichne(g, Garderobe.Art.values()[kosmetikArt], id, farbe, tx + tb / 2, ty + 28, i);
-			} else if (kosmetikArt == 1) {
-				Kosmetik.Fluegel f = alleFluegel.get(i - 1);
-				name = f.name();
-				farbe = f.farbe();
-				gewaehlt = fluegel != null && fluegel.id().equals(f.id());
-				KosmetikSymbole.zeichne(g, Garderobe.Art.FLUEGEL, f.id(), f.farbe(), tx + tb / 2, ty + 28, i);
-				if (Kosmetik.istEigen(f.id())) {
-					eigenMarke(g, tx, ty);
-				}
-				aktion = () -> c.fluegel = f.id();
-			} else if (kosmetikArt == 2) {
-				Kosmetik.Partikel p = Kosmetik.PARTIKEL.get(i - 1);
-				name = p.name();
-				farbe = p.farbe();
-				gewaehlt = partikel != null && partikel.id().equals(p.id());
-				KosmetikSymbole.zeichne(g, Garderobe.Art.PARTIKEL, p.id(), p.farbe(), tx + tb / 2, ty + 28, i);
-				aktion = () -> c.partikel = p.id();
-			} else {
-				Kosmetik.Cape k = alleCapes.get(i - 1);
-				name = k.name();
-				farbe = k.farbe();
-				gewaehlt = k.id().equals(c.capeDesign);
-				KosmetikSymbole.zeichne(g, Garderobe.Art.CAPES, k.id(), k.farbe(), tx + tb / 2, ty + 28, i);
-				if (Kosmetik.istEigen(k.id())) {
-					eigenMarke(g, tx, ty);
-				}
-				aktion = () -> {
-					c.capeDesign = k.id();
-					c.capeAn = true;
-				};
-			}
-
-			if (gewaehlt) {
-				Neon.leuchtRahmen(g, tx, ty, tb, th, farbe == Farben.GRAU ? Farben.NEON : farbe, 0.6f + 0.4f * Farben.puls());
-				g.fill(tx + tb - 11, ty + 2, tx + tb - 2, ty + 11, Farben.NEON);
-				g.drawString(font, "✔", tx + tb - 10, ty + 2, Farben.SCHWARZ, false);
-			} else {
-				g.renderOutline(tx, ty, tb, th, hover ? 0xFF2E4058 : Farben.LINIE);
-			}
-
-			String n = font.plainSubstrByWidth(name, (int) ((tb - 4) / 0.75f));
-			int nb = (int) (font.width(n) * 0.75f);
-			Neon.text(g, font, n, tx + (tb - nb) / 2, ty + th - 22, 0.75f, gewaehlt ? Farben.WEISS : 0xFFC8D2DE, false);
-			String status = gewaehlt ? "AKTIV" : "WÄHLEN";
-			int sb = (int) (font.width(status) * 0.6f);
-			Neon.text(g, font, status, tx + (tb - sb) / 2, ty + th - 11, 0.6f, gewaehlt ? Farben.NEON : Farben.GRAU, false);
-
-			final Runnable a = aktion;
-			klick(tx, ty, tb, th, () -> {
-				a.run();
-				speichern();
-			}, true);
-		}
-
-		int zeilen = (anzahl + spalten - 1) / spalten;
-		return Math.max(vh + 56, 22 + zeilen * (th + abstand));
-	}
-
-	/** Kleines "EIGEN"-Schild für selbst erstellte Kosmetik. */
-	private void eigenMarke(GuiGraphics g, int tx, int ty) {
-		g.fill(tx + 2, ty + 2, tx + 26, ty + 9, Farben.alpha(Farben.NEON_PINK, 200));
-		Neon.text(g, font, "EIGEN", tx + 4, ty + 3, 0.5f, Farben.SCHWARZ, false);
-	}
-
 	private void kleinKnopf(GuiGraphics g, int mx, int my, String text, int x, int y, int b, Runnable aktion) {
 		boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, x, y, b, 15);
 		g.fill(x, y, x + b, y + 15, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(x, y, b, 15, hover ? Farben.NEON_PINK : Farben.LINIE);
 		int tb = (int) (font.width(text) * 0.6f);
 		Neon.text(g, font, text, x + (b - tb) / 2, y + 5, 0.6f, hover ? Farben.WEISS : Farben.GRAU, false);
-		klick(x, y, b, 15, aktion, true);
-	}
-
-	private void unterTab(GuiGraphics g, int mx, int my, String text, int x, int y, boolean aktiv, Runnable aktion) {
-		int b = 50;
-		boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, x, y, b, 15);
-		g.fill(x, y, x + b, y + 15, aktiv ? Farben.alpha(Farben.NEON_CYAN, 40) : Farben.KARTE);
-		g.renderOutline(x, y, b, 15, aktiv ? Farben.NEON_CYAN : hover ? 0xFF2E4058 : Farben.LINIE);
-		int tb = (int) (font.width(text) * 0.75f);
-		Neon.text(g, font, text, x + (b - tb) / 2, y + 5, 0.75f, aktiv ? Farben.NEON_CYAN : Farben.GRAU, false);
 		klick(x, y, b, 15, aktion, true);
 	}
 

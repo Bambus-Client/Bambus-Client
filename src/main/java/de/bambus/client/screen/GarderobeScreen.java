@@ -2,6 +2,7 @@ package de.bambus.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
+import de.bambus.client.EigeneKosmetik;
 import de.bambus.client.Farben;
 import de.bambus.client.Garderobe;
 import de.bambus.client.Kosmetik;
@@ -13,6 +14,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -153,6 +155,12 @@ public class GarderobeScreen extends Screen {
 		Neon.text(g, font, unter, x, 28, 0.75f, Farben.GRAU, false);
 		g.fill(x, KOPF - 8, x + b, KOPF - 7, Farben.LINIE);
 
+		// Eigene Capes/Flügel: Ordner öffnen + neu einlesen
+		if (art == Garderobe.Art.CAPES || art == Garderobe.Art.FLUEGEL) {
+			kleinKnopf(g, mx, my, "⟳ LADEN", x + b - 50, 14, 50, EigeneKosmetik::neuLaden);
+			kleinKnopf(g, mx, my, "ORDNER", x + b - 104, 14, 50, () -> Util.getPlatform().openPath(EigeneKosmetik.ordner()));
+		}
+
 		// Vorschau mit Spielerfigur – kompakte Box, nur wenn genug Platz ist
 		int vb = b >= 260 ? VORSCHAU_B : 0;
 		if (vb > 0) {
@@ -252,6 +260,15 @@ public class GarderobeScreen extends Screen {
 			art.waehle(id);
 			BambusClient.config.speichern();
 		}, true);
+	}
+
+	private void kleinKnopf(GuiGraphics g, int mx, int my, String text, int x, int y, int b, Runnable aktion) {
+		boolean hover = Neon.ueber(mx, my, x, y, b, 15);
+		g.fill(x, y, x + b, y + 15, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+		g.renderOutline(x, y, b, 15, hover ? Farben.NEON_PINK : Farben.LINIE);
+		int tb = (int) (font.width(text) * 0.6f);
+		Neon.text(g, font, text, x + (b - tb) / 2, y + 5, 0.6f, hover ? Farben.WEISS : Farben.GRAU, false);
+		klick(x, y, b, 15, aktion, false);
 	}
 
 	private void knopf(GuiGraphics g, int mx, int my, String text, int x, int y, int b, int h, Runnable aktion) {
