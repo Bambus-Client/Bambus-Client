@@ -69,6 +69,7 @@ public class BambusConfig {
 	public java.util.List<String> freunde = new java.util.ArrayList<>();
 	public boolean autoScreenshot = false;
 	public boolean discordAn = false;
+	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten
 	public String discordAppId = "";
 
 	// PvP

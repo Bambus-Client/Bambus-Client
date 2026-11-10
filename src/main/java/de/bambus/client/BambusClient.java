@@ -4,7 +4,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.hud.*;
 import de.bambus.client.screen.BambusMenuScreen;
 import de.bambus.client.screen.BambusTitelScreen;
-import de.bambus.client.screen.GarderobeKnopf;
+import de.bambus.client.screen.BambusAuswahlScreen;
+import de.bambus.client.screen.GarderobeScreen;
+import de.bambus.client.screen.NeonKarte;
 import de.bambus.client.screen.HudEditorScreen;
 import de.bambus.client.screen.Neon;
 import net.fabricmc.api.ClientModInitializer;
@@ -43,7 +45,7 @@ import java.util.List;
  * Bambus Client – ein leichter PvP-/HUD-Client für Minecraft 1.21.11 (Fabric).
  *
  * Tasten (änderbar unter Optionen → Steuerung):
- *  Rechts-Shift  Mod-Menü
+ *  Rechts-Shift  Auswahl: Garderobe oder Mod-Menü
  *  C             Zoom (mit Mausrad näher/weiter)
  *  Linke Alt     Freelook
  *  H             HUD an/aus
@@ -157,7 +159,9 @@ public class BambusClient implements ClientModInitializer {
 			}
 			// Escape-Menü: Avatar-Karte „Garderobe“ an der linken Seite
 			if (screen instanceof PauseScreen pause && pause.showsPauseMenu()) {
-				Screens.getButtons(screen).add(GarderobeKnopf.fuer(screen, hoehe));
+				int h = Math.max(70, Math.min(140, hoehe - 40));
+				Screens.getButtons(screen).add(new NeonKarte(10, (hoehe - h) / 2, 96, h, "GARDEROBE", "KOSMETIK ANPASSEN",
+						NeonKarte.AVATAR, () -> client.setScreen(new GarderobeScreen(screen))));
 			}
 		});
 	}
@@ -222,7 +226,7 @@ public class BambusClient implements ClientModInitializer {
 
 		while (menuTaste.consumeClick()) {
 			if (mc.screen == null) {
-				mc.setScreen(new BambusMenuScreen(null));
+				mc.setScreen(new BambusAuswahlScreen());   // erst wählen: Garderobe oder Mod-Menü
 			}
 		}
 
