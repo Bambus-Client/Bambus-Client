@@ -12,13 +12,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Textur-Modul: Low Shield und Side Shield (der Aufrufer stellt die Pose danach wieder her). */
+/** Textur-Modul: Low Shield, Side Shield und Short Sword (der Aufrufer stellt die Pose danach wieder her). */
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
 
 	@Inject(method = "renderItem", at = @At("HEAD"))
-	private void bambus$schild(LivingEntity wesen, ItemStack stack, ItemDisplayContext kontext, PoseStack pose,
+	private void bambus$hand(LivingEntity wesen, ItemStack stack, ItemDisplayContext kontext, PoseStack pose,
 							   SubmitNodeCollector sammler, int licht, CallbackInfo ci) {
-		Texturen.schildVerschieben(stack, kontext, pose);
+		Texturen.handAnpassen(stack, kontext, pose);
 	}
 }

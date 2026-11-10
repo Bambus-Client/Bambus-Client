@@ -672,7 +672,8 @@ public class BambusMenuScreen extends Screen {
 		zy += karten(g, mx, my, List.of(
 				new Karte("Low Fire", "Feuer am Bildschirm tiefer", () -> c.lowFire, () -> c.lowFire = !c.lowFire, Farben.NEON_PINK),
 				new Karte("Low Shield", "Schild in der Hand tiefer", () -> c.lowShield, () -> c.lowShield = !c.lowShield, Farben.NEON_CYAN),
-				new Karte("Side Shield", "Schild weiter zur Seite", () -> c.sideShield, () -> c.sideShield = !c.sideShield, Farben.NEON_CYAN)),
+				new Karte("Side Shield", "Schild weiter zur Seite", () -> c.sideShield, () -> c.sideShield = !c.sideShield, Farben.NEON_CYAN),
+				new Karte("Short Sword", "Schwert in der Hand kürzer", () -> c.shortSword, () -> c.shortSword = !c.shortSword, Farben.NEON_PINK)),
 				x, zy, b);
 		auswahl(g, mx, my, "FEUER", "−" + c.lowFireStaerke + " %", x, zy, hb,
 				() -> c.lowFireStaerke = Texturen.naechsteStaerke(c.lowFireStaerke, -1),
@@ -680,6 +681,10 @@ public class BambusMenuScreen extends Screen {
 		auswahl(g, mx, my, "SCHILD", "−" + c.lowShieldStaerke + " %", x + hb + 6, zy, hb,
 				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, -1),
 				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, 1));
+		zy += 22;
+		auswahl(g, mx, my, "SCHWERT", c.shortSwordGroesse + " %", x, zy, hb,
+				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, -1),
+				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, 1));
 		zy += 28;
 
 		Neon.text(g, font, "SICHT", x, zy, 0.75f, Farben.NEON, false);

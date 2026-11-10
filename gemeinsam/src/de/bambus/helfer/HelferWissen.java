@@ -190,9 +190,9 @@ public final class HelferWissen {
 		e("garderobe,wardrobe,kosmetik im spiel,kosmetik ingame,cosmetics in game,umziehen",
 				"Die Garderobe öffnest du im Spiel mit RECHTS-SHIFT → GARDEROBE oder im Escape-Menü über die Karte mit deinem Avatar. Links wählst du die Art (Capes, Flügel, Partikel, Hüte, Kill-Effekte, Pfeil-Spuren), rechts das Design – es wird sofort gespeichert.",
 				"Open the wardrobe in game with RIGHT SHIFT → WARDROBE or in the pause menu via the card with your avatar. Pick the type on the left (capes, wings, particles, hats, kill effects, arrow trails) and the design on the right – it saves instantly.");
-		e("low fire,lowfire,low shield,lowshield,side shield,feuer tiefer,schild tiefer,textur,texturen,texture,kuerbis overlay,pumpkin overlay,wasser sicht",
-				"Das Textur-Modul findest du im Spiel unter RECHTS-SHIFT → MOD-MENÜ → TEXTUREN: Low Fire (Feuer tiefer), Low Shield (Schild tiefer), Side Shield (Schild zur Seite), kein Kürbis-Overlay und klare Sicht unter Wasser. Wie tief Feuer und Schild rutschen, stellst du mit ‹ › ein.",
-				"The texture module is in game under RIGHT SHIFT → MOD MENU → TEXTURES: Low Fire, Low Shield, Side Shield, no pumpkin overlay and clear underwater view. Use ‹ › to set how low fire and shield go.");
+		e("low fire,lowfire,low shield,lowshield,side shield,short sword,kurzes schwert,schwert kleiner,feuer tiefer,schild tiefer,textur,texturen,texture,kuerbis overlay,pumpkin overlay,wasser sicht",
+				"Das Textur-Modul findest du im Spiel unter RECHTS-SHIFT → MOD-MENÜ → TEXTUREN: Low Fire (Feuer tiefer), Low Shield (Schild tiefer), Side Shield (Schild zur Seite), Short Sword (Schwert kürzer), kein Kürbis-Overlay und klare Sicht unter Wasser. Wie tief Feuer und Schild rutschen und wie groß das Schwert ist, stellst du mit ‹ › ein.",
+				"The texture module is in game under RIGHT SHIFT → MOD MENU → TEXTURES: Low Fire, Low Shield, Side Shield, Short Sword, no pumpkin overlay and clear underwater view. Use ‹ › to set how low fire and shield go and how big the sword is.");
 		e("helfer ausschalten,helfer deaktivieren,helfer weg,disable helper,turn off helper,hide helper",
 				"Im Spiel kannst du mich ausblenden: RECHTS-SHIFT → MOD-MENÜ → MEHR → EXTRAS → „Bambus-Helfer“ ausschalten. Dann zeigt RECHTS-SHIFT nur noch Garderobe und Mod-Menü. Im Launcher bleibe ich auf der Seite HELFER.",
 				"You can hide me in game: RIGHT SHIFT → MOD MENU → MORE → EXTRAS → turn off “Bambus Helper”. Then RIGHT SHIFT only shows wardrobe and mod menu. In the launcher I stay on the HELPER page.");

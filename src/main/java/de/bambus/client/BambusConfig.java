@@ -77,6 +77,8 @@ public class BambusConfig {
 	public boolean lowShield = false;
 	public int lowShieldStaerke = 30;
 	public boolean sideShield = false;
+	public boolean shortSword = false;
+	public int shortSwordGroesse = 70;    // Prozent der normalen Größe
 	public boolean keinKuerbisOverlay = false;
 	public boolean klaresWasser = false;
 	public String discordAppId = "";
