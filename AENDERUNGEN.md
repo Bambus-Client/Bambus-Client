@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Flügel-Paket 1 im Pixel-Look: Engel Classic, Drache Classic, Fee und Phönix Classic – im Launcher und im Spiel (Phönix Classic und Fee leuchten)
 - Bambus-Helfer: Hilfe-Chat im Launcher zu Client und Minecraft (Rezepte, Tipps, Probleme, Nether-Rechner) – ohne Internet und kostenlos
 - Willkommens-Seite beim ersten Start: Sprache, Minecraft-Name, Look und Leistung einstellen
 - Der Launcher gibt es jetzt auf Deutsch und Englisch (umschaltbar unter Einstellungen)

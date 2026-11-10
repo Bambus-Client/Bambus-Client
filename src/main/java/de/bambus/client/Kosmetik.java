@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Kosmetik: Capes, Flügel, Hüte, Partikelspuren, Kill-Effekte und Pfeil-Spuren.
@@ -53,6 +54,21 @@ public final class Kosmetik {
 	/** Form für eingebaute 3D-Flügel – null bei selbst erstellten Flügeln (altes Format). */
 	public static FluegelForm fluegelForm(String id) {
 		return istEigen(id) ? null : FORMEN.get(id);
+	}
+
+	/** Flügel im einfachen Format (ohne FluegelForm), die im Dunkeln voll leuchten. */
+	private static final Set<String> LEUCHTENDE_FLUEGEL = Set.of("phoenix_classic", "fee");
+
+	public static boolean fluegelLeuchtet(String id) {
+		return LEUCHTENDE_FLUEGEL.contains(id);
+	}
+
+	/** Größere Flügel im einfachen Format (Faktor auf Breite und Höhe); alle anderen 1. */
+	private static final Map<String, Float> FLUEGEL_GROESSE = Map.of(
+			"engel_classic", 1.45f, "drache_classic", 1.45f, "fee", 1.35f, "phoenix_classic", 1.45f);
+
+	public static float fluegelGroesse(String id) {
+		return FLUEGEL_GROESSE.getOrDefault(id, 1f);
 	}
 
 	/** Ebene eines eingebauten 3D-Flügels: "hinten" (Schwungfedern) oder "vorne" (Deckfedern, Knochen). */
@@ -231,7 +247,12 @@ public final class Kosmetik {
 			new Fluegel("kristall", "Kristall", 0xFF5AE6FF),
 			new Fluegel("aurora", "Aurora", 0xFF3DFFC8),
 			new Fluegel("sakura", "Sakura", 0xFFFF8CC0),
-			new Fluegel("bambus", "Bambus", 0xFF7BD65C)
+			new Fluegel("bambus", "Bambus", 0xFF7BD65C),
+			// Flügel-Paket 1 im Pixel-Look: quadratisches Bild, gezeichnet wie selbst erstellte Flügel
+			new Fluegel("engel_classic", "Engel Classic", 0xFFE6ECF5),
+			new Fluegel("drache_classic", "Drache Classic", 0xFFC0303C),
+			new Fluegel("fee", "Fee", 0xFF8A6BFF),
+			new Fluegel("phoenix_classic", "Phönix Classic", 0xFFFFB03D)
 	);
 
 	/** Eingebaute + selbst erstellte Capes. */

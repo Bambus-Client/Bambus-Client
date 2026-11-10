@@ -200,7 +200,7 @@ final class SeiteKosmetik extends JPanel {
 		String cape = l.client.cape();
 		modell.setCape(ClientEinstellungen.AUS.equals(cape) ? null : capeBilder.get(cape));
 		String fl = l.client.fluegel();
-		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : fluegelBilder.get(fl));
+		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : fluegelBilder.get(fl), ClientEinstellungen.fluegelGroesse(fl));
 		modell.setHut(l.client.hut());
 	}
 
