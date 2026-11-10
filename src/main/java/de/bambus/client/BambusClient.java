@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.hud.*;
 import de.bambus.client.screen.BambusMenuScreen;
 import de.bambus.client.screen.BambusTitelScreen;
-import de.bambus.client.screen.GarderobeScreen;
+import de.bambus.client.screen.GarderobeKnopf;
 import de.bambus.client.screen.HudEditorScreen;
 import de.bambus.client.screen.Neon;
 import net.fabricmc.api.ClientModInitializer;
@@ -155,11 +155,9 @@ public class BambusClient implements ClientModInitializer {
 				ScreenEvents.afterRender(screen).register(
 						(s, grafik, mausX, mausY, d) -> zeichneTitelLogo(grafik));
 			}
-			// Escape-Menü: Garderobe an der linken Seite
+			// Escape-Menü: Avatar-Karte „Garderobe“ an der linken Seite
 			if (screen instanceof PauseScreen pause && pause.showsPauseMenu()) {
-				Screens.getButtons(screen).add(Button.builder(Component.literal("§bGarderobe"),
-								b -> client.setScreen(new GarderobeScreen(screen)))
-						.bounds(8, hoehe / 2 - 10, 90, 20).build());
+				Screens.getButtons(screen).add(GarderobeKnopf.fuer(screen, hoehe));
 			}
 		});
 	}

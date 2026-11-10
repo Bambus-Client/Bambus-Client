@@ -30,6 +30,8 @@ public class GarderobeScreen extends Screen {
 	private static final int KACHEL_B = 54;
 	private static final int KACHEL_H = 70;
 	private static final int ABSTAND = 6;
+	private static final int VORSCHAU_B = 110;
+	private static final int VORSCHAU_MAX_H = 190;
 
 	private static Garderobe.Art letzteArt = Garderobe.Art.CAPES;
 
@@ -151,10 +153,11 @@ public class GarderobeScreen extends Screen {
 		Neon.text(g, font, unter, x, 28, 0.75f, Farben.GRAU, false);
 		g.fill(x, KOPF - 8, x + b, KOPF - 7, Farben.LINIE);
 
-		// Vorschau mit Spielerfigur (nur wenn genug Platz ist)
-		int vb = b >= 260 ? 100 : 0;
+		// Vorschau mit Spielerfigur – kompakte Box, nur wenn genug Platz ist
+		int vb = b >= 260 ? VORSCHAU_B : 0;
 		if (vb > 0) {
-			vorschau(g, mx, my, x, KOPF, vb, height - KOPF - RAND, gewaehlt);
+			int vh = Math.min(height - KOPF - RAND, VORSCHAU_MAX_H);
+			vorschau(g, mx, my, x, KOPF, vb, vh, gewaehlt);
 		}
 
 		// Kacheln
@@ -188,7 +191,7 @@ public class GarderobeScreen extends Screen {
 		int modellH = h - 26;
 		if (minecraft.player != null) {
 			InventoryScreen.renderEntityInInventoryFollowsMouse(g, x + 4, y + 4, x + b - 4, y + modellH,
-					(int) (Math.min(modellH, 170) * 0.36f), 0.0625f, mx, my, minecraft.player);
+					(int) (modellH * 0.42f), 0.0625f, mx, my, minecraft.player);
 		}
 		g.fill(x + 6, y + h - 24, x + b - 6, y + h - 23, Farben.LINIE);
 		Neon.text(g, font, "AKTIV", x + 8, y + h - 18, 0.6f, Farben.GRAU, false);
