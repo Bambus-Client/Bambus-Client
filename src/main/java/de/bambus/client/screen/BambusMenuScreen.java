@@ -5,6 +5,7 @@ import de.bambus.client.Anzeigen;
 import de.bambus.client.DiscordStatus;
 import de.bambus.client.Profile;
 import de.bambus.client.Statistik;
+import de.bambus.client.Texturen;
 import de.bambus.client.Visuals;
 import de.bambus.client.BambusClient;
 import de.bambus.client.BambusConfig;
@@ -29,13 +30,13 @@ import java.util.function.BooleanSupplier;
 
 /**
  * Das Bambus-Menü im Neon-Look (Rechts-Shift).
- * Tabs: Module · Funktionen · Fadenkreuz · Mehr – mit der TAB-Taste wechseln.
+ * Tabs: Module · Funktionen · Fadenkreuz · Texturen · Mehr – mit der TAB-Taste wechseln.
  * Kosmetik gibt es in der Garderobe (GarderobeScreen).
  */
 public class BambusMenuScreen extends Screen {
 
 	private enum Tab {
-		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), MEHR("MEHR");
+		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), TEXTUREN("TEXTUREN"), MEHR("MEHR");
 
 		final String titel;
 
@@ -193,6 +194,7 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> karten(g, mx, my, moduleKarten(), ix, y0, ib);
 			case FUNKTIONEN -> funktionen(g, mx, my, ix, y0, ib);
 			case FADENKREUZ -> fadenkreuz(g, mx, my, ix, y0, ib);
+			case TEXTUREN -> texturen(g, mx, my, ix, y0, ib);
 			case MEHR -> mehr(g, mx, my, ix, y0, ib);
 		};
 		if (wechsel < 1f) {
@@ -240,6 +242,7 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> "alle";
 			case FUNKTIONEN -> "blitz";
 			case FADENKREUZ -> "fadenkreuz";
+			case TEXTUREN -> "textur";
 			case MEHR -> "mehr";
 		};
 	}
@@ -654,6 +657,45 @@ public class BambusMenuScreen extends Screen {
 			zy += 21;
 		}
 		return zy + 4;
+	}
+
+	// ------------------------------------------------------------- Texturen
+
+	/** Textur-Modul: PvP-Anpassungen wie in Texturpaketen (siehe Texturen). */
+	private int texturen(GuiGraphics g, int mx, int my, int x, int y, int b) {
+		BambusConfig c = cfg();
+		int zy = y;
+		int hb = (b - 6) / 2;
+
+		Neon.text(g, font, "KAMPF", x, zy, 0.75f, Farben.NEON, false);
+		zy += 12;
+		zy += karten(g, mx, my, List.of(
+				new Karte("Low Fire", "Feuer am Bildschirm tiefer", () -> c.lowFire, () -> c.lowFire = !c.lowFire, Farben.NEON_PINK),
+				new Karte("Low Shield", "Schild in der Hand tiefer", () -> c.lowShield, () -> c.lowShield = !c.lowShield, Farben.NEON_CYAN),
+				new Karte("Side Shield", "Schild weiter zur Seite", () -> c.sideShield, () -> c.sideShield = !c.sideShield, Farben.NEON_CYAN),
+				new Karte("Short Sword", "Schwert in der Hand kürzer", () -> c.shortSword, () -> c.shortSword = !c.shortSword, Farben.NEON_PINK)),
+				x, zy, b);
+		auswahl(g, mx, my, "FEUER", "−" + c.lowFireStaerke + " %", x, zy, hb,
+				() -> c.lowFireStaerke = Texturen.naechsteStaerke(c.lowFireStaerke, -1),
+				() -> c.lowFireStaerke = Texturen.naechsteStaerke(c.lowFireStaerke, 1));
+		auswahl(g, mx, my, "SCHILD", "−" + c.lowShieldStaerke + " %", x + hb + 6, zy, hb,
+				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, -1),
+				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, 1));
+		zy += 22;
+		auswahl(g, mx, my, "SCHWERT", c.shortSwordGroesse + " %", x, zy, hb,
+				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, -1),
+				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, 1));
+		zy += 28;
+
+		Neon.text(g, font, "SICHT", x, zy, 0.75f, Farben.NEON, false);
+		zy += 12;
+		zy += karten(g, mx, my, List.of(
+				new Karte("Kein Kürbis-Overlay", "Freie Sicht mit Kürbis auf dem Kopf", () -> c.keinKuerbisOverlay, () -> c.keinKuerbisOverlay = !c.keinKuerbisOverlay, Farben.NEON),
+				new Karte("Klare Sicht unter Wasser", "Ohne Wasser-Textur vor dem Auge", () -> c.klaresWasser, () -> c.klaresWasser = !c.klaresWasser, Farben.NEON)),
+				x, zy, b, 2);
+		Neon.text(g, font, "Nur bei dir sichtbar – wie ein PvP-Texturpaket, ohne Vorteil im Spiel.", x, zy + 2, 0.6f, Farben.GRAU, false);
+		zy += 14;
+		return zy - y;
 	}
 
 	// ----------------------------------------------------------- Fadenkreuz

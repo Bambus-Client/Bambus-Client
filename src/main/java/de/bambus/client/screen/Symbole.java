@@ -53,7 +53,8 @@ public final class Symbole {
 			"update", 0x183C7E181818007EL,
 			"signal", 0x03030F0F3F3FFFFFL,
 			"karte", 0xFF9195F18FA989FFL,
-			"helfer", 0x7E81A5817E302000L
+			"helfer", 0x7E81A5817E302000L,
+			"textur", 0xCCCC3333CCCC3333L
 		};
 		for (int i = 0; i < daten.length; i += 2) BILDER.put((String) daten[i], (Long) daten[i + 1]);
 	}
@@ -92,6 +93,7 @@ public final class Symbole {
 				{"freund", "person"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
 				{"bossbar", "hud"}, {"tab", "hud"}, {"chat", "hud"}, {"hauptmenü", "hud"}, {"menü", "mehr"},
 				{"verlauf", "kosmetik"}, {"benachrichtigung", "update"}, {"lade", "update"}, {"treffer", "ziel"},
+				{"fire", "textur"}, {"shield", "ruestung"}, {"sword", "pvp"}, {"kürbis", "auge"}, {"wasser", "auge"},
 		};
 		for (String[] r : regeln) if (n.contains(r[0])) return r[1];
 		return "hud";

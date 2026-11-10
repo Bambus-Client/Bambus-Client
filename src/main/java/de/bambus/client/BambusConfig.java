@@ -70,6 +70,17 @@ public class BambusConfig {
 	public boolean autoScreenshot = false;
 	public boolean discordAn = false;
 	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten
+
+	// Texturen (Mod-Menü → TEXTUREN)
+	public boolean lowFire = false;
+	public int lowFireStaerke = 30;       // Prozent, siehe Texturen
+	public boolean lowShield = false;
+	public int lowShieldStaerke = 30;
+	public boolean sideShield = false;
+	public boolean shortSword = false;
+	public int shortSwordGroesse = 70;    // Prozent der normalen Größe
+	public boolean keinKuerbisOverlay = false;
+	public boolean klaresWasser = false;
 	public String discordAppId = "";
 
 	// PvP
