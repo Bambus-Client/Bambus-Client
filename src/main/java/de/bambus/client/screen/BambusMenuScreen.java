@@ -38,13 +38,21 @@ import java.util.function.BooleanSupplier;
  */
 public class BambusMenuScreen extends Screen {
 
+	/** Bereiche des Menüs – links in der Seitenleiste. */
 	private enum Tab {
-		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), MEHR("MEHR");
+		MODULE("Module", "HUD & Texturen", "alle"),
+		FUNKTIONEN("Funktionen", "Zoom & Visuals", "blitz"),
+		FADENKREUZ("Fadenkreuz", "Form & Farbe", "fadenkreuz"),
+		MEHR("Mehr", "Design & Extras", "mehr");
 
 		final String titel;
+		final String untertitel;
+		final String symbol;
 
-		Tab(String titel) {
+		Tab(String titel, String untertitel, String symbol) {
 			this.titel = titel;
+			this.untertitel = untertitel;
+			this.symbol = symbol;
 		}
 	}
 
@@ -93,6 +101,7 @@ public class BambusMenuScreen extends Screen {
 
 	// Layout (wird in render berechnet)
 	private int px, py, pb, ph;
+	private int leiste;   // Breite der Seitenleiste
 	private int ix, iy, ib, ih;
 
 	public BambusMenuScreen(Screen eltern) {
@@ -103,7 +112,7 @@ public class BambusMenuScreen extends Screen {
 	@Override
 	protected void init() {
 		suchFeld = new EditBox(font, 0, 0, 120, 14, Component.literal("Suche"));
-		suchFeld.setHint(Component.literal("Modul suchen …"));
+		suchFeld.setHint(Component.literal("Suchen …"));
 		suchFeld.setMaxLength(32);
 		suchFeld.setResponder(t -> scroll = 0);
 		addRenderableWidget(suchFeld);
@@ -169,7 +178,7 @@ public class BambusMenuScreen extends Screen {
 		if (liveAnsicht()) {
 			suchFeld.setVisible(false);
 			freundFeld.setVisible(false);
-			einstellungsFenster(g, mx, my, einstellungsZiel, true);
+			liveFenster(g, mx, my, einstellungsZiel);
 			return;
 		}
 		int mausX = mx, mausY = my;
@@ -178,7 +187,7 @@ public class BambusMenuScreen extends Screen {
 			my = -1;
 		}
 
-		pb = Math.min(width - 20, 500);
+		pb = Math.min(width - 20, 540);
 		ph = Math.min(height - 20, 310);
 		px = (width - pb) / 2;
 		py = (height - ph) / 2;
@@ -198,10 +207,11 @@ public class BambusMenuScreen extends Screen {
 				sichtbar = Math.min(sichtbar, 1 - Anim.aus(z));
 			}
 		}
-		ix = px + 10;
-		iy = py + 58;
-		ib = pb - 20;
-		ih = ph - 58 - 32;
+		leiste = pb < 460 ? 92 : 112;
+		ix = px + leiste + 10;
+		iy = py + 34;
+		ib = pb - leiste - 20;
+		ih = ph - 34 - 32;
 		boolean suchleiste = tab == Tab.MODULE;
 		suchFeld.setVisible(suchleiste);
 		if (tab != Tab.MEHR) {
@@ -212,14 +222,14 @@ public class BambusMenuScreen extends Screen {
 			ih -= 22;
 		}
 
-		// Grundfläche mit Leuchtrahmen
+		// Grundfläche: ruhiger Rahmen, Ecken als einziges Schmuckelement
 		g.fill(px, py, px + pb, py + ph, Farben.PANEL);
-		Neon.gitter(g, px, py, pb, ph, 16, Farben.alpha(Farben.NEON, 6));
-		Neon.leuchtRahmen(g, px, py, pb, ph, Farben.NEON, 0.55f + 0.45f * Farben.puls());
-		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.NEON_CYAN);
+		g.renderOutline(px - 1, py - 1, pb + 2, ph + 2, Farben.alpha(Farben.NEON, 28));
+		g.renderOutline(px, py, pb, ph, Farben.alpha(Farben.NEON, 110));
+		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.alpha(Farben.NEON_CYAN, 170));
 
-		kopf(g, mx, my);
-		tabs(g, mx, my);
+		seitenleiste(g, mx, my);
+		kopfzeile(g, mx, my);
 		if (suchleiste) {
 			suchleiste(g, mx, my);
 		}
@@ -252,90 +262,78 @@ public class BambusMenuScreen extends Screen {
 		super.render(g, mx, my, delta);
 		if (einstellungsZiel != null) {
 			bereiche.clear();   // nur das Fenster ist klickbar
-			einstellungsFenster(g, mausX, mausY, einstellungsZiel, false);
+			einstellungsFenster(g, mausX, mausY, einstellungsZiel);
 		}
 		if (sichtbar < 1f) {   // ein- und ausblenden
 			g.fill(px - 6, py - 6, px + pb + 6, py + ph + 6, Farben.alpha(0xFF020407, (int) ((1 - sichtbar) * 255)));
 		}
 	}
 
-	private void kopf(GuiGraphics g, int mx, int my) {
-		Neon.logo(g, px + 12, py + 8, 16);
-		Neon.leuchtText(g, font, "BAMBUS", px + 30, py + 9, 1.5f, Farben.NEON);
-		int cx = px + 30 + (int) (font.width("BAMBUS") * 1.5f) + 5;
-		Neon.text(g, font, "CLIENT", cx, py + 14, 0.75f, Farben.NEON_CYAN, false);
+	/** Kopf rechts: Titel der Seite und Schließen. */
+	private void kopfzeile(GuiGraphics g, int mx, int my) {
+		int x = px + leiste + 10;
+		g.drawString(font, tab.titel, x, py + 11, Farben.WEISS, false);
+		Neon.text(g, font, tab.untertitel, x + font.width(tab.titel) + 6, py + 12, 0.75f, Farben.GRAU, false);
 
-		String version = "v" + BambusClient.VERSION + " // 1.21.11";
-		Neon.text(g, font, version, px + pb - 28 - (int) (font.width(version) * 0.75f), py + 13, 0.75f, Farben.GRAU, false);
-
-		// Schließen
 		int sx = px + pb - 20;
 		int sy = py + 8;
 		boolean hover = Neon.ueber(mx, my, sx, sy, 12, 12);
 		g.drawString(font, "✕", sx + 2, sy + 2, hover ? Farben.ROT : Farben.GRAU, false);
 		klick(sx, sy, 12, 12, this::onClose, false);
 
-		g.fill(px + 8, py + 30, px + pb - 8, py + 31, Farben.LINIE);
+		g.fill(x, py + 28, px + pb - 8, py + 29, Farben.LINIE);
 	}
 
-	private static String tabSymbol(Tab t) {
-		return switch (t) {
-			case MODULE -> "alle";
-			case FUNKTIONEN -> "blitz";
-			case FADENKREUZ -> "fadenkreuz";
-			case MEHR -> "mehr";
-		};
-	}
 
-	private void tabs(GuiGraphics g, int mx, int my) {
-		int y = py + 36;
-		// erst die Positionen, damit der Unterstrich zum aktiven Tab gleiten kann
-		int x = px + 10;
-		int aktivX = x, aktivB = 0;
-		for (Tab t : Tab.values()) {
-			int b = font.width(t.titel) + 25;
-			if (t == tab) { aktivX = x; aktivB = b; }
-			x += b + 4;
-		}
+	/** Schlanke Seitenleiste links: Logo, die Bereiche mit gleitender Markierung, unten Tab-Hinweis und Version. */
+	private void seitenleiste(GuiGraphics g, int mx, int my) {
+		int x = px, b = leiste;
 		boolean weich = cfg().menueAnimation;
-		int ux = weich ? Math.round(Anim.zu("tab-x", aktivX, Anim.GLEITEN)) : aktivX;
-		int ub = weich ? Math.round(Anim.zu("tab-b", aktivB, Anim.GLEITEN)) : aktivB;
-		g.fill(ux, y, ux + ub, y + 16, Farben.alpha(Farben.NEON, 22));
-		g.fill(ux, y + 15, ux + ub, y + 17, Farben.NEON);
-		g.fill(ux, y + 17, ux + ub, y + 18, Farben.alpha(Farben.NEON, 60));
+		g.fill(x, py, x + b, py + ph, 0x50000000);
+		g.fill(x + b - 1, py + 6, x + b, py + ph - 6, Farben.alpha(Farben.NEON, 70));
 
-		x = px + 10;
-		for (Tab t : Tab.values()) {
-			int b = font.width(t.titel) + 25;
+		Neon.logo(g, x + 10, py + 10, 16);
+		Neon.leuchtText(g, font, "BAMBUS", x + 28, py + 10, 1f, Farben.NEON);
+		Neon.text(g, font, "CLIENT", x + 28, py + 21, 0.6f, Farben.NEON_CYAN, false);
+		g.fill(x + 8, py + 33, x + b - 8, py + 34, Farben.LINIE);
+
+		Tab[] alle = Tab.values();
+		int y0 = py + 40, eh = 28, abstand = 2;
+		float ziel = tab.ordinal() * (eh + abstand);
+		int markY = y0 + (weich ? Math.round(Anim.zu("menue-markierung", ziel, Anim.GLEITEN)) : (int) ziel);
+		g.fill(x + 4, markY, x + b - 5, markY + eh, Farben.alpha(Farben.NEON, 26));
+		g.fill(x + 4, markY, x + 6, markY + eh, Farben.NEON);
+
+		for (int i = 0; i < alle.length; i++) {
+			Tab t = alle[i];
+			int y = y0 + i * (eh + abstand);
 			boolean aktiv = t == tab;
-			boolean hover = Neon.ueber(mx, my, x, y, b, 16);
-			float h = weich ? Anim.zu("tab-hover:" + t, hover || aktiv ? 1f : 0f, Anim.HOVER) : (hover || aktiv ? 1f : 0f);
+			boolean hover = Neon.ueber(mx, my, x + 4, y, b - 9, eh);
+			float h = weich ? Anim.zu("menue-hover:" + t, hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
+			if (!aktiv && h > 0.01f) {
+				g.fill(x + 4, y, x + b - 5, y + eh, Farben.alpha(Farben.KARTE_HOVER, (int) (255 * h)));
+			}
 			int farbe = aktiv ? Farben.NEON : Anim.mische(Farben.GRAU, Farben.WEISS, h);
-			Symbole.zeichne(g, tabSymbol(t), x + 6, y + 4, 1, farbe);
-			g.drawString(font, t.titel, x + 18, y + 4, farbe, aktiv);
-			final Tab ziel = t;
-			klick(x, y, b, 16, () -> wechsle(ziel), false);
-			x += b + 4;
+			Symbole.zeichne(g, t.symbol, x + 12, y + 6, 1, farbe);
+			g.drawString(font, t.titel, x + 26, y + 5, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
+			String unter = font.plainSubstrByWidth(t.untertitel, (int) ((b - 32) / 0.6f));
+			Neon.text(g, font, unter, x + 26, y + 16, 0.6f, aktiv ? Farben.NEON : Farben.GRAU, false);
+			klick(x + 4, y, b - 9, eh, () -> wechsle(t), false);
 		}
-		String hinweis = "[TAB] wechseln";
-		int hx = px + pb - 12 - (int) (font.width(hinweis) * 0.75f);
-		if (hx > x + 4) {   // nur, wenn er nicht mit den Tabs zusammenstößt
-			Neon.text(g, font, hinweis, hx, y + 5, 0.75f, Farben.GRAU, false);
-		}
+
+		Neon.text(g, font, "[TAB] wechseln", x + 10, py + ph - 26, 0.6f, Farben.GRAU, false);
+		Neon.text(g, font, "v" + BambusClient.VERSION + " · 1.21.11", x + 10, py + ph - 16, 0.6f, 0xFF4A5A6E, false);
 	}
 
+	/** Fuß rechts unter dem Inhalt: HUD BEARBEITEN und FERTIG. */
 	private void fuss(GuiGraphics g, int mx, int my) {
 		int y = py + ph - 26;
-		g.fill(px + 8, y - 5, px + pb - 8, y - 4, Farben.LINIE);
+		g.fill(ix, y - 5, px + pb - 8, y - 4, Farben.LINIE);
 
 		boolean imSpiel = minecraft.player != null;
-		knopf(g, mx, my, "HUD BEARBEITEN", px + 10, y, 110, 18, false, imSpiel,
+		knopf(g, mx, my, "HUD BEARBEITEN", ix, y, 100, 18, false, imSpiel,
 				() -> minecraft.setScreen(new HudEditorScreen(this)));
-		knopf(g, mx, my, "FERTIG", px + pb - 90, y, 80, 18, true, true, this::onClose);
-
-		String tipp = imSpiel ? "RECHTS-SHIFT öffnet dieses Menü" : "HUD bearbeiten geht in einer Welt";
-		int tb = (int) (font.width(tipp) * 0.75f);
-		Neon.text(g, font, tipp, px + (pb - tb) / 2, y + 6, 0.75f, Farben.GRAU, false);
+		knopf(g, mx, my, "FERTIG", px + pb - 80, y, 70, 18, true, true, this::onClose);
 	}
 
 	// ------------------------------------------------------------- Karten
@@ -483,19 +481,16 @@ public class BambusMenuScreen extends Screen {
 
 			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			g.fill(kx, ky, kx + kb, ky + kh, Anim.mische(Farben.KARTE, Farben.KARTE_HOVER, hk));
-			if (an) {
-				g.fill(kx, ky, kx + 2, ky + kh, k.akzent());
-				g.renderOutline(kx, ky, kb, kh, Farben.alpha(k.akzent(), hover ? 140 : 70));
-			} else {
-				g.renderOutline(kx, ky, kb, kh, hover ? 0xFF2E4058 : Farben.LINIE);
+			g.renderOutline(kx, ky, kb, kh, Anim.mische(Farben.LINIE, 0xFF2E4058, hk));
+			if (an) {   // ein schmaler Balken zeigt „an“ – der Schalter sagt den Rest
+				g.fill(kx, ky + 1, kx + 2, ky + kh - 1, k.akzent());
 			}
 
-			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF5A6A7E);
-			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 82 : 52));
-			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFC8D2DE, false);
-			String text = font.plainSubstrByWidth(k.text(), (int) ((kb - (k.einstellungen() != null ? 28 : 14)) / 0.75f));
-			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, Farben.GRAU, false);
-			Neon.text(g, font, an ? "AN" : "AUS", kx + kb - 44, ky + 8, 0.75f, an ? k.akzent() : Farben.GRAU, false);
+			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF4A5A6E);
+			String name = kuerzen(k.name(), kb - (k.fav() != null ? 66 : 52), 1f);
+			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFAAB6C4, false);
+			String text = kuerzen(k.text(), kb - (k.einstellungen() != null ? 28 : 14), 0.75f);
+			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, an ? Farben.GRAU : 0xFF5E6E82, false);
 			Neon.schalter(g, kx + kb - 26, ky + 7, an, k.name());
 
 			bereiche.add(new Bereich(kx, ky, kb, kh, () -> {
@@ -507,9 +502,11 @@ public class BambusMenuScreen extends Screen {
 			}
 			if (k.fav() != null) {
 				boolean fav = cfg().favoriten.contains(k.fav());
-				int sx = kx + kb - 58;
+				int sx = kx + kb - 40;
 				boolean sh = imInhalt(mx, my) && Neon.ueber(mx, my, sx - 2, ky + 4, 12, 12);
-				g.drawString(font, fav ? "★" : "☆", sx, ky + 6, fav ? Farben.GELB : sh ? Farben.WEISS : 0xFF4A5A6E, false);
+				if (fav || hover) {   // leerer Stern nur, wenn man über der Karte ist
+					g.drawString(font, fav ? "★" : "☆", sx, ky + 6, fav ? Farben.GELB : sh ? Farben.WEISS : 0xFF4A5A6E, false);
+				}
 				klick(sx - 2, ky + 4, 12, 12, () -> {
 					if (!cfg().favoriten.remove(k.fav())) {
 						cfg().favoriten.add(k.fav());
@@ -520,6 +517,15 @@ public class BambusMenuScreen extends Screen {
 		}
 		int zeilen = (karten.size() + spalten - 1) / spalten;
 		return zeilen * (kh + abstand);
+	}
+
+	/** Text auf eine Breite kürzen – mit „…“ statt mitten im Wort abzuschneiden. */
+	private String kuerzen(String text, int breite, float groesse) {
+		int max = (int) (breite / groesse);
+		if (font.width(text) <= max) {
+			return text;
+		}
+		return font.plainSubstrByWidth(text, max - font.width("…")).stripTrailing() + "…";
 	}
 
 	/** ⋮ – drei Punkte unten rechts auf der Karte, öffnen die Modul-Einstellungen. */
@@ -539,26 +545,57 @@ public class BambusMenuScreen extends Screen {
 	// ------------------------------------------------------ Modul-Einstellungen (⋮)
 
 	/**
-	 * Einstellungsfenster (⋮ oder Rechtsklick): links eine Vorschau, rechts Schalter und Stufen (scrollbar).
-	 * live = Textur-Modul in einer Welt: schmales Fenster am Rand, ohne Vorschau – das Spiel selbst ist die Vorschau.
+	 * Live-Modus (Textur-Modul in einer Welt): kompakte Leiste oben in der Mitte, Zeilen in zwei Spalten –
+	 * beide Hände unten bleiben frei, jede Änderung wirkt sofort im Spiel.
 	 */
-	private void einstellungsFenster(GuiGraphics g, int mx, int my, Einstellbar ziel, boolean live) {
+	private void liveFenster(GuiGraphics g, int mx, int my, Einstellbar ziel) {
+		List<Einstellung> zeilen = ziel.einstellungen();
+		int zeile = 18;
+		// in zwei Spalten teilen – eine Stufe bleibt bei ihrem Schalter
+		int teilung = (zeilen.size() + 1) / 2;
+		while (teilung < zeilen.size() && zeilen.get(teilung) instanceof Einstellung.Stufe) {
+			teilung++;
+		}
+		int proSpalte = Math.max(teilung, zeilen.size() - teilung);
+		int fb = Math.min(width - 20, 440);
+		int fh = 28 + proSpalte * zeile + 4;
+		int fx = (width - fb) / 2;
+		int fy = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
+
+		g.fill(fx, fy, fx + fb, fy + fh, 0xE60A0F17);
+		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
+		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 8, fy + 8, 1, Farben.NEON);
+		Neon.leuchtText(g, font, ziel.titel(), fx + 20, fy + 7, 1f, Farben.NEON);
+		Neon.text(g, font, "LIVE · SIEH DIR DEINE HÄNDE AN", fx + 24 + font.width(ziel.titel()), fy + 9, 0.6f, Farben.NEON_CYAN, false);
+		knopf(g, mx, my, "FERTIG", fx + fb - 58, fy + 5, 50, 14, true, true, () -> einstellungsZiel = null);
+		knopf(g, mx, my, "STANDARD", fx + fb - 124, fy + 5, 62, 14, false, true, () -> {
+			ziel.standard();
+			speichern();
+		});
+
+		int sb = (fb - 16 - 6) / 2;
+		for (int i = 0; i < zeilen.size(); i++) {
+			int spalte = i < teilung ? 0 : 1;
+			int reihe = spalte == 0 ? i : i - teilung;
+			int zx = fx + 8 + spalte * (sb + 6), zy = fy + 26 + reihe * zeile;
+			Einstellung e = zeilen.get(i);
+			if (e instanceof Einstellung.Schalter sch) {
+				schalterZeile(g, mx, my, ziel, sch, zx, zy, sb, zeile - 2, true);
+			} else if (e instanceof Einstellung.Stufe st) {
+				stufenZeile(g, mx, my, st, zx, zy, sb, zeile - 2, true);
+			}
+		}
+	}
+
+	/** Einstellungsfenster (⋮ oder Rechtsklick): links eine Vorschau, rechts Schalter und Stufen (scrollbar). */
+	private void einstellungsFenster(GuiGraphics g, int mx, int my, Einstellbar ziel) {
 		List<Einstellung> zeilen = ziel.einstellungen();
 		int zeile = 20;
-		int fb, fh, fx, fy;
-		if (live) {
-			fb = Math.min(230, width / 3 + 40);
-			int oben = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
-			fh = Math.min(height - oben - 10, 34 + zeilen.size() * zeile + 30 + 14);
-			fx = width - fb - 10;
-			fy = Math.max(oben, (height - fh) / 2);
-		} else {
-			fb = Math.min(ziel == Texturen.MODUL ? 400 : 360, pb - 30);
-			fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
-			fx = px + (pb - fb) / 2;
-			fy = py + (ph - fh) / 2;
-			g.fill(px, py, px + pb, py + ph, 0xB0020407);
-		}
+		int fb = Math.min(ziel == Texturen.MODUL ? 400 : 360, pb - 30);
+		int fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
+		int fx = px + (pb - fb) / 2;
+		int fy = py + (ph - fh) / 2;
+		g.fill(px, py, px + pb, py + ph, 0xB0020407);
 		g.fill(fx, fy, fx + fb, fy + fh, 0xF20A0F17);
 		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
 		Neon.ecken(g, fx - 3, fy - 3, fb + 6, fh + 6, 8, Farben.NEON_CYAN);
@@ -566,27 +603,24 @@ public class BambusMenuScreen extends Screen {
 		// Kopf
 		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 10, fy + 10, 1, Farben.NEON);
 		Neon.leuchtText(g, font, ziel.titel(), fx + 24, fy + 9, 1f, Farben.NEON);
-		Neon.text(g, font, live ? "LIVE · SIEH DIR DEINE HAND AN" : "EINSTELLUNGEN", fx + 24, fy + 20, 0.6f,
-				live ? Farben.NEON_CYAN : Farben.GRAU, false);
+		Neon.text(g, font, "EINSTELLUNGEN", fx + 24, fy + 20, 0.6f, Farben.GRAU, false);
 		int sx = fx + fb - 18, sy = fy + 7;
 		boolean zuHover = Neon.ueber(mx, my, sx, sy, 12, 12);
 		g.drawString(font, "✕", sx + 2, sy + 2, zuHover ? Farben.ROT : Farben.GRAU, false);
 		klick(sx, sy, 12, 12, () -> einstellungsZiel = null, false);
 
 		int inhaltY = fy + 32;
-		int inhaltH = fh - 32 - 30 - (live ? 14 : 0);
+		int inhaltH = fh - 32 - 30;
 
-		// Vorschau links (nicht im Live-Modus)
+		// Vorschau links
 		int vb = 0;
-		if (!live) {
-			if (ziel instanceof HudModul m) {
-				vb = Math.max(90, Math.min(130, fb * 2 / 5));
-				einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
-			} else if (ziel == Texturen.MODUL) {
-				vb = Math.max(110, Math.min(190, fb / 2));
-				TexturAnsicht.zeichne(g, font, fx + 8, inhaltY, vb, inhaltH, mx, my,
-						(kx, ky, kb, kh, aktion) -> klick(kx, ky, kb, kh, aktion, false));
-			}
+		if (ziel instanceof HudModul m) {
+			vb = Math.max(90, Math.min(130, fb * 2 / 5));
+			einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
+		} else if (ziel == Texturen.MODUL) {
+			vb = Math.max(110, Math.min(190, fb / 2));
+			TexturAnsicht.zeichne(g, font, fx + 8, inhaltY, vb, inhaltH, mx, my,
+					(kx, ky, kb, kh, aktion) -> klick(kx, ky, kb, kh, aktion, false));
 		}
 
 		// Zeilen rechts
@@ -617,9 +651,6 @@ public class BambusMenuScreen extends Screen {
 		}
 
 		// Fuß
-		if (live) {
-			Neon.text(g, font, "Halte Schild und Schwert in der Hand", fx + 8, fy + fh - 40, 0.6f, Farben.GRAU, false);
-		}
 		int knopfY = fy + fh - 24;
 		knopf(g, mx, my, "STANDARD", fx + 8, knopfY, 80, 16, false, true, () -> {
 			ziel.standard();
@@ -711,17 +742,25 @@ public class BambusMenuScreen extends Screen {
 
 	/** Suche + Kategorien über der Modul-Liste. */
 	private void suchleiste(GuiGraphics g, int mx, int my) {
-		int y = py + 60;
+		int y = py + 36;
+		// Suchfeld so breit, dass alle Kategorien daneben passen
+		int katGesamt = 0;
+		for (String kat : KATEGORIEN) {
+			katGesamt += katBreite(kat) + 4;
+		}
+		int suchB = Math.max(60, Math.min(120, ib - katGesamt - 8));
 		suchFeld.setX(ix);
 		suchFeld.setY(y + 1);
-		int x = ix + 128;
+		suchFeld.setWidth(suchB);
+		int start = ix + suchB + 8;
+		int x = start;
 		int aktivX = x, aktivB = 0;
 		for (String kat : KATEGORIEN) {
 			int b = katBreite(kat);
 			if (kategorie.equals(kat)) { aktivX = x; aktivB = b; }
 			x += b + 4;
 		}
-		x = ix + 128;
+		x = start;
 		for (String kat : KATEGORIEN) {
 			int b = katBreite(kat);
 			boolean hover = Neon.ueber(mx, my, x, y, b, 16);
@@ -734,7 +773,7 @@ public class BambusMenuScreen extends Screen {
 		int mbk = weich ? Math.round(Anim.zu("kat-b", aktivB, Anim.GLEITEN)) : aktivB;
 		g.fill(mxk, y, mxk + mbk, y + 16, Farben.alpha(Farben.NEON, 40));
 		g.renderOutline(mxk, y, mbk, 16, Farben.NEON);
-		x = ix + 128;
+		x = start;
 		for (String kat : KATEGORIEN) {
 			int b = katBreite(kat);
 			boolean aktiv = kategorie.equals(kat);
