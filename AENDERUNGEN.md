@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Kosmetik für alle: Andere Bambus-Spieler sehen dein Cape, deine Flügel, deinen Hut und deine Partikel – und du ihre (eigene Designs bleiben privat; in der Garderobe abschaltbar)
 - Launcher im Pixel-Look wie im Spiel: Pixelschrift, eckige Karten, gleiche Symbole und Namen (MOD-MENÜ, GARDEROBE)
 - Farbthemen im Launcher (Neon, Ozean, Sakura, Gold, Lila, Eis, RGB) – eine Einstellung für Launcher und Spiel
 - Flügel in zwei Stilen: HD (weich) oder Blockbench (eckig mit groben Pixeln) – umschaltbar im Launcher und in der Garderobe

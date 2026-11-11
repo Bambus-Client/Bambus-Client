@@ -6,6 +6,8 @@ import net.minecraft.core.ClientAsset;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +18,8 @@ import java.util.Set;
 
 /**
  * Kosmetik: Capes, Flügel, Hüte, Partikelspuren, Kill-Effekte und Pfeil-Spuren.
- * Alles nur auf deinem Bildschirm sichtbar – andere Spieler sehen es nicht.
+ * Cape, Flügel, Hut und Partikel sehen auch andere Bambus-Spieler (siehe {@link KosmetikOnline}) –
+ * außer selbst erstellte Designs. Kill-Effekte und Pfeil-Spuren siehst nur du.
  */
 public final class Kosmetik {
 
@@ -156,8 +159,68 @@ public final class Kosmetik {
 	);
 
 	public static Hut gewaehlterHut() {
-		String id = BambusClient.config.hut;
-		return HUETE.stream().filter(h -> h.id().equals(id)).findFirst().orElse(null);
+		return hut(BambusClient.config.hut);
+	}
+
+	public static Hut hut(String id) {
+		return id == null ? null : HUETE.stream().filter(h -> h.id().equals(id)).findFirst().orElse(null);
+	}
+
+	// ------------------------------------------------------------ Kosmetik für alle Spieler
+
+	/** Deine eigene Auswahl (auch selbst erstellte Designs). */
+	public static KosmetikOnline.Auswahl eigeneAuswahl() {
+		Fluegel f = gewaehlteFluegel();
+		Hut h = gewaehlterHut();
+		Partikel p = gewaehltePartikel();
+		return new KosmetikOnline.Auswahl(gewaehlteCapeId(), f == null ? null : f.id(), h == null ? null : h.id(),
+				p == null ? null : p.id());
+	}
+
+	/** Was andere von dir sehen: nur eingebaute Designs, selbst erstellte bleiben bei dir. */
+	public static KosmetikOnline.Auswahl eigeneAuswahlFuerAlle() {
+		KosmetikOnline.Auswahl a = eigeneAuswahl();
+		return new KosmetikOnline.Auswahl(eingebautesCape(a.cape()), eingebauteFluegel(a.fluegel()),
+				eingebauterHut(a.hut()), eingebautePartikel(a.partikel()));
+	}
+
+	/**
+	 * Was dieser Spieler trägt: du selbst → deine Auswahl, andere → ihre online gespeicherte Auswahl
+	 * (null, wenn nichts bekannt ist oder „Kosmetik anderer zeigen“ aus ist).
+	 */
+	public static KosmetikOnline.Auswahl auswahl(Player spieler) {
+		Minecraft mc = Minecraft.getInstance();
+		if (spieler == null) {
+			return null;
+		}
+		if (spieler == mc.player) {
+			return eigeneAuswahl();
+		}
+		return BambusClient.config.kosmetikAndere ? KosmetikOnline.von(spieler.getUUID()) : null;
+	}
+
+	/** Bewegung pro Tick – bei anderen Spielern aus der Positionsänderung (ihre Geschwindigkeit kennt der Client nicht). */
+	public static Vec3 bewegung(Player spieler) {
+		if (spieler instanceof LocalPlayer) {
+			return spieler.getDeltaMovement();
+		}
+		return new Vec3(spieler.getX() - spieler.xo, spieler.getY() - spieler.yo, spieler.getZ() - spieler.zo);
+	}
+
+	public static String eingebautesCape(String id) {
+		return id != null && CAPES.stream().anyMatch(k -> k.id().equals(id)) ? id : null;
+	}
+
+	public static String eingebauteFluegel(String id) {
+		return id != null && FLUEGEL.stream().anyMatch(k -> k.id().equals(id)) ? id : null;
+	}
+
+	public static String eingebauterHut(String id) {
+		return hut(id) == null ? null : id;
+	}
+
+	public static String eingebautePartikel(String id) {
+		return id != null && PARTIKEL.stream().anyMatch(k -> k.id().equals(id)) ? id : null;
 	}
 
 	public static Effekt effekt(List<Effekt> liste, String id) {
@@ -306,19 +369,23 @@ public final class Kosmetik {
 
 	/** Das gewählte Cape – oder null, wenn keins ausgewählt ist. */
 	public static ClientAsset.Texture gewaehltesCape() {
-		BambusConfig c = BambusClient.config;
-		if (!c.capeAn || c.capeDesign == null || AUS.equals(c.capeDesign)) {
+		return capeTextur(gewaehlteCapeId());
+	}
+
+	/** Cape-Textur zu einer Id (für die Elytra) – oder null. */
+	public static ClientAsset.Texture capeTextur(String capeId) {
+		if (capeId == null || AUS.equals(capeId)) {
 			return null;
 		}
-		if (istEigen(c.capeDesign)) {
-			EigeneKosmetik.Eintrag e = EigeneKosmetik.cape(c.capeDesign);
+		if (istEigen(capeId)) {
+			EigeneKosmetik.Eintrag e = EigeneKosmetik.cape(capeId);
 			if (e == null) {
 				return null;
 			}
 			// Eigene Capes werden beim Neuladen neu registriert – darum nicht dauerhaft cachen
 			return new ClientAsset.ResourceTexture(e.bild(), e.bild());
 		}
-		Cape cape = CAPES.stream().filter(k -> k.id().equals(c.capeDesign)).findFirst().orElse(CAPES.get(0));
+		Cape cape = CAPES.stream().filter(k -> k.id().equals(capeId)).findFirst().orElse(CAPES.get(0));
 		return TEXTUREN.computeIfAbsent(cape.id(), id -> new ClientAsset.ResourceTexture(
 				Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "cape/" + id), capeBild(id)));
 	}
@@ -333,7 +400,10 @@ public final class Kosmetik {
 
 	/** Die gewählten Flügel – oder null. */
 	public static Fluegel gewaehlteFluegel() {
-		String id = BambusClient.config.fluegel;
+		return fluegel(BambusClient.config.fluegel);
+	}
+
+	public static Fluegel fluegel(String id) {
 		if (id == null || AUS.equals(id)) {
 			return null;
 		}
@@ -341,24 +411,36 @@ public final class Kosmetik {
 	}
 
 	public static Partikel gewaehltePartikel() {
-		String id = BambusClient.config.partikel;
+		return partikel(BambusClient.config.partikel);
+	}
+
+	public static Partikel partikel(String id) {
 		if (id == null || AUS.equals(id)) {
 			return null;
 		}
 		return PARTIKEL.stream().filter(p -> p.id().equals(id)).findFirst().orElse(null);
 	}
 
-	/** Jeden Tick: Partikelspur um den eigenen Spieler und hinter eigenen Geschossen. */
+	/** Jeden Tick: Partikel um dich und andere Bambus-Spieler in der Nähe, Spur hinter eigenen Geschossen. */
 	public static void tick(Minecraft mc) {
-		if (!mc.isPaused()) {
-			spuren(mc);
-		}
-		LocalPlayer p = mc.player;
-		Partikel art = gewaehltePartikel();
-		if (art == null || p == null || mc.level == null || p.isInvisible() || mc.isPaused()) {
+		if (mc.isPaused() || mc.level == null || mc.player == null) {
 			return;
 		}
-		// Seit 3.3: Partikel kreisen um dich (Ring an der Hüfte) bzw. als Kranz über dem Kopf
+		spuren(mc);
+		for (Player p : mc.level.players()) {
+			if (p.isInvisible() || p.isSpectator() || (p != mc.player && p.distanceToSqr(mc.player) > 48 * 48)) {
+				continue;
+			}
+			KosmetikOnline.Auswahl a = auswahl(p);
+			Partikel art = a == null ? null : partikel(a.partikel());
+			if (art != null) {
+				partikelUm(mc, p, art);
+			}
+		}
+	}
+
+	/** Seit 3.3: Partikel kreisen um den Spieler (Ring an der Hüfte) bzw. als Kranz über dem Kopf. */
+	private static void partikelUm(Minecraft mc, Player p, Partikel art) {
 		double w = p.tickCount * 0.35;
 		if (art.ueberKopf()) {
 			if (p.tickCount % 2 != 0) {

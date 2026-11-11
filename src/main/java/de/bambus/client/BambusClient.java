@@ -244,6 +244,7 @@ public class BambusClient implements ClientModInitializer {
 		Funktionen.freelookTick(mc, freelookTaste.isDown());
 		Funktionen.fullbrightTick(mc);
 		Kosmetik.tick(mc);
+		KosmetikOnline.tick(mc);
 		Kampf.tick(mc);
 		Visuals.tick(mc);
 		WeltModul.tick(mc);

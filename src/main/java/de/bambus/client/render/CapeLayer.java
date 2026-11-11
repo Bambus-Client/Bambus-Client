@@ -2,9 +2,12 @@ package de.bambus.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.bambus.client.Kosmetik;
+import de.bambus.client.KosmetikOnline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.player.PlayerModel;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
@@ -22,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
  * Fallen weht er stärker nach hinten, im Stand bewegt er sich leicht im Wind.
  * Eingebaute Umhänge haben zusätzlich eine leuchtende, laufende Animations-Ebene (Kosmetik.capeAnimation).
  * Bilder im normalen Minecraft-Cape-Layout (64×32-Raster, auch in HD) – eigene Capes funktionieren genauso.
- * Nur auf deinem Bildschirm sichtbar.
+ * Gezeichnet für dich und für andere Bambus-Spieler mit ihrer online gespeicherten Auswahl.
  */
 public class CapeLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
@@ -34,44 +37,78 @@ public class CapeLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static final float RH = CH / R;
 	private static final float UEBERLAPP = RH * 0.5f; // Reihen überlappen leicht → keine Ritzen beim Biegen
 
-	private static float glattVor, glattHoch;
-	private static long zuletzt;
+	/** Geglättete Bewegung je Spieler (Entity-Id): {vor, hoch, zuletzt gezeichnet (ns)}. */
+	private static final java.util.Map<Integer, float[]> GLATT = new java.util.HashMap<>();
+	private static final java.util.Map<Integer, Long> ZULETZT = new java.util.HashMap<>();
 
 	public CapeLayer(RenderLayerParent<AvatarRenderState, PlayerModel> eltern) {
 		super(eltern);
 	}
 
+	/** Der Spieler zu einem Render-Zustand (du oder ein anderer Spieler) – null z. B. bei Schaufensterpuppen. */
+	public static AbstractClientPlayer spieler(AvatarRenderState zustand) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null) {
+			return null;
+		}
+		if (mc.player != null && zustand.id == mc.player.getId()) {
+			return mc.player;
+		}
+		Entity e = mc.level.getEntity(zustand.id);
+		return e instanceof AbstractClientPlayer p ? p : null;
+	}
+
+	/** Id des Bambus-Umhangs, den dieser Spieler trägt – oder null. */
+	public static String capeVon(Player spieler) {
+		KosmetikOnline.Auswahl a = Kosmetik.auswahl(spieler);
+		return a == null ? null : a.cape();
+	}
+
 	/** Wird der Bambus-Umhang gerade gezeigt? (nicht mit Elytra, nicht unsichtbar) */
-	public static boolean zeigtUmhang(LocalPlayer spieler) {
-		if (spieler == null || spieler.isInvisible() || Kosmetik.gewaehlteCapeId() == null) {
+	public static boolean zeigtUmhang(Player spieler) {
+		if (spieler == null || spieler.isInvisible() || capeVon(spieler) == null) {
 			return false;
 		}
 		return !spieler.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
 	}
 
+	/** Alte Einträge (Spieler nicht mehr in Sicht) wegräumen. */
+	static <T> void aufraeumen(java.util.Map<Integer, Long> zuletzt, java.util.Map<Integer, T> daten, long jetzt) {
+		if (zuletzt.size() > 64) {
+			zuletzt.entrySet().removeIf(e -> {
+				boolean alt = jetzt - e.getValue() > 10_000_000_000L;
+				if (alt) {
+					daten.remove(e.getKey());
+				}
+				return alt;
+			});
+		}
+	}
+
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
 					   float yRot, float xRot) {
-		Minecraft mc = Minecraft.getInstance();
-		LocalPlayer spieler = mc.player;
-		if (spieler == null || zustand.id != spieler.getId() || zustand.isInvisible || zustand.isSpectator
-				|| !zeigtUmhang(spieler)) {
+		AbstractClientPlayer spieler = spieler(zustand);
+		if (spieler == null || zustand.isInvisible || zustand.isSpectator || !zeigtUmhang(spieler)) {
 			return;
 		}
-		String id = Kosmetik.gewaehlteCapeId();
+		String id = capeVon(spieler);
 		Identifier bild = Kosmetik.capeBild(id);
 		float[] anim = Kosmetik.capeAnimation(id);
 
-		// ---- Bewegung messen (vorwärts / hoch), weich geglättet
+		// ---- Bewegung messen (vorwärts / hoch), weich geglättet – für jeden Spieler einzeln
 		long jetzt = System.nanoTime();
-		float dt = zuletzt == 0 ? 0 : Math.min(0.05f, Math.max(0, (jetzt - zuletzt) / 1e9f));
-		zuletzt = jetzt;
-		Vec3 v = spieler.getDeltaMovement();
+		Long vorherZeit = ZULETZT.put(zustand.id, jetzt);
+		float dt = vorherZeit == null ? 0 : Math.min(0.05f, Math.max(0, (jetzt - vorherZeit) / 1e9f));
+		float[] glatt = GLATT.computeIfAbsent(zustand.id, x -> new float[2]);
+		aufraeumen(ZULETZT, GLATT, jetzt);
+		Vec3 v = Kosmetik.bewegung(spieler);
 		float yaw = (float) Math.toRadians(spieler.yBodyRot);
 		float vor = (float) (-v.x * Math.sin(yaw) + v.z * Math.cos(yaw));
 		float k = 1 - (float) Math.pow(0.02, dt);
-		glattVor += (vor - glattVor) * k;
-		glattHoch += ((float) v.y - glattHoch) * k;
+		glatt[0] += (vor - glatt[0]) * k;
+		glatt[1] += ((float) v.y - glatt[1]) * k;
+		float glattVor = glatt[0], glattHoch = glatt[1];
 
 		float zeit = zustand.ageInTicks / 20f;
 		float wind = Mth.clamp(0.3f + Math.abs(glattVor) * 3.5f + Math.abs(glattHoch) * 1.5f, 0, 1);

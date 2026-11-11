@@ -73,7 +73,16 @@ Ein Windows-Zertifikat gibt es bei offiziellen Zertifizierungsstellen (kostet Ge
 Für den Mac braucht man eine Mitgliedschaft im Apple Developer Program (99 $/Jahr).
 Base64 erzeugen: Mac/Linux `base64 -i datei.pfx | pbcopy`, Windows `[Convert]::ToBase64String([IO.File]::ReadAllBytes("datei.pfx"))`.
 
-## 4. Aufbau auf bestehenden Systemen
+## 4. Kosmetik für alle (Online-Speicher)
+
+- Damit andere Bambus-Spieler deine Kosmetik sehen, speichert der Client **deine Minecraft-UUID** und die Ids
+  deiner eingebauten Kosmetik (Cape, Flügel, Hut, Partikel) in einem Supabase-Projekt. Kein Name, keine IP,
+  keine E-Mail. Selbst erstellte Designs werden nie hochgeladen.
+- Zum Speichern meldet sich der Client bei Mojang an, als würde er einem Server beitreten (`joinServer`), und
+  die Bambus-Funktion prüft das bei Mojang (`hasJoined`). Dein Zugangs-Token geht dabei nur an Mojang.
+- Abschaltbar in der Garderobe („TEILEN“ und „ANDERE“). Details: `supabase/README.md`.
+
+## 5. Aufbau auf bestehenden Systemen
 
 Bambus baut – wie Feather und viele andere Clients – auf **Fabric** auf:
 der Client ist eine Fabric-Mod, der Launcher richtet Fabric, Fabric API und die Mod ein und startet das Spiel

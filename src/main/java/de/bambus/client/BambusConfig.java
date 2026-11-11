@@ -106,6 +106,8 @@ public class BambusConfig {
 	public String hut = "aus";
 	public String killEffekt = "aus";
 	public String spur = "aus";
+	public boolean kosmetikTeilen = true;   // deine Kosmetik online speichern, damit andere Bambus-Spieler sie sehen
+	public boolean kosmetikAndere = true;   // Kosmetik anderer Bambus-Spieler anzeigen
 
 	// Fadenkreuz
 	public boolean fadenkreuzAn = false;

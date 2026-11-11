@@ -4,9 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Kosmetik;
-import net.minecraft.client.Minecraft;
+import de.bambus.client.KosmetikOnline;
 import net.minecraft.client.model.player.PlayerModel;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
@@ -25,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
  * Blockbench-Stil (Einstellung fluegelBlock): dieselben Flügel eckig wie ein Minecraft-Modell – vier starre
  * Platten mit groben Pixeln und kantigen Knochen-Würfeln statt der weichen Streifen.
  * Selbst erstellte Flügel (ein Bild im alten Format) werden weiter mit zwei Flächen gezeichnet.
- * Nur auf deinem Bildschirm sichtbar.
+ * Gezeichnet für dich und für andere Bambus-Spieler mit ihrer online gespeicherten Auswahl.
  */
 public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
@@ -51,9 +51,14 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static final float[] W_SPITZE = gewichte(0.80f, 0.12f, false);
 
 	// Bewegungszustand (sweep, lift, Gelenk-Schwenk, Gelenk-Hub, Spitzen-Hub) – weich nachgeführt
-	private static final float[] P = {30, -10, 8, 0, 0};
-	private static float phase;
-	private static long zuletzt;
+	/** Flügelschlag je Spieler (Entity-Id): Gelenkwinkel {Wurzel Y, Wurzel Z, Gelenk, Bogen, Spitze} und Phase. */
+	private static final class Schwung {
+		final float[] p = {30, -10, 8, 0, 0};
+		float phase;
+	}
+
+	private static final java.util.Map<Integer, Schwung> SCHWUNG = new java.util.HashMap<>();
+	private static final java.util.Map<Integer, Long> ZULETZT = new java.util.HashMap<>();
 
 	public FluegelLayer(RenderLayerParent<AvatarRenderState, PlayerModel> eltern) {
 		super(eltern);
@@ -62,11 +67,12 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
 					   float yRot, float xRot) {
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null || zustand.id != mc.player.getId() || zustand.isInvisible || zustand.isSpectator) {
+		if (zustand.isInvisible || zustand.isSpectator) {
 			return;
 		}
-		Kosmetik.Fluegel fluegel = Kosmetik.gewaehlteFluegel();
+		AbstractClientPlayer spieler = CapeLayer.spieler(zustand);
+		KosmetikOnline.Auswahl auswahl = Kosmetik.auswahl(spieler);
+		Kosmetik.Fluegel fluegel = auswahl == null ? null : Kosmetik.fluegel(auswahl.fluegel());
 		if (fluegel == null) {
 			return;
 		}
@@ -77,9 +83,9 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (form == null) {
 			alteFluegel(poseStack, sammler, licht, zustand, fluegel);
 		} else if (BambusClient.config.fluegelBlock) {
-			blockFluegel(poseStack, sammler, licht, zustand, mc.player, fluegel.id(), form);
+			blockFluegel(poseStack, sammler, licht, zustand, spieler, fluegel.id(), form);
 		} else {
-			neueFluegel(poseStack, sammler, licht, zustand, mc.player, fluegel.id(), form);
+			neueFluegel(poseStack, sammler, licht, zustand, spieler, fluegel.id(), form);
 		}
 		poseStack.popPose();
 	}
@@ -87,8 +93,8 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	// ================================================================== 3D-Flügel
 
 	private void neueFluegel(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
-							 LocalPlayer spieler, String id, Kosmetik.FluegelForm form) {
-		bewege(zustand, spieler);
+							 AbstractClientPlayer spieler, String id, Kosmetik.FluegelForm form) {
+		float[] P = bewege(zustand, spieler);
 		int l = form.leuchtet() ? VOLL_HELL : licht;
 		float zeit = zustand.ageInTicks / 20f;
 		float glanzBand = ((zeit * 0.45f) % 1.6f - 0.3f) * WTW;
@@ -151,8 +157,8 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	 * wie die HD-Flügel, nur stufig), grobe Pixel-Textur und kantige Knochen-Würfel an der Vorderkante.
 	 */
 	private void blockFluegel(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
-							  LocalPlayer spieler, String id, Kosmetik.FluegelForm form) {
-		bewege(zustand, spieler);
+							  AbstractClientPlayer spieler, String id, Kosmetik.FluegelForm form) {
+		float[] P = bewege(zustand, spieler);
 		int l = form.leuchtet() ? VOLL_HELL : licht;
 		boolean umhang = CapeLayer.zeigtUmhang(spieler);
 		float sb = WTW / NB;          // Plattenbreite in px
@@ -260,12 +266,15 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	}
 
 	/** Bewegung: Schlagen beim Laufen/Springen/Fliegen, Gleiten im Stand, Anlegen beim Schleichen. */
-	private static void bewege(AvatarRenderState zustand, LocalPlayer spieler) {
+	private static float[] bewege(AvatarRenderState zustand, AbstractClientPlayer spieler) {
 		long jetzt = System.nanoTime();
-		float dt = zuletzt == 0 ? 0 : Math.min(0.05f, Math.max(0, (jetzt - zuletzt) / 1e9f));
-		zuletzt = jetzt;
+		Long vorher = ZULETZT.put(zustand.id, jetzt);
+		float dt = vorher == null ? 0 : Math.min(0.05f, Math.max(0, (jetzt - vorher) / 1e9f));
+		Schwung s = SCHWUNG.computeIfAbsent(zustand.id, x -> new Schwung());
+		CapeLayer.aufraeumen(ZULETZT, SCHWUNG, jetzt);
+		float[] P = s.p;
 
-		Vec3 v = spieler.getDeltaMovement();
+		Vec3 v = Kosmetik.bewegung(spieler);
 		float waagrecht = (float) Math.sqrt(v.x * v.x + v.z * v.z);
 		int modus;          // 0 = schlagen, 1 = gleiten, 2 = angelegt
 		float tempo;
@@ -282,8 +291,8 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		} else {
 			modus = 1; tempo = 1.0f;
 		}
-		phase += dt * 5.2f * tempo;
-		float p = phase;
+		s.phase += dt * 5.2f * tempo;
+		float p = s.phase;
 		float[] ziel;
 		if (modus == 0) {
 			ziel = new float[]{30 + 12 * Mth.cos(p), -8 - 30 * Mth.sin(p), 10 + 10 * Mth.sin(p),
@@ -298,6 +307,7 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		for (int i = 0; i < P.length; i++) {
 			P[i] += (ziel[i] - P[i]) * k;
 		}
+		return P;
 	}
 
 	private static float[] gewichte(float mitte, float breite, boolean linear) {

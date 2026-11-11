@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Kosmetik;
-import net.minecraft.client.Minecraft;
+import de.bambus.client.KosmetikOnline;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -19,7 +19,7 @@ import net.minecraft.util.Mth;
  * Hüte und Kopf-Kosmetik (Krone, Zylinder, Heiligenschein, Hörner, Katzenohren, Partyhut, Bandana, Neon-Visier).
  * Aus farbigen Quadern gebaut, sitzt am Kopf und dreht sich mit. Seit 3.3 detaillierter und animiert
  * (funkelnde Steine, pulsierendes Band, kreisende Funken, flatternde Bandana-Enden, Scan-Balken).
- * Nur auf deinem Bildschirm sichtbar.
+ * Gezeichnet für dich und für andere Bambus-Spieler mit ihrer online gespeicherten Auswahl.
  */
 public class HutLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
@@ -33,11 +33,11 @@ public class HutLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
 					   float yRot, float xRot) {
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null || zustand.id != mc.player.getId() || zustand.isInvisible || zustand.isSpectator) {
+		if (zustand.isInvisible || zustand.isSpectator) {
 			return;
 		}
-		Kosmetik.Hut hut = Kosmetik.gewaehlterHut();
+		KosmetikOnline.Auswahl auswahl = Kosmetik.auswahl(CapeLayer.spieler(zustand));
+		Kosmetik.Hut hut = auswahl == null ? null : Kosmetik.hut(auswahl.hut());
 		if (hut == null) {
 			return;
 		}

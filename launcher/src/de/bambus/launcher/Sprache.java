@@ -168,7 +168,7 @@ final class Sprache {
 		g("Farbverlauf", "Gradient"); g("HUD-Kästen mit Farbverlauf", "HUD boxes with a color gradient");
 
 		// ---------------------------------------------------------------- Kosmetik
-		g("Deine Figur mit der Maus drehen. Cape, Flügel und Partikel sind nur für dich sichtbar.", "Rotate your figure with the mouse. Cape, wings and particles are only visible to you.");
+		g("Deine Figur mit der Maus drehen. Andere Bambus-Spieler sehen Cape, Flügel, Hut und Partikel.", "Rotate your figure with the mouse. Other Bambus players see your cape, wings, hat and particles.");
 		g("CAPES", "CAPES"); g("FLÜGEL", "WINGS"); g("PARTIKEL", "PARTICLES"); g("HÜTE", "HATS"); g("KILL", "KILL"); g("PFEIL", "ARROW");
 		g("3D-VORSCHAU", "3D PREVIEW"); g("ZIEHEN = DREHEN", "DRAG = ROTATE"); g("VORNE", "FRONT"); g("HINTEN", "BACK"); g("⟳ DREHEN", "⟳ ROTATE");
 		g("SKIN", "SKIN"); g("LADEN", "LOAD"); g("CAPE", "CAPE"); g("SPUR", "TRAIL"); g("HUT", "HAT"); g("EIGEN", "CUSTOM"); g("STUDIO", "STUDIO");

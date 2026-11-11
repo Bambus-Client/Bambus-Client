@@ -388,7 +388,7 @@ final class SeiteKosmetik extends JPanel {
 		NeonUI.leuchtText(g, "GARDEROBE", X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(NeonUI.GRAU);
-		g.drawString("Deine Figur mit der Maus drehen. Cape, Flügel und Partikel sind nur für dich sichtbar.", X, 84);
+		g.drawString("Deine Figur mit der Maus drehen. Andere Bambus-Spieler sehen Cape, Flügel, Hut und Partikel.", X, 84);
 
 		// Skin-Leiste
 		int sy = V_Y + V_H + 52;

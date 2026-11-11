@@ -2,10 +2,12 @@ package de.bambus.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
+import de.bambus.client.BambusConfig;
 import de.bambus.client.EigeneKosmetik;
 import de.bambus.client.Farben;
 import de.bambus.client.Garderobe;
 import de.bambus.client.Kosmetik;
+import de.bambus.client.KosmetikOnline;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -108,7 +110,8 @@ public class GarderobeScreen extends Screen {
 		// Einträge – Höhe passt sich dem Fenster an
 		Garderobe.Art[] arten = Garderobe.Art.values();
 		int y0 = 54;
-		int platz = height - y0 - 34;
+		boolean online = KosmetikOnline.eingerichtet();
+		int platz = height - y0 - (online ? 54 : 34);
 		int eh = Math.max(18, Math.min(28, platz / arten.length - 2));
 		boolean mitUntertitel = eh >= 24;
 
@@ -137,6 +140,20 @@ public class GarderobeScreen extends Screen {
 				Neon.text(g, font, unter, x + 32, y + 16, 0.6f, gewaehlt != null ? (aktiv ? Farben.NEON : Farben.GRAU) : 0xFF4A5A6E, false);
 			}
 			klick(x + 6, y, LEISTE - 14, eh, () -> wechsle(a), false);
+		}
+
+		// Kosmetik für alle: eigene Auswahl teilen / Kosmetik anderer Bambus-Spieler zeigen
+		if (online) {
+			int kb = (LEISTE - 20) / 2;
+			BambusConfig c = BambusClient.config;
+			kleinKnopf(g, mx, my, c.kosmetikTeilen ? "TEILEN: AN" : "TEILEN: AUS", x + 8, height - 46, kb, () -> {
+				c.kosmetikTeilen = !c.kosmetikTeilen;
+				c.speichern();
+			});
+			kleinKnopf(g, mx, my, c.kosmetikAndere ? "ANDERE: AN" : "ANDERE: AUS", x + 12 + kb, height - 46, kb, () -> {
+				c.kosmetikAndere = !c.kosmetikAndere;
+				c.speichern();
+			});
 		}
 
 		knopf(g, mx, my, "ZURÜCK", x + 8, height - 26, LEISTE - 16, 18, this::onClose);
