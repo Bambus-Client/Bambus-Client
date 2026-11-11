@@ -169,7 +169,7 @@ public class BambusMenuScreen extends Screen {
 		if (liveAnsicht()) {
 			suchFeld.setVisible(false);
 			freundFeld.setVisible(false);
-			einstellungsFenster(g, mx, my, einstellungsZiel, true);
+			liveFenster(g, mx, my, einstellungsZiel);
 			return;
 		}
 		int mausX = mx, mausY = my;
@@ -252,7 +252,7 @@ public class BambusMenuScreen extends Screen {
 		super.render(g, mx, my, delta);
 		if (einstellungsZiel != null) {
 			bereiche.clear();   // nur das Fenster ist klickbar
-			einstellungsFenster(g, mausX, mausY, einstellungsZiel, false);
+			einstellungsFenster(g, mausX, mausY, einstellungsZiel);
 		}
 		if (sichtbar < 1f) {   // ein- und ausblenden
 			g.fill(px - 6, py - 6, px + pb + 6, py + ph + 6, Farben.alpha(0xFF020407, (int) ((1 - sichtbar) * 255)));
@@ -539,26 +539,57 @@ public class BambusMenuScreen extends Screen {
 	// ------------------------------------------------------ Modul-Einstellungen (⋮)
 
 	/**
-	 * Einstellungsfenster (⋮ oder Rechtsklick): links eine Vorschau, rechts Schalter und Stufen (scrollbar).
-	 * live = Textur-Modul in einer Welt: schmales Fenster am Rand, ohne Vorschau – das Spiel selbst ist die Vorschau.
+	 * Live-Modus (Textur-Modul in einer Welt): kompakte Leiste oben in der Mitte, Zeilen in zwei Spalten –
+	 * beide Hände unten bleiben frei, jede Änderung wirkt sofort im Spiel.
 	 */
-	private void einstellungsFenster(GuiGraphics g, int mx, int my, Einstellbar ziel, boolean live) {
+	private void liveFenster(GuiGraphics g, int mx, int my, Einstellbar ziel) {
+		List<Einstellung> zeilen = ziel.einstellungen();
+		int zeile = 18;
+		// in zwei Spalten teilen – eine Stufe bleibt bei ihrem Schalter
+		int teilung = (zeilen.size() + 1) / 2;
+		while (teilung < zeilen.size() && zeilen.get(teilung) instanceof Einstellung.Stufe) {
+			teilung++;
+		}
+		int proSpalte = Math.max(teilung, zeilen.size() - teilung);
+		int fb = Math.min(width - 20, 440);
+		int fh = 28 + proSpalte * zeile + 4;
+		int fx = (width - fb) / 2;
+		int fy = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
+
+		g.fill(fx, fy, fx + fb, fy + fh, 0xE60A0F17);
+		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
+		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 8, fy + 8, 1, Farben.NEON);
+		Neon.leuchtText(g, font, ziel.titel(), fx + 20, fy + 7, 1f, Farben.NEON);
+		Neon.text(g, font, "LIVE · SIEH DIR DEINE HÄNDE AN", fx + 24 + font.width(ziel.titel()), fy + 9, 0.6f, Farben.NEON_CYAN, false);
+		knopf(g, mx, my, "FERTIG", fx + fb - 58, fy + 5, 50, 14, true, true, () -> einstellungsZiel = null);
+		knopf(g, mx, my, "STANDARD", fx + fb - 124, fy + 5, 62, 14, false, true, () -> {
+			ziel.standard();
+			speichern();
+		});
+
+		int sb = (fb - 16 - 6) / 2;
+		for (int i = 0; i < zeilen.size(); i++) {
+			int spalte = i < teilung ? 0 : 1;
+			int reihe = spalte == 0 ? i : i - teilung;
+			int zx = fx + 8 + spalte * (sb + 6), zy = fy + 26 + reihe * zeile;
+			Einstellung e = zeilen.get(i);
+			if (e instanceof Einstellung.Schalter sch) {
+				schalterZeile(g, mx, my, ziel, sch, zx, zy, sb, zeile - 2, true);
+			} else if (e instanceof Einstellung.Stufe st) {
+				stufenZeile(g, mx, my, st, zx, zy, sb, zeile - 2, true);
+			}
+		}
+	}
+
+	/** Einstellungsfenster (⋮ oder Rechtsklick): links eine Vorschau, rechts Schalter und Stufen (scrollbar). */
+	private void einstellungsFenster(GuiGraphics g, int mx, int my, Einstellbar ziel) {
 		List<Einstellung> zeilen = ziel.einstellungen();
 		int zeile = 20;
-		int fb, fh, fx, fy;
-		if (live) {
-			fb = Math.min(230, width / 3 + 40);
-			int oben = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
-			fh = Math.min(height - oben - 10, 34 + zeilen.size() * zeile + 30 + 14);
-			fx = width - fb - 10;
-			fy = Math.max(oben, (height - fh) / 2);
-		} else {
-			fb = Math.min(ziel == Texturen.MODUL ? 400 : 360, pb - 30);
-			fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
-			fx = px + (pb - fb) / 2;
-			fy = py + (ph - fh) / 2;
-			g.fill(px, py, px + pb, py + ph, 0xB0020407);
-		}
+		int fb = Math.min(ziel == Texturen.MODUL ? 400 : 360, pb - 30);
+		int fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
+		int fx = px + (pb - fb) / 2;
+		int fy = py + (ph - fh) / 2;
+		g.fill(px, py, px + pb, py + ph, 0xB0020407);
 		g.fill(fx, fy, fx + fb, fy + fh, 0xF20A0F17);
 		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
 		Neon.ecken(g, fx - 3, fy - 3, fb + 6, fh + 6, 8, Farben.NEON_CYAN);
@@ -566,27 +597,24 @@ public class BambusMenuScreen extends Screen {
 		// Kopf
 		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 10, fy + 10, 1, Farben.NEON);
 		Neon.leuchtText(g, font, ziel.titel(), fx + 24, fy + 9, 1f, Farben.NEON);
-		Neon.text(g, font, live ? "LIVE · SIEH DIR DEINE HAND AN" : "EINSTELLUNGEN", fx + 24, fy + 20, 0.6f,
-				live ? Farben.NEON_CYAN : Farben.GRAU, false);
+		Neon.text(g, font, "EINSTELLUNGEN", fx + 24, fy + 20, 0.6f, Farben.GRAU, false);
 		int sx = fx + fb - 18, sy = fy + 7;
 		boolean zuHover = Neon.ueber(mx, my, sx, sy, 12, 12);
 		g.drawString(font, "✕", sx + 2, sy + 2, zuHover ? Farben.ROT : Farben.GRAU, false);
 		klick(sx, sy, 12, 12, () -> einstellungsZiel = null, false);
 
 		int inhaltY = fy + 32;
-		int inhaltH = fh - 32 - 30 - (live ? 14 : 0);
+		int inhaltH = fh - 32 - 30;
 
-		// Vorschau links (nicht im Live-Modus)
+		// Vorschau links
 		int vb = 0;
-		if (!live) {
-			if (ziel instanceof HudModul m) {
-				vb = Math.max(90, Math.min(130, fb * 2 / 5));
-				einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
-			} else if (ziel == Texturen.MODUL) {
-				vb = Math.max(110, Math.min(190, fb / 2));
-				TexturAnsicht.zeichne(g, font, fx + 8, inhaltY, vb, inhaltH, mx, my,
-						(kx, ky, kb, kh, aktion) -> klick(kx, ky, kb, kh, aktion, false));
-			}
+		if (ziel instanceof HudModul m) {
+			vb = Math.max(90, Math.min(130, fb * 2 / 5));
+			einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
+		} else if (ziel == Texturen.MODUL) {
+			vb = Math.max(110, Math.min(190, fb / 2));
+			TexturAnsicht.zeichne(g, font, fx + 8, inhaltY, vb, inhaltH, mx, my,
+					(kx, ky, kb, kh, aktion) -> klick(kx, ky, kb, kh, aktion, false));
 		}
 
 		// Zeilen rechts
@@ -617,9 +645,6 @@ public class BambusMenuScreen extends Screen {
 		}
 
 		// Fuß
-		if (live) {
-			Neon.text(g, font, "Halte Schild und Schwert in der Hand", fx + 8, fy + fh - 40, 0.6f, Farben.GRAU, false);
-		}
 		int knopfY = fy + fh - 24;
 		knopf(g, mx, my, "STANDARD", fx + 8, knopfY, 80, 16, false, true, () -> {
 			ziel.standard();

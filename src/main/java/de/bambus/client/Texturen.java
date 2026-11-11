@@ -1,6 +1,7 @@
 package de.bambus.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -28,7 +29,12 @@ public final class Texturen {
 
 	public static final float FEUER_WEG = 0.5f;    // so weit rutscht das Feuer bei 100 %
 	public static final float SCHILD_WEG = 0.5f;
-	public static final float SCHILD_SEITE = 0.18f;
+	public static final float SCHILD_SEITE = 0.12f;
+
+	/** Drehung für Side Shield in Grad. */
+	public static final int MIN_DREHUNG = 30;
+	public static final int MAX_DREHUNG = 90;
+	public static final int DREHUNG_SCHRITT = 15;
 
 	private Texturen() {}
 
@@ -66,6 +72,8 @@ public final class Texturen {
 					new Einstellung.Stufe("Schild tiefer", () -> c.lowShieldStaerke, w -> c.lowShieldStaerke = w,
 							MIN_STAERKE, MAX_STAERKE, SCHRITT, "−%d %%", () -> c.lowShield),
 					new Einstellung.Schalter("Side Shield", () -> c.sideShield, () -> c.sideShield = !c.sideShield),
+					new Einstellung.Stufe("Drehung", () -> c.sideShieldDrehung, w -> c.sideShieldDrehung = w,
+							MIN_DREHUNG, MAX_DREHUNG, DREHUNG_SCHRITT, "%d°", () -> c.sideShield),
 					new Einstellung.Schalter("Short Sword", () -> c.shortSword, () -> c.shortSword = !c.shortSword),
 					new Einstellung.Stufe("Schwert-Größe", () -> c.shortSwordGroesse, w -> c.shortSwordGroesse = w,
 							MIN_SCHWERT, MAX_SCHWERT, SCHRITT, "%d %%", () -> c.shortSword),
@@ -82,6 +90,7 @@ public final class Texturen {
 			c.lowShield = neu.lowShield;
 			c.lowShieldStaerke = neu.lowShieldStaerke;
 			c.sideShield = neu.sideShield;
+			c.sideShieldDrehung = neu.sideShieldDrehung;
 			c.shortSword = neu.shortSword;
 			c.shortSwordGroesse = neu.shortSwordGroesse;
 			c.keinKuerbisOverlay = neu.keinKuerbisOverlay;
@@ -107,6 +116,11 @@ public final class Texturen {
 		return new float[]{x, y};
 	}
 
+	/** Side Shield: Drehung des Schilds zur Seite in Grad (0 = aus). */
+	public static float schildDrehung() {
+		return aktiv() && cfg().sideShield ? cfg().sideShieldDrehung : 0f;
+	}
+
 	/** Größe des Schwerts in der Hand (1 = normal). */
 	public static float schwertGroesse() {
 		return aktiv() && cfg().shortSword ? cfg().shortSwordGroesse / 100f : 1f;
@@ -128,8 +142,13 @@ public final class Texturen {
 			return;
 		}
 		if (stack.is(Items.SHIELD)) {
-			float[] v = schildVersatz(kontext.leftHand());
+			boolean links = kontext.leftHand();
+			float[] v = schildVersatz(links);
 			pose.translate(v[0], v[1], 0f);
+			float drehung = schildDrehung();
+			if (drehung > 0f) {   // wie im Texturpaket: Schild zur Seite gedreht, man sieht nur noch die Kante
+				pose.mulPose(Axis.YP.rotationDegrees(links ? -drehung : drehung));   // Fläche nach außen
+			}
 		} else if (stack.is(ItemTags.SWORDS)) {
 			float f = schwertGroesse();
 			if (f < 1f) {   // kleiner und etwas nach unten, damit der Griff in der Hand bleibt

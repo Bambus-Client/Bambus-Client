@@ -80,6 +80,7 @@ public class BambusConfig {
 	public boolean lowShield = false;
 	public int lowShieldStaerke = 30;
 	public boolean sideShield = false;
+	public int sideShieldDrehung = 60;    // Grad: Schild seitlich gedreht wie im Texturpaket
 	public boolean shortSword = false;
 	public int shortSwordGroesse = 70;    // Prozent der normalen Größe
 	public boolean keinKuerbisOverlay = false;

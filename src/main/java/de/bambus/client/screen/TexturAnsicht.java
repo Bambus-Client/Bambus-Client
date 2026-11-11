@@ -108,19 +108,21 @@ public final class TexturAnsicht {
 		float[] schild = Texturen.schildVersatz(true);   // linke Hand
 		float schildX = x - b * 0.02f + schild[0] * b * 0.5f;
 		float schildY = y + h * 0.42f - schild[1] * h * 0.5f + wippen;
-		item(g, SCHILD, schildX, schildY, s * 2.1f);   // das Schild-Modell füllt sein Feld nicht ganz aus
+		// Side Shield: von vorne gesehen wird der gedrehte Schild schmal (Breite ~ cos(Drehung))
+		float schmal = (float) Math.max(0.15, Math.cos(Math.toRadians(Texturen.schildDrehung())));
+		item(g, SCHILD, schildX, schildY, s * 2.1f * schmal, s * 2.1f);   // das Schild-Modell füllt sein Feld nicht ganz aus
 
 		float f = Texturen.schwertGroesse();
 		float ss = s * 1.5f * f;
 		// Griff unten rechts bleibt an der Hand – kleiner wird das Schwert zur Spitze hin
 		float griffX = x + b * 0.6f, griffY = y + h + 4 + (1f - f) * h * 0.12f + wippen;
-		item(g, SCHWERT, griffX, griffY - 16 * ss, ss);
+		item(g, SCHWERT, griffX, griffY - 16 * ss, ss, ss);
 	}
 
-	private static void item(GuiGraphics g, ItemStack stack, float x, float y, float groesse) {
+	private static void item(GuiGraphics g, ItemStack stack, float x, float y, float breite, float hoehe) {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
-		g.pose().scale(groesse, groesse);
+		g.pose().scale(breite, hoehe);
 		g.renderItem(stack, 0, 0);
 		g.pose().popMatrix();
 	}
