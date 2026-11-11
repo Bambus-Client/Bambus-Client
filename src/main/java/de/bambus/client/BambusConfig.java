@@ -23,6 +23,8 @@ public class BambusConfig {
 		public int y;
 		/** Größe im HUD (1 = 100 %), im HUD-Editor mit Ecke oder Mausrad änderbar. */
 		public float groesse = 1f;
+		/** Einstellungen des Moduls (⋮ im Mod-Menü), z. B. "cps" → false. Fehlt ein Eintrag, gilt der Standard. */
+		public Map<String, Boolean> optionen = new LinkedHashMap<>();
 
 		public ModulPos() {}
 
@@ -71,7 +73,8 @@ public class BambusConfig {
 	public boolean discordAn = false;
 	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten
 
-	// Texturen (Mod-Menü → TEXTUREN)
+	// Texturen (Mod-Menü → MODULE → Texturen)
+	public boolean texturenAn = true;     // Hauptschalter der Karte „Texturen“
 	public boolean lowFire = false;
 	public int lowFireStaerke = 30;       // Prozent, siehe Texturen
 	public boolean lowShield = false;

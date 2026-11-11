@@ -10,6 +10,8 @@ import java.util.List;
 /** Zeigt nach jedem Treffer, ob vorher ein Sprint-Reset (W-Tap, S-Tap) gemacht wurde. */
 public class TapModul extends TextModul {
 
+	private final Option ohneReset = option("ohnereset", "Auch „Kein Reset“ zeigen", true);
+
 	public TapModul() {
 		super("tap", "W-/S-Tap-Anzeige", 4, 148, false, "Sprint-Reset vor dem Treffer?", "PVP");
 	}
@@ -19,8 +21,8 @@ public class TapModul extends TextModul {
 		List<Zeile> z = new ArrayList<>();
 		boolean frisch = System.currentTimeMillis() - Kampf.tapZeit < 1500;
 		String art = frisch ? Kampf.tapArt : editor ? "W-TAP" : "";
-		if (!art.isEmpty()) {
-			boolean gut = !art.equals("KEIN RESET");
+		boolean gut = !art.equals("KEIN RESET");
+		if (!art.isEmpty() && (gut || ohneReset.an())) {
 			z.add(new Zeile((gut ? "✔ " : "✘ ") + art, gut ? Farben.NEON : Farben.ROT));
 		}
 		return z;

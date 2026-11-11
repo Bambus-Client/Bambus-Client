@@ -83,7 +83,7 @@ public class GarderobeScreen extends Screen {
 		Farben.themaAnwenden(BambusClient.config.thema);
 
 		// Seitenleiste gleitet von links herein
-		float k = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / 220f)) : 1f;
+		float k = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS)) : 1f;
 		int versatz = Math.round((1 - k) * -LEISTE);
 
 		seitenleiste(g, mx, my, versatz);
@@ -113,7 +113,7 @@ public class GarderobeScreen extends Screen {
 		boolean mitUntertitel = eh >= 24;
 
 		int aktivY = y0 + art.ordinal() * (eh + 2);
-		int markY = weich() ? Math.round(Anim.zu("garderobe-markierung", aktivY, 18f)) : aktivY;
+		int markY = weich() ? Math.round(Anim.zu("garderobe-markierung", aktivY, Anim.GLEITEN)) : aktivY;
 		g.fill(x + 6, markY, x + LEISTE - 8, markY + eh, Farben.alpha(Farben.NEON, 26));
 		g.fill(x + 6, markY, x + 8, markY + eh, Farben.NEON);
 
@@ -122,7 +122,7 @@ public class GarderobeScreen extends Screen {
 			int y = y0 + i * (eh + 2);
 			boolean aktiv = a == art;
 			boolean hover = Neon.ueber(mx, my, x + 6, y, LEISTE - 14, eh);
-			float h = weich() ? Anim.zu("garderobe-hover:" + a, hover ? 1f : 0f, 16f) : (hover ? 1f : 0f);
+			float h = weich() ? Anim.zu("garderobe-hover:" + a, hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			if (!aktiv && h > 0.01f) {
 				g.fill(x + 6, y, x + LEISTE - 8, y + eh, Farben.alpha(Farben.KARTE_HOVER, (int) (255 * h)));
 			}
@@ -174,7 +174,7 @@ public class GarderobeScreen extends Screen {
 		rb = x + b - rx;
 		rh = height - KOPF - RAND;
 		g.enableScissor(rx, ry, rx + rb, ry + rh);
-		float wechsel = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - artSeit) / 180f)) : 1f;
+		float wechsel = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - artSeit) / Anim.WECHSEL_MS)) : 1f;
 		int y0 = ry - scroll + Math.round((1 - wechsel) * 10);
 		inhaltHoehe = raster(g, mx, my, eintraege, gewaehlt, rx, y0, rb);
 		if (wechsel < 1f) {

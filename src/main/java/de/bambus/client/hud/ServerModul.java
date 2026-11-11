@@ -11,6 +11,9 @@ import java.util.List;
 /** Server-Adresse und Ping. */
 public class ServerModul extends TextModul {
 
+	private final Option adresse = option("adresse", "Serveradresse", true);
+	private final Option ping = option("ping", "Ping", true);
+
 	public ServerModul() {
 		super("server", "Server & Ping", 4, 146);
 	}
@@ -24,7 +27,12 @@ public class ServerModul extends TextModul {
 		}
 
 		ServerData server = mc.getCurrentServer();
-		z.add(new Zeile("Server: " + (server != null ? server.ip : "?"), Farben.WEISS));
+		if (adresse.an()) {
+			z.add(new Zeile("Server: " + (server != null ? server.ip : "?"), Farben.WEISS));
+		}
+		if (!this.ping.an()) {
+			return z;
+		}
 
 		int ping = -1;
 		if (mc.getConnection() != null && mc.player != null) {

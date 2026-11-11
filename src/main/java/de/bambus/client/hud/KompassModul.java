@@ -13,6 +13,9 @@ public class KompassModul extends HudModul {
 	private static final float PX_PRO_GRAD = 1.0f;   // sichtbar sind ±90°
 	private static final String[] NAMEN = {"N", "NO", "O", "SO", "S", "SW", "W", "NW"};
 
+	private final Option gradzahl = option("grad", "Gradzahl", true);
+	private final Option zwischen = option("zwischen", "Zwischenrichtungen (NO, SW …)", true);
+
 	public KompassModul() {
 		super("kompass", "Kompass-Balken", 10000, 2, false, "Himmelsrichtungen gleiten beim Umsehen vorbei", "INFO");
 	}
@@ -47,9 +50,9 @@ public class KompassModul extends HudModul {
 			int px = mitte + Math.round(abstand * PX_PRO_GRAD);
 			// zum Rand hin ausblenden
 			int alpha = (int) (255 * Math.max(0.15f, 1f - Math.abs(abstand) / 95f));
-			if (grad % 45 == 0) {
+			boolean haupt = grad % 90 == 0;
+			if (grad % 45 == 0 && (haupt || zwischen.an())) {
 				String n = NAMEN[grad / 45];
-				boolean haupt = grad % 90 == 0;
 				int farbe = Farben.alpha(n.equals("N") ? Farben.ROT : haupt ? Farben.WEISS : Farben.NEON_CYAN, alpha);
 				g.drawString(mc.font, n, px - mc.font.width(n) / 2, y + 6, farbe, true);
 			} else {
@@ -60,6 +63,9 @@ public class KompassModul extends HudModul {
 		// Markierung in der Mitte + Gradzahl
 		g.fill(mitte, y, mitte + 1, y + 4, Farben.NEON);
 		g.fill(mitte - 2, y, mitte + 3, y + 1, Farben.NEON);
+		if (!gradzahl.an()) {
+			return;
+		}
 		String zahl = Math.round(r) % 360 + "°";
 		int zb = mc.font.width(zahl);
 		g.pose().pushMatrix();

@@ -14,6 +14,9 @@ public class PingModul extends HudModul {
 	private static int pos = 0;
 	private static int takt = 0;
 
+	private final Option signal = option("signal", "Signalbalken", true);
+	private final Option verlauf = option("verlauf", "Verlauf der letzten Minute", true);
+
 	public PingModul() {
 		super("pingverlauf", "Ping-Verlauf", 10000, 230, false, "Signalbalken und Ping der letzten Minute", "INFO");
 	}
@@ -42,22 +45,25 @@ public class PingModul extends HudModul {
 
 	@Override
 	public int hoehe(Minecraft mc, boolean editor) {
-		return HOEHE;
+		return verlauf.an() ? HOEHE : 18;   // ohne Verlauf nur die Zeile mit dem Ping
 	}
 
 	@Override
 	public void zeichne(GuiGraphics g, Minecraft mc, int x, int y, boolean editor) {
-		panel(g, x, y, BREITE, HOEHE);
+		panel(g, x, y, BREITE, hoehe(mc, editor));
 		int ms = editor && mc.player == null ? 46 : ping(mc);
 		int f = farbe(ms);
 		// 4 Signalbalken: je besser der Ping, desto mehr leuchten
 		int stufe = ms < 0 ? 0 : ms < 50 ? 4 : ms < 100 ? 3 : ms < 180 ? 2 : 1;
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4 && signal.an(); i++) {
 			int h = 3 + i * 3;
 			g.fill(x + 6 + i * 4, y + 17 - h, x + 9 + i * 4, y + 17, i < stufe ? f : 0xFF2A3445);
 		}
 		String text = ms < 0 ? (mc.hasSingleplayerServer() ? "Einzelspieler" : "–") : ms + " ms";
-		g.drawString(mc.font, text, x + 26, y + 5, f, true);
+		g.drawString(mc.font, text, x + (signal.an() ? 26 : 6), y + 5, f, true);
+		if (!verlauf.an()) {
+			return;
+		}
 		// Verlauf (60 Sekunden) als Säulen
 		int gx = x + 6, gy = y + HOEHE - 4, gh = 8;
 		int max = 50;

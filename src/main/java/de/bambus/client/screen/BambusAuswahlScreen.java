@@ -79,7 +79,7 @@ public class BambusAuswahlScreen extends Screen {
 
 		// weiches Einblenden
 		if (BambusClient.config.menueAnimation) {
-			float k = Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / 200f));
+			float k = Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS));
 			if (k < 1f) {
 				g.fill(0, 0, width, height, Farben.alpha(0xFF020407, (int) ((1 - k) * 255)));
 			}

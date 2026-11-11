@@ -11,6 +11,18 @@ public final class Anim {
 
 	private static final Map<String, double[]> WERTE = new HashMap<>();
 
+	// Einheitliche Zeiten für alle Bambus-Menüs – kurz gehalten, damit die Oberfläche sofort reagiert
+	/** Fenster einblenden (ms). */
+	public static final float OEFFNEN_MS = 150f;
+	/** Fenster ausblenden, bevor es wirklich schließt (ms). */
+	public static final float SCHLIESSEN_MS = 90f;
+	/** Inhalt beim Tab- oder Kategorie-Wechsel einblenden (ms). */
+	public static final float WECHSEL_MS = 120f;
+	/** Tempo für Hover-Leuchten und Schalter (höher = schneller, siehe zu()). */
+	public static final float HOVER = 24f;
+	/** Tempo für gleitende Markierungen (Tab-Unterstrich, Auswahlbalken). */
+	public static final float GLEITEN = 24f;
+
 	private Anim() {}
 
 	/** Gleitet zum Ziel. tempo ≈ wie schnell (12 = flott, 20 = sehr schnell). */

@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +64,8 @@ public class HelferScreen extends Screen {
 	private int scroll;
 	private int inhaltHoehe;
 	private boolean nachUnten = true;
+	private final Map<Nachricht, List<FormattedCharSequence>> umbruch = new IdentityHashMap<>();
+	private int umbruchBreite = -1;
 
 	// Layout (wird in render berechnet)
 	private int px, py, pb, ph;
@@ -232,8 +235,13 @@ public class HelferScreen extends Screen {
 		}
 	}
 
+	/** Umgebrochene Zeilen je Nachricht – nur neu berechnen, wenn sich die Breite ändert (nicht jedes Bild). */
 	private List<FormattedCharSequence> zeilen(Nachricht n, int maxB) {
-		return font.split(Component.literal(n.text()), maxB - 2 * PAD);
+		if (maxB != umbruchBreite) {
+			umbruch.clear();
+			umbruchBreite = maxB;
+		}
+		return umbruch.computeIfAbsent(n, m -> font.split(Component.literal(m.text()), maxB - 2 * PAD));
 	}
 
 	private boolean hatRezept(Nachricht n) {

@@ -12,6 +12,9 @@ import java.util.List;
 /** Anzahl der Pfeile im Inventar (wird nur gezeigt, wenn welche da sind). */
 public class PfeileModul extends TextModul {
 
+	private final Option symbol = option("symbol", "Pfeil-Symbol ➶", true);
+	private final Option warnung = option("warnung", "Gelb unter 16 Pfeilen", true);
+
 	public PfeileModul() {
 		super("pfeile", "Pfeil-Zähler", 4, 176, true, "Pfeile im Inventar", "PVP");
 	}
@@ -36,7 +39,7 @@ public class PfeileModul extends TextModul {
 		List<Zeile> z = new ArrayList<>();
 		int n = editor ? Math.max(64, pfeile(mc)) : pfeile(mc);
 		if (n > 0) {
-			z.add(new Zeile("➶ Pfeile: " + n, n < 16 ? Farben.GELB : Farben.WEISS));
+			z.add(new Zeile((symbol.an() ? "➶ " : "") + "Pfeile: " + n, warnung.an() && n < 16 ? Farben.GELB : Farben.WEISS));
 		}
 		return z;
 	}

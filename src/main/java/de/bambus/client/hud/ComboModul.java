@@ -10,6 +10,8 @@ import java.util.List;
 /** Treffer in Folge, ohne selbst getroffen zu werden. */
 public class ComboModul extends TextModul {
 
+	private final Option farbig = option("farbig", "Farbe ab 3 und 5 Treffern", true);
+
 	public ComboModul() {
 		super("combo", "Combo-Zähler", 4, 120, true, "Treffer in Folge ohne Gegentreffer", "PVP");
 	}
@@ -19,7 +21,7 @@ public class ComboModul extends TextModul {
 		List<Zeile> z = new ArrayList<>();
 		int c = editor && Kampf.combo == 0 ? 3 : Kampf.combo;
 		if (c > 0) {
-			int farbe = c >= 5 ? Farben.NEON_PINK : c >= 3 ? Farben.NEON : Farben.WEISS;
+			int farbe = !farbig.an() ? Farben.WEISS : c >= 5 ? Farben.NEON_PINK : c >= 3 ? Farben.NEON : Farben.WEISS;
 			z.add(new Zeile(c + " Combo", farbe));
 		}
 		return z;

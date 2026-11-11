@@ -5,6 +5,8 @@ import de.bambus.client.Anzeigen;
 import de.bambus.client.DiscordStatus;
 import de.bambus.client.Profile;
 import de.bambus.client.Statistik;
+import de.bambus.client.Einstellbar;
+import de.bambus.client.Einstellung;
 import de.bambus.client.Texturen;
 import de.bambus.client.Visuals;
 import de.bambus.client.BambusClient;
@@ -30,13 +32,14 @@ import java.util.function.BooleanSupplier;
 
 /**
  * Das Bambus-Menü im Neon-Look (Rechts-Shift).
- * Tabs: Module · Funktionen · Fadenkreuz · Texturen · Mehr – mit der TAB-Taste wechseln.
+ * Tabs: Module · Funktionen · Fadenkreuz · Mehr – mit der TAB-Taste wechseln.
+ * Das Textur-Modul ist eine Karte unter MODULE; Einstellungen jeder Modul-Karte über ⋮ oder Rechtsklick.
  * Kosmetik gibt es in der Garderobe (GarderobeScreen).
  */
 public class BambusMenuScreen extends Screen {
 
 	private enum Tab {
-		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), TEXTUREN("TEXTUREN"), MEHR("MEHR");
+		MODULE("MODULE"), FUNKTIONEN("FUNKTIONEN"), FADENKREUZ("FADENKREUZ"), MEHR("MEHR");
 
 		final String titel;
 
@@ -45,9 +48,11 @@ public class BambusMenuScreen extends Screen {
 		}
 	}
 
-	private record Karte(String name, String text, BooleanSupplier an, Runnable umschalten, int akzent, String fav) {
+	/** Eine Schalter-Karte; fav = Modul-Id (Stern), einstellungen = öffnet das ⋮-Fenster (oder null). */
+	private record Karte(String name, String text, BooleanSupplier an, Runnable umschalten, int akzent, String fav,
+						 Runnable einstellungen) {
 		Karte(String name, String text, BooleanSupplier an, Runnable umschalten, int akzent) {
-			this(name, text, an, umschalten, akzent, null);
+			this(name, text, an, umschalten, akzent, null, null);
 		}
 	}
 
@@ -61,7 +66,8 @@ public class BambusMenuScreen extends Screen {
 	private long tabSeit = 0;        // für den weichen Inhaltswechsel
 	private long schliessSeit = 0;   // für die Schließ-Animation
 
-	private record Bereich(int x, int y, int b, int h, Runnable aktion, boolean imInhalt) {}
+	/** Klickfläche; rechts = Aktion für Rechtsklick (z. B. Einstellungen einer Modul-Karte) oder null. */
+	private record Bereich(int x, int y, int b, int h, Runnable aktion, boolean imInhalt, Runnable rechts) {}
 
 	private static final Map<String, String> MODUL_TEXT = Map.of(
 			"info", "FPS, Koordinaten und CPS",
@@ -78,6 +84,10 @@ public class BambusMenuScreen extends Screen {
 	private final List<Bereich> bereiche = new ArrayList<>();
 
 	private Tab tab = letzterTab;
+	/** Modul, dessen Einstellungsfenster (⋮ / Rechtsklick) gerade offen ist – oder null. */
+	private Einstellbar einstellungsZiel;
+	private int einstellungsScroll;
+	private int[] einstellungsListe = new int[4];   // Bereich der Schalterliste {x, y, b, h} fürs Mausrad
 	private int scroll = 0;
 	private int inhaltHoehe = 0;
 
@@ -118,7 +128,21 @@ public class BambusMenuScreen extends Screen {
 		cfg().speichern();
 	}
 
+	private void oeffneEinstellungen(Einstellbar ziel) {
+		einstellungsZiel = ziel;
+		einstellungsScroll = 0;
+	}
+
+	/**
+	 * Textur-Einstellungen in einer Welt: Menü und Abdunkeln verschwinden, das Fenster rückt an den Rand –
+	 * so siehst du jede Änderung sofort an deiner echten Hand im Spiel.
+	 */
+	private boolean liveAnsicht() {
+		return einstellungsZiel == Texturen.MODUL && minecraft.level != null && minecraft.player != null;
+	}
+
 	private void wechsle(Tab neu) {
+		einstellungsZiel = null;
 		if (tab != neu) {
 			tab = neu;
 			letzterTab = neu;
@@ -131,6 +155,9 @@ public class BambusMenuScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mausX, int mausY, float delta) {
+		if (liveAnsicht()) {
+			return;   // freie Sicht aufs Spiel
+		}
 		g.fill(0, 0, width, height, 0xC0020407);
 		Neon.gitter(g, 0, 0, width, height, 24, Farben.alpha(Farben.NEON, 7));
 	}
@@ -138,19 +165,30 @@ public class BambusMenuScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-
 		Farben.themaAnwenden(cfg().thema);
+		if (liveAnsicht()) {
+			suchFeld.setVisible(false);
+			freundFeld.setVisible(false);
+			einstellungsFenster(g, mx, my, einstellungsZiel, true);
+			return;
+		}
+		int mausX = mx, mausY = my;
+		if (einstellungsZiel != null) {   // darunter liegt alles still, solange das Einstellungsfenster offen ist
+			mx = -1;
+			my = -1;
+		}
+
 		pb = Math.min(width - 20, 500);
 		ph = Math.min(height - 20, 310);
 		px = (width - pb) / 2;
 		py = (height - ph) / 2;
 		float sichtbar = 1f;
 		if (cfg().menueAnimation) {
-			float k = Math.min(1f, (System.currentTimeMillis() - offenSeit) / 220f);
+			float k = Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS);
 			py += (int) ((1 - Anim.aus(k)) * 14);   // weich von unten einschweben
 			sichtbar = Anim.aus(k);
 			if (schliessSeit > 0) {
-				float z = (System.currentTimeMillis() - schliessSeit) / 140f;
+				float z = (System.currentTimeMillis() - schliessSeit) / Anim.SCHLIESSEN_MS;
 				if (z >= 1f) {
 					speichern();
 					minecraft.setScreen(eltern);
@@ -188,13 +226,12 @@ public class BambusMenuScreen extends Screen {
 
 		// Inhalt (scrollbar)
 		g.enableScissor(ix, iy, ix + ib, iy + ih);
-		float wechsel = cfg().menueAnimation ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - tabSeit) / 180f)) : 1f;
+		float wechsel = cfg().menueAnimation ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - tabSeit) / Anim.WECHSEL_MS)) : 1f;
 		int y0 = iy - scroll + (int) ((1 - wechsel) * 10);
 		inhaltHoehe = switch (tab) {
 			case MODULE -> karten(g, mx, my, moduleKarten(), ix, y0, ib);
 			case FUNKTIONEN -> funktionen(g, mx, my, ix, y0, ib);
 			case FADENKREUZ -> fadenkreuz(g, mx, my, ix, y0, ib);
-			case TEXTUREN -> texturen(g, mx, my, ix, y0, ib);
 			case MEHR -> mehr(g, mx, my, ix, y0, ib);
 		};
 		if (wechsel < 1f) {
@@ -213,6 +250,10 @@ public class BambusMenuScreen extends Screen {
 
 		fuss(g, mx, my);
 		super.render(g, mx, my, delta);
+		if (einstellungsZiel != null) {
+			bereiche.clear();   // nur das Fenster ist klickbar
+			einstellungsFenster(g, mausX, mausY, einstellungsZiel, false);
+		}
 		if (sichtbar < 1f) {   // ein- und ausblenden
 			g.fill(px - 6, py - 6, px + pb + 6, py + ph + 6, Farben.alpha(0xFF020407, (int) ((1 - sichtbar) * 255)));
 		}
@@ -242,7 +283,6 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> "alle";
 			case FUNKTIONEN -> "blitz";
 			case FADENKREUZ -> "fadenkreuz";
-			case TEXTUREN -> "textur";
 			case MEHR -> "mehr";
 		};
 	}
@@ -258,8 +298,8 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		boolean weich = cfg().menueAnimation;
-		int ux = weich ? Math.round(Anim.zu("tab-x", aktivX, 18f)) : aktivX;
-		int ub = weich ? Math.round(Anim.zu("tab-b", aktivB, 18f)) : aktivB;
+		int ux = weich ? Math.round(Anim.zu("tab-x", aktivX, Anim.GLEITEN)) : aktivX;
+		int ub = weich ? Math.round(Anim.zu("tab-b", aktivB, Anim.GLEITEN)) : aktivB;
 		g.fill(ux, y, ux + ub, y + 16, Farben.alpha(Farben.NEON, 22));
 		g.fill(ux, y + 15, ux + ub, y + 17, Farben.NEON);
 		g.fill(ux, y + 17, ux + ub, y + 18, Farben.alpha(Farben.NEON, 60));
@@ -269,7 +309,7 @@ public class BambusMenuScreen extends Screen {
 			int b = font.width(t.titel) + 25;
 			boolean aktiv = t == tab;
 			boolean hover = Neon.ueber(mx, my, x, y, b, 16);
-			float h = weich ? Anim.zu("tab-hover:" + t, hover || aktiv ? 1f : 0f, 14f) : (hover || aktiv ? 1f : 0f);
+			float h = weich ? Anim.zu("tab-hover:" + t, hover || aktiv ? 1f : 0f, Anim.HOVER) : (hover || aktiv ? 1f : 0f);
 			int farbe = aktiv ? Farben.NEON : Anim.mische(Farben.GRAU, Farben.WEISS, h);
 			Symbole.zeichne(g, tabSymbol(t), x + 6, y + 4, 1, farbe);
 			g.drawString(font, t.titel, x + 18, y + 4, farbe, aktiv);
@@ -278,7 +318,10 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		String hinweis = "[TAB] wechseln";
-		Neon.text(g, font, hinweis, px + pb - 12 - (int) (font.width(hinweis) * 0.75f), y + 5, 0.75f, Farben.GRAU, false);
+		int hx = px + pb - 12 - (int) (font.width(hinweis) * 0.75f);
+		if (hx > x + 4) {   // nur, wenn er nicht mit den Tabs zusammenstößt
+			Neon.text(g, font, hinweis, hx, y + 5, 0.75f, Farben.GRAU, false);
+		}
 	}
 
 	private void fuss(GuiGraphics g, int mx, int my) {
@@ -314,13 +357,36 @@ public class BambusMenuScreen extends Screen {
 					|| (kategorie.equals("★") && c.favoriten.contains(m.id));
 			if (passt && kat) {
 				k.add(new Karte(m.name, text, () -> m.pos().an, () -> m.pos().an = !m.pos().an,
-						m.kategorie.equals("PVP") ? Farben.NEON_PINK : m.kategorie.equals("INFO") ? Farben.NEON_CYAN : Farben.NEON, m.id));
+						m.kategorie.equals("PVP") ? Farben.NEON_PINK : m.kategorie.equals("INFO") ? Farben.NEON_CYAN : Farben.NEON, m.id,
+						() -> oeffneEinstellungen(m)));
 			}
 		}
+		texturKarte(k, suche, c);
 		if (!suche.isEmpty() || !kategorie.equals("ALLE")) {
 			k.remove(0); // "HUD (alles)" nur in der vollen Liste
 		}
 		return k;
+	}
+
+	/** Das Textur-Modul als Karte (Kategorie PVP) – als Favorit oben, sonst am Ende der Liste. */
+	private void texturKarte(List<Karte> k, String suche, BambusConfig c) {
+		String id = "texturen", name = "Texturen", text = "Low Fire, Low Shield, Short Sword …";
+		boolean passt = suche.isEmpty() || name.toLowerCase(java.util.Locale.ROOT).contains(suche)
+				|| text.toLowerCase(java.util.Locale.ROOT).contains(suche)
+				|| "low fire shield side short sword kürbis wasser".contains(suche);
+		boolean fav = c.favoriten.contains(id);
+		boolean kat = kategorie.equals("ALLE") || kategorie.equals("PVP") || (kategorie.equals("★") && fav);
+		if (!passt || !kat) {
+			return;
+		}
+		Karte karte = new Karte(name, text, () -> c.texturenAn, () -> c.texturenAn = !c.texturenAn, Farben.NEON_PINK, id,
+				() -> oeffneEinstellungen(Texturen.MODUL));
+		int favoriten = 0;
+		for (Karte x : k) {
+			if (x.fav() != null && c.favoriten.contains(x.fav())) favoriten++;
+		}
+		boolean hudAlles = !k.isEmpty() && k.get(0).fav() == null;
+		k.add(fav ? favoriten + (hudAlles ? 1 : 0) : k.size(), karte);
 	}
 
 	private List<Karte> funktionsKarten() {
@@ -415,7 +481,7 @@ public class BambusMenuScreen extends Screen {
 			boolean an = k.an().getAsBoolean();
 			boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, kx, ky, kb, kh);
 
-			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, 16f) : (hover ? 1f : 0f);
+			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			g.fill(kx, ky, kx + kb, ky + kh, Anim.mische(Farben.KARTE, Farben.KARTE_HOVER, hk));
 			if (an) {
 				g.fill(kx, ky, kx + 2, ky + kh, k.akzent());
@@ -425,17 +491,20 @@ public class BambusMenuScreen extends Screen {
 			}
 
 			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF5A6A7E);
-			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 74 : 52));
+			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 82 : 52));
 			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFC8D2DE, false);
-			String text = font.plainSubstrByWidth(k.text(), (int) ((kb - 14) / 0.75f));
+			String text = font.plainSubstrByWidth(k.text(), (int) ((kb - (k.einstellungen() != null ? 28 : 14)) / 0.75f));
 			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, Farben.GRAU, false);
 			Neon.text(g, font, an ? "AN" : "AUS", kx + kb - 44, ky + 8, 0.75f, an ? k.akzent() : Farben.GRAU, false);
 			Neon.schalter(g, kx + kb - 26, ky + 7, an, k.name());
 
-			klick(kx, ky, kb, kh, () -> {
+			bereiche.add(new Bereich(kx, ky, kb, kh, () -> {
 				k.umschalten().run();
 				speichern();
-			}, true);
+			}, true, k.einstellungen()));   // Rechtsklick öffnet die Einstellungen
+			if (k.einstellungen() != null) {
+				punkte(g, mx, my, kx + kb - 14, ky + kh - 16, k.einstellungen());
+			}
 			if (k.fav() != null) {
 				boolean fav = cfg().favoriten.contains(k.fav());
 				int sx = kx + kb - 58;
@@ -451,6 +520,179 @@ public class BambusMenuScreen extends Screen {
 		}
 		int zeilen = (karten.size() + spalten - 1) / spalten;
 		return zeilen * (kh + abstand);
+	}
+
+	/** ⋮ – drei Punkte unten rechts auf der Karte, öffnen die Modul-Einstellungen. */
+	private void punkte(GuiGraphics g, int mx, int my, int x, int y, Runnable aktion) {
+		boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, x, y, 12, 14);
+		if (hover) {
+			g.fill(x, y, x + 12, y + 14, Farben.alpha(Farben.NEON, 40));
+			g.renderOutline(x, y, 12, 14, Farben.alpha(Farben.NEON, 160));
+		}
+		int farbe = hover ? Farben.NEON : Farben.GRAU;
+		for (int i = 0; i < 3; i++) {
+			g.fill(x + 5, y + 3 + i * 4, x + 7, y + 5 + i * 4, farbe);
+		}
+		klick(x, y, 12, 14, aktion, true);
+	}
+
+	// ------------------------------------------------------ Modul-Einstellungen (⋮)
+
+	/**
+	 * Einstellungsfenster (⋮ oder Rechtsklick): links eine Vorschau, rechts Schalter und Stufen (scrollbar).
+	 * live = Textur-Modul in einer Welt: schmales Fenster am Rand, ohne Vorschau – das Spiel selbst ist die Vorschau.
+	 */
+	private void einstellungsFenster(GuiGraphics g, int mx, int my, Einstellbar ziel, boolean live) {
+		List<Einstellung> zeilen = ziel.einstellungen();
+		int zeile = 20;
+		int fb, fh, fx, fy;
+		if (live) {
+			fb = Math.min(230, width / 3 + 40);
+			int oben = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
+			fh = Math.min(height - oben - 10, 34 + zeilen.size() * zeile + 30 + 14);
+			fx = width - fb - 10;
+			fy = Math.max(oben, (height - fh) / 2);
+		} else {
+			fb = Math.min(ziel == Texturen.MODUL ? 400 : 360, pb - 30);
+			fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
+			fx = px + (pb - fb) / 2;
+			fy = py + (ph - fh) / 2;
+			g.fill(px, py, px + pb, py + ph, 0xB0020407);
+		}
+		g.fill(fx, fy, fx + fb, fy + fh, 0xF20A0F17);
+		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
+		Neon.ecken(g, fx - 3, fy - 3, fb + 6, fh + 6, 8, Farben.NEON_CYAN);
+
+		// Kopf
+		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 10, fy + 10, 1, Farben.NEON);
+		Neon.leuchtText(g, font, ziel.titel(), fx + 24, fy + 9, 1f, Farben.NEON);
+		Neon.text(g, font, live ? "LIVE · SIEH DIR DEINE HAND AN" : "EINSTELLUNGEN", fx + 24, fy + 20, 0.6f,
+				live ? Farben.NEON_CYAN : Farben.GRAU, false);
+		int sx = fx + fb - 18, sy = fy + 7;
+		boolean zuHover = Neon.ueber(mx, my, sx, sy, 12, 12);
+		g.drawString(font, "✕", sx + 2, sy + 2, zuHover ? Farben.ROT : Farben.GRAU, false);
+		klick(sx, sy, 12, 12, () -> einstellungsZiel = null, false);
+
+		int inhaltY = fy + 32;
+		int inhaltH = fh - 32 - 30 - (live ? 14 : 0);
+
+		// Vorschau links (nicht im Live-Modus)
+		int vb = 0;
+		if (!live) {
+			if (ziel instanceof HudModul m) {
+				vb = Math.max(90, Math.min(130, fb * 2 / 5));
+				einstellungsVorschau(g, m, fx + 8, inhaltY, vb, inhaltH);
+			} else if (ziel == Texturen.MODUL) {
+				vb = Math.max(110, Math.min(190, fb / 2));
+				TexturAnsicht.zeichne(g, font, fx + 8, inhaltY, vb, inhaltH, mx, my,
+						(kx, ky, kb, kh, aktion) -> klick(kx, ky, kb, kh, aktion, false));
+			}
+		}
+
+		// Zeilen rechts
+		int ox = vb > 0 ? fx + 8 + vb + 8 : fx + 8, ob = fb - (ox - fx) - 16;
+		einstellungsListe = new int[]{ox, inhaltY, ob, inhaltH};
+		int maxScroll = Math.max(0, zeilen.size() * zeile - inhaltH);
+		einstellungsScroll = Math.max(0, Math.min(einstellungsScroll, maxScroll));
+		g.enableScissor(ox, inhaltY, ox + ob, inhaltY + inhaltH);
+		for (int i = 0; i < zeilen.size(); i++) {
+			int zy = inhaltY + i * zeile - einstellungsScroll;
+			if (zy + zeile < inhaltY || zy > inhaltY + inhaltH) {
+				continue;
+			}
+			boolean ganz = zy >= inhaltY && zy + zeile - 2 <= inhaltY + inhaltH;   // nur ganz sichtbare Zeilen sind klickbar
+			Einstellung e = zeilen.get(i);
+			if (e instanceof Einstellung.Schalter sch) {
+				schalterZeile(g, mx, my, ziel, sch, ox, zy, ob, zeile - 2, ganz);
+			} else if (e instanceof Einstellung.Stufe st) {
+				stufenZeile(g, mx, my, st, ox, zy, ob, zeile - 2, ganz);
+			}
+		}
+		g.disableScissor();
+		if (maxScroll > 0) {   // Scrollbalken
+			int balkenH = Math.max(10, inhaltH * inhaltH / (zeilen.size() * zeile));
+			int balkenY = inhaltY + (inhaltH - balkenH) * einstellungsScroll / maxScroll;
+			g.fill(fx + fb - 5, inhaltY, fx + fb - 3, inhaltY + inhaltH, Farben.LINIE);
+			g.fill(fx + fb - 5, balkenY, fx + fb - 3, balkenY + balkenH, Farben.NEON);
+		}
+
+		// Fuß
+		if (live) {
+			Neon.text(g, font, "Halte Schild und Schwert in der Hand", fx + 8, fy + fh - 40, 0.6f, Farben.GRAU, false);
+		}
+		int knopfY = fy + fh - 24;
+		knopf(g, mx, my, "STANDARD", fx + 8, knopfY, 80, 16, false, true, () -> {
+			ziel.standard();
+			speichern();
+		});
+		knopf(g, mx, my, "FERTIG", fx + fb - 78, knopfY, 70, 16, true, true, () -> einstellungsZiel = null);
+	}
+
+	private void schalterZeile(GuiGraphics g, int mx, int my, Einstellbar ziel, Einstellung.Schalter sch,
+							   int x, int y, int b, int h, boolean klickbar) {
+		boolean hover = klickbar && Neon.ueber(mx, my, x, y, b, h);
+		boolean an = sch.an().getAsBoolean();
+		g.fill(x, y, x + b, y + h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+		if (an) {
+			g.fill(x, y, x + 2, y + h, Farben.NEON);
+		}
+		g.drawString(font, font.plainSubstrByWidth(sch.name(), b - 36), x + 8, y + 5, an ? Farben.WEISS : 0xFFC8D2DE, false);
+		Neon.schalter(g, x + b - 26, y + 4, an, ziel.symbol() + ":" + sch.name());
+		if (klickbar) {
+			klick(x, y, b, h, () -> {
+				sch.umschalten().run();
+				speichern();
+			}, false);
+		}
+	}
+
+	/** Zeile „Name   ‹ Wert ›“ – ausgegraut, solange der zugehörige Schalter aus ist. */
+	private void stufenZeile(GuiGraphics g, int mx, int my, Einstellung.Stufe st, int x, int y, int b, int h, boolean klickbar) {
+		boolean aktiv = st.aktiv().getAsBoolean();
+		g.fill(x + 8, y, x + b, y + h, Farben.alpha(Farben.KARTE, 200));
+		g.fill(x + 8, y, x + 9, y + h, Farben.LINIE);   // eingerückt: gehört zum Schalter darüber
+		Neon.text(g, font, st.name(), x + 14, y + 6, 0.75f, aktiv ? 0xFFC8D2DE : 0xFF4A5A6E, false);
+		int wb = 70, wx = x + b - wb - 4;
+		g.renderOutline(wx, y + 2, wb, h - 4, aktiv ? Farben.LINIE : 0xFF161F2B);
+		boolean hl = aktiv && klickbar && Neon.ueber(mx, my, wx, y + 2, 14, h - 4);
+		boolean hr = aktiv && klickbar && Neon.ueber(mx, my, wx + wb - 14, y + 2, 14, h - 4);
+		int grau = aktiv ? Farben.GRAU : 0xFF33404F;
+		g.drawString(font, "‹", wx + 4, y + 5, hl ? Farben.NEON : grau, false);
+		g.drawString(font, "›", wx + wb - 9, y + 5, hr ? Farben.NEON : grau, false);
+		String wert = st.text();
+		g.drawString(font, wert, wx + (wb - font.width(wert)) / 2, y + 5, aktiv ? Farben.WEISS : 0xFF4A5A6E, false);
+		if (aktiv && klickbar) {
+			klick(wx, y + 2, 14, h - 4, () -> {
+				st.aendern(-1);
+				speichern();
+			}, false);
+			klick(wx + wb - 14, y + 2, 14, h - 4, () -> {
+				st.aendern(1);
+				speichern();
+			}, false);
+		}
+	}
+
+	/** Das HUD-Modul selbst, eingepasst in die Box (wie im HUD, mit Beispielwerten). */
+	private void einstellungsVorschau(GuiGraphics g, HudModul m, int x, int y, int b, int h) {
+		vorschauBox(g, x, y, b, h);
+		int mb = m.breite(minecraft, true), mh = m.hoehe(minecraft, true);
+		if (mb <= 0 || mh <= 0) {
+			String[] leer = {"Alles", "ausgeschaltet"};
+			for (int i = 0; i < leer.length; i++) {
+				int tb = (int) (font.width(leer[i]) * 0.75f);
+				Neon.text(g, font, leer[i], x + (b - tb) / 2, y + h / 2 - 8 + i * 9, 0.75f, Farben.GRAU, false);
+			}
+			return;
+		}
+		float s = Math.min(1.5f, Math.min((b - 12) / (float) mb, (h - 12) / (float) mh));
+		g.enableScissor(x + 1, y + 1, x + b - 1, y + h - 1);
+		g.pose().pushMatrix();
+		g.pose().translate(x + (b - mb * s) / 2f, y + (h - mh * s) / 2f);
+		g.pose().scale(s, s);
+		m.zeichne(g, minecraft, 0, 0, true);
+		g.pose().popMatrix();
+		g.disableScissor();
 	}
 
 	private int katBreite(String kat) {
@@ -488,8 +730,8 @@ public class BambusMenuScreen extends Screen {
 			x += b + 4;
 		}
 		boolean weich = cfg().menueAnimation;
-		int mxk = weich ? Math.round(Anim.zu("kat-x", aktivX, 18f)) : aktivX;
-		int mbk = weich ? Math.round(Anim.zu("kat-b", aktivB, 18f)) : aktivB;
+		int mxk = weich ? Math.round(Anim.zu("kat-x", aktivX, Anim.GLEITEN)) : aktivX;
+		int mbk = weich ? Math.round(Anim.zu("kat-b", aktivB, Anim.GLEITEN)) : aktivB;
 		g.fill(mxk, y, mxk + mbk, y + 16, Farben.alpha(Farben.NEON, 40));
 		g.renderOutline(mxk, y, mbk, 16, Farben.NEON);
 		x = ix + 128;
@@ -659,45 +901,6 @@ public class BambusMenuScreen extends Screen {
 		return zy + 4;
 	}
 
-	// ------------------------------------------------------------- Texturen
-
-	/** Textur-Modul: PvP-Anpassungen wie in Texturpaketen (siehe Texturen). */
-	private int texturen(GuiGraphics g, int mx, int my, int x, int y, int b) {
-		BambusConfig c = cfg();
-		int zy = y;
-		int hb = (b - 6) / 2;
-
-		Neon.text(g, font, "KAMPF", x, zy, 0.75f, Farben.NEON, false);
-		zy += 12;
-		zy += karten(g, mx, my, List.of(
-				new Karte("Low Fire", "Feuer am Bildschirm tiefer", () -> c.lowFire, () -> c.lowFire = !c.lowFire, Farben.NEON_PINK),
-				new Karte("Low Shield", "Schild in der Hand tiefer", () -> c.lowShield, () -> c.lowShield = !c.lowShield, Farben.NEON_CYAN),
-				new Karte("Side Shield", "Schild weiter zur Seite", () -> c.sideShield, () -> c.sideShield = !c.sideShield, Farben.NEON_CYAN),
-				new Karte("Short Sword", "Schwert in der Hand kürzer", () -> c.shortSword, () -> c.shortSword = !c.shortSword, Farben.NEON_PINK)),
-				x, zy, b);
-		auswahl(g, mx, my, "FEUER", "−" + c.lowFireStaerke + " %", x, zy, hb,
-				() -> c.lowFireStaerke = Texturen.naechsteStaerke(c.lowFireStaerke, -1),
-				() -> c.lowFireStaerke = Texturen.naechsteStaerke(c.lowFireStaerke, 1));
-		auswahl(g, mx, my, "SCHILD", "−" + c.lowShieldStaerke + " %", x + hb + 6, zy, hb,
-				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, -1),
-				() -> c.lowShieldStaerke = Texturen.naechsteStaerke(c.lowShieldStaerke, 1));
-		zy += 22;
-		auswahl(g, mx, my, "SCHWERT", c.shortSwordGroesse + " %", x, zy, hb,
-				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, -1),
-				() -> c.shortSwordGroesse = Texturen.naechsteSchwertGroesse(c.shortSwordGroesse, 1));
-		zy += 28;
-
-		Neon.text(g, font, "SICHT", x, zy, 0.75f, Farben.NEON, false);
-		zy += 12;
-		zy += karten(g, mx, my, List.of(
-				new Karte("Kein Kürbis-Overlay", "Freie Sicht mit Kürbis auf dem Kopf", () -> c.keinKuerbisOverlay, () -> c.keinKuerbisOverlay = !c.keinKuerbisOverlay, Farben.NEON),
-				new Karte("Klare Sicht unter Wasser", "Ohne Wasser-Textur vor dem Auge", () -> c.klaresWasser, () -> c.klaresWasser = !c.klaresWasser, Farben.NEON)),
-				x, zy, b, 2);
-		Neon.text(g, font, "Nur bei dir sichtbar – wie ein PvP-Texturpaket, ohne Vorteil im Spiel.", x, zy + 2, 0.6f, Farben.GRAU, false);
-		zy += 14;
-		return zy - y;
-	}
-
 	// ----------------------------------------------------------- Fadenkreuz
 
 	private int fadenkreuz(GuiGraphics g, int mx, int my, int x, int y, int b) {
@@ -813,7 +1016,7 @@ public class BambusMenuScreen extends Screen {
 	// ============================================================ Eingabe
 
 	private void klick(int x, int y, int b, int h, Runnable aktion, boolean imInhalt) {
-		bereiche.add(new Bereich(x, y, b, h, aktion, imInhalt));
+		bereiche.add(new Bereich(x, y, b, h, aktion, imInhalt, null));
 	}
 
 	private boolean imInhalt(double mx, double my) {
@@ -826,25 +1029,38 @@ public class BambusMenuScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		boolean rechts = e.button() == 1;
+		if (e.button() == 0 || rechts) {
 			// rückwärts, damit oben liegende Bereiche zuerst drankommen
 			for (int i = bereiche.size() - 1; i >= 0; i--) {
 				Bereich b = bereiche.get(i);
-				if (b.imInhalt() && !imInhalt(e.x(), e.y())) {
+				Runnable aktion = rechts ? b.rechts() : b.aktion();
+				if (aktion == null || (b.imInhalt() && !imInhalt(e.x(), e.y()))) {
 					continue;
 				}
 				if (Neon.ueber(e.x(), e.y(), b.x(), b.y(), b.b(), b.h())) {
 					klickGeraeusch();
-					b.aktion().run();
+					aktion.run();
 					return true;
 				}
 			}
+		}
+		if (einstellungsZiel != null) {   // Klick neben das Fenster schließt es
+			einstellungsZiel = null;
+			return true;
 		}
 		return super.mouseClicked(e, doppelt);
 	}
 
 	@Override
 	public boolean mouseScrolled(double mx, double my, double horizontal, double vertikal) {
+		if (einstellungsZiel != null) {
+			int[] l = einstellungsListe;
+			if (Neon.ueber(mx, my, l[0], l[1], l[2], l[3])) {
+				einstellungsScroll -= (int) (vertikal * 20);   // begrenzt wird beim Zeichnen
+			}
+			return true;
+		}
 		if (imInhalt(mx, my)) {
 			scroll -= (int) (vertikal * 18);
 			scroll = Math.max(0, Math.min(scroll, Math.max(0, inhaltHoehe - ih)));
@@ -855,6 +1071,10 @@ public class BambusMenuScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(KeyEvent e) {
+		if (einstellungsZiel != null && (e.key() == InputConstants.KEY_ESCAPE || e.key() == InputConstants.KEY_TAB)) {
+			einstellungsZiel = null;   // ESC/Tab schließt erst das Einstellungsfenster
+			return true;
+		}
 		if (e.key() == InputConstants.KEY_TAB) {
 			Tab[] alle = Tab.values();
 			int richtung = (e.modifiers() & 1) != 0 ? -1 : 1; // Shift+Tab = zurück

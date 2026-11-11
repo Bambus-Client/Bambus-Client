@@ -2,12 +2,48 @@ package de.bambus.client.hud;
 
 import de.bambus.client.BambusClient;
 import de.bambus.client.BambusConfig;
+import de.bambus.client.Einstellbar;
+import de.bambus.client.Einstellung;
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
-/** Ein verschiebbares Element des Bambus-HUDs. */
-public abstract class HudModul {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Ein verschiebbares Element des Bambus-HUDs.
+ * Einstellungen: jedes Modul meldet seine Schalter mit {@link #option} an; sie erscheinen im Mod-Menü
+ * hinter den drei Punkten (⋮) der Modul-Karte und werden pro Modul in der Config gespeichert.
+ */
+public abstract class HudModul implements Einstellbar {
+
+	/** Ein Ein/Aus-Schalter eines Moduls. */
+	public final class Option {
+		public final String schluessel;
+		public final String name;
+		private final boolean standard;
+
+		private Option(String schluessel, String name, boolean standard) {
+			this.schluessel = schluessel;
+			this.name = name;
+			this.standard = standard;
+		}
+
+		public boolean an() {
+			Boolean wert = optionenSpeicher().get(schluessel);
+			return wert != null ? wert : standard;
+		}
+
+		public void umschalten() {
+			optionenSpeicher().put(schluessel, !an());
+		}
+	}
+
+	private final List<Option> optionen = new ArrayList<>();
+	/** Gilt für jedes Modul: Kasten hinter dem Modul zeichnen. */
+	public final Option hintergrund = option("hintergrund", "Hintergrund", true);
 
 	public final String id;
 	public final String name;
@@ -31,6 +67,57 @@ public abstract class HudModul {
 		this.stdAn = stdAn;
 		this.beschreibung = beschreibung;
 		this.kategorie = kategorie;
+	}
+
+	/** Meldet einen Schalter an – in den Feldern der Unterklasse aufrufen. */
+	protected final Option option(String schluessel, String name, boolean standard) {
+		Option o = new Option(schluessel, name, standard);
+		optionen.add(o);
+		return o;
+	}
+
+	/** Alle Schalter dieses Moduls, in der Reihenfolge der Anmeldung. */
+	public List<Option> optionen() {
+		return Collections.unmodifiableList(optionen);
+	}
+
+	/** Alle Schalter auf ihren Standard zurück. */
+	public void optionenZuruecksetzen() {
+		optionenSpeicher().clear();
+	}
+
+	// ---------------------------------------------------------- Einstellbar (Fenster im Mod-Menü)
+
+	@Override
+	public String titel() {
+		return name;
+	}
+
+	@Override
+	public String symbol() {
+		return id;
+	}
+
+	@Override
+	public List<Einstellung> einstellungen() {
+		List<Einstellung> liste = new ArrayList<>();
+		for (Option o : optionen) {
+			liste.add(new Einstellung.Schalter(o.name, o::an, o::umschalten));
+		}
+		return liste;
+	}
+
+	@Override
+	public void standard() {
+		optionenZuruecksetzen();
+	}
+
+	private java.util.Map<String, Boolean> optionenSpeicher() {
+		BambusConfig.ModulPos p = pos();
+		if (p.optionen == null) {   // ältere Config ohne Einstellungen
+			p.optionen = new java.util.LinkedHashMap<>();
+		}
+		return p.optionen;
 	}
 
 	public abstract int breite(Minecraft mc, boolean editor);
@@ -92,7 +179,11 @@ public abstract class HudModul {
 		g.pose().popMatrix();
 	}
 
-	protected static void panel(GuiGraphics g, int x, int y, int b, int h) {
+	/** Kasten hinter dem Modul – entfällt, wenn „Hintergrund“ ausgeschaltet ist. */
+	protected void panel(GuiGraphics g, int x, int y, int b, int h) {
+		if (!hintergrund.an()) {
+			return;
+		}
 		g.fill(x, y, x + b, y + h, Farben.HINTERGRUND);
 		if (BambusClient.config.verlauf) {
 			g.fillGradient(x, y, x + 2, y + h, Farben.NEON, Farben.NEON_CYAN);

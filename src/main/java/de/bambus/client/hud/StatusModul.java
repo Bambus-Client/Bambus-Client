@@ -10,6 +10,9 @@ import java.util.List;
 /** Zeigt an, ob Sprinten oder Schleichen gerade umgeschaltet (dauerhaft an) ist. */
 public class StatusModul extends TextModul {
 
+	private final Option sprint = option("sprint", "Sprinten anzeigen", true);
+	private final Option schleichen = option("schleichen", "Schleichen anzeigen", true);
+
 	public StatusModul() {
 		super("status", "Sprint-/Schleich-Status", 4, 172);
 	}
@@ -17,10 +20,10 @@ public class StatusModul extends TextModul {
 	@Override
 	protected List<Zeile> zeilen(Minecraft mc, boolean editor) {
 		List<Zeile> z = new ArrayList<>();
-		if (BambusClient.config.toggleSprint && mc.options.keySprint.isDown()) {
+		if (sprint.an() && BambusClient.config.toggleSprint && mc.options.keySprint.isDown()) {
 			z.add(new Zeile("[Sprinten (umgeschaltet)]", Farben.GRUEN));
 		}
-		if (BambusClient.config.toggleSneak && mc.options.keyShift.isDown()) {
+		if (schleichen.an() && BambusClient.config.toggleSneak && mc.options.keyShift.isDown()) {
 			z.add(new Zeile("[Schleichen (umgeschaltet)]", Farben.GRUEN));
 		}
 		if (z.isEmpty() && editor) {
