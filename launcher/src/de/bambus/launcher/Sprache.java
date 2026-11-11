@@ -210,6 +210,21 @@ final class Sprache {
 		g("Aus · Klicken für mehr FPS", "Off · click for more FPS"); g("EMPFOHLEN", "RECOMMENDED"); g("MODRINTH DURCHSUCHEN", "SEARCH MODRINTH");
 		g("DEINE MODS", "YOUR MODS"); g("Noch keine. Suche oben oder füge eine .jar hinzu.", "None yet. Search above or add a .jar.");
 		g("Tippe z. B. „minimap“, „zoom“ oder „shader“.", "Type e.g. “minimap”, “zoom” or “shader”."); g("SUCHEN", "SEARCH"); g("+ MOD-DATEI", "+ MOD FILE");
+		g("Profile mit eigenen Mods · wird beim nächsten SPIELEN eingerichtet.", "Profiles with their own mods · set up the next time you PLAY.");
+		g("PROFILE", "PROFILES"); g("KOPIE", "COPY"); g("LÖSCHEN", "DELETE");
+		g("INSTALLIERT", "INSTALLED"); g("ENTDECKEN", "DISCOVER"); g("SCHLÜSSEL", "API KEY"); g("DATEI", "FILE");
+		g("Profil umbenennen", "Rename profile"); g("Profil mit allen Mods kopieren", "Copy profile with all its mods"); g("Profil löschen", "Delete profile");
+		g("Neues Profil", "New profile"); g("Profil kopieren", "Copy profile"); g("Name des Profils:", "Profile name:");
+		g("Das letzte Profil kann nicht gelöscht werden.", "The last profile can't be deleted.");
+		g("CurseForge-API-Schlüssel eintragen oder ändern", "Enter or change your CurseForge API key"); g("CurseForge-Schlüssel", "CurseForge API key");
+		g("CurseForge verlangt einen eigenen API-Schlüssel (kostenlos):\n1. Auf console.curseforge.com anmelden\n2. Unter „API keys“ den Schlüssel kopieren\n3. Hier einfügen\n\nDer Schlüssel bleibt nur auf diesem Computer.",
+				"CurseForge requires your own API key (free):\n1. Sign in at console.curseforge.com\n2. Copy the key under “API keys”\n3. Paste it here\n\nThe key stays on this computer only.");
+		g("Suche auf CurseForge …", "Searching CurseForge …"); g("Keine Verbindung zu CurseForge. Internet prüfen.", "No connection to CurseForge. Check your internet.");
+		g("CurseForge lehnt den Schlüssel ab – bitte unter SCHLÜSSEL prüfen.", "CurseForge rejects the key – please check it under API KEY.");
+		teil("Fabric-Mods für ", "Fabric mods for "); teil(" · „+“ fügt die Mod zum aktiven Profil hinzu", " · “+” adds the mod to the active profile");
+		teil("INSTALLIERT · ", "INSTALLED · "); g("+ NEU", "+ NEW"); teil(" · AKTIV", " · ACTIVE");
+		teil("Profil „", "Profile “"); 
+		teil(": nur direkt bei curseforge.com ladbar – dort laden und mit „+ MOD-DATEI“ hinzufügen", ": only downloadable on curseforge.com – get it there and add it with “+ MOD FILE”");
 		g("Suche auf Modrinth …", "Searching Modrinth …"); g("Keine Verbindung zu Modrinth. Internet prüfen.", "No connection to Modrinth. Check your internet.");
 		g("Neue Grafik-Engine – oft doppelt so viele FPS", "New graphics engine – often twice the FPS");
 		g("Schnellere Spiel-Logik: Physik, Tiere, Chunks", "Faster game logic: physics, mobs, chunks");

@@ -42,7 +42,7 @@ Links die Seitenleiste mit vier Tabs:
 - **KOSMETIK** – dein eigener Skin als drehbare 3D-Figur, dazu Capes, Flügel und Partikelspuren –
   und das **Kosmetik-Studio** („+ Erstellen“), mit dem du eigene Capes und Flügel baust
 - **MODS** – **⚡ FPS-Boost** (Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling, Dynamic FPS),
-  **Mod Menu** (Mods-Knopf im Spiel), Mods auf Modrinth suchen und hinzufügen, eigene `.jar`-Mods an/aus
+  **Mod Menu** (Mods-Knopf im Spiel), Mod-Profile wie in der Modrinth-App, Mods auf Modrinth und CurseForge suchen und hinzufügen (mit Icons), eigene `.jar`-Mods an/aus
 - **EINSTELLUNGEN** – Arbeitsspeicher (2–16 GB), Ordner öffnen, Zurücksetzen
 
 Beim Klick auf **SPIELEN** richtet der Launcher Fabric + Fabric API + Bambus Client in einem eigenen Spielordner

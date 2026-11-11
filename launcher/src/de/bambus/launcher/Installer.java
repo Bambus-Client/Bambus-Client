@@ -418,10 +418,18 @@ final class Installer {
 	// ------------------------------------------------------------- Download
 
 	static byte[] lade(String adresse) throws IOException {
+		return lade(adresse, new String[0]);
+	}
+
+	/** Wie {@link #lade(String)}, mit zusätzlichen Kopfzeilen (Name, Wert, Name, Wert …) – nur für die erste Adresse. */
+	static byte[] lade(String adresse, String... kopf) throws IOException {
 		String url = adresse;
 		for (int umleitung = 0; umleitung < 5; umleitung++) {
 			HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
 			c.setRequestProperty("User-Agent", USER_AGENT);
+			if (umleitung == 0) {   // Schlüssel nie an eine Weiterleitung auf einen anderen Server mitgeben
+				for (int i = 0; i + 1 < kopf.length; i += 2) c.setRequestProperty(kopf[i], kopf[i + 1]);
+			}
 			c.setConnectTimeout(15000);
 			c.setReadTimeout(60000);
 			c.setInstanceFollowRedirects(false);
