@@ -1,18 +1,25 @@
 package de.bambus.client.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
+import de.bambus.client.Hinweise;
 import de.bambus.client.hud.HudModul;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * HUD-Editor: Anzeigen mit der Maus verschieben und in der Größe ändern.
  * Beim Ziehen rasten sie an Bildschirmrändern, der Mitte und an anderen Anzeigen ein
  * (Shift gedrückt halten = frei schieben). Größe: Ecke unten rechts ziehen oder Mausrad.
+ * Ausblenden: ✕ neben dem Namen oder Entf – das Modul ist dann auch im Mod-Menü aus; Strg+Z holt es zurück.
  */
 public class HudEditorScreen extends Screen {
 
@@ -29,6 +36,10 @@ public class HudEditorScreen extends Screen {
 	private int linieY = -1;
 	private long groesseZeigenBis;
 	private HudModul groesseZeigen;
+	/** Zuletzt markiertes Modul – bleibt markiert, solange die Maus auf seinem ✕ ist. */
+	private HudModul markiert;
+	/** Ausgeblendete Module, neueste zuerst (für Strg+Z). */
+	private final Deque<HudModul> ausgeblendet = new ArrayDeque<>();
 
 	public HudEditorScreen(Screen eltern) {
 		super(Component.literal("HUD verschieben"));
@@ -65,6 +76,57 @@ public class HudEditorScreen extends Screen {
 		return mx >= ex - GRIFF - 1 && my >= ey - GRIFF - 1 && mx <= ex + 2 && my <= ey + 2;
 	}
 
+	/** Name und Größe über dem Modul (oder darunter, wenn oben kein Platz ist): {x, y, b}. */
+	private int[] namensFeld(HudModul m) {
+		String name = m.name + "  " + Math.round(m.skala() * 100) + " %";
+		int nb = (int) (font.width(name) * 0.75f) + 6;
+		int ny = by(m) - 11 < 0 ? by(m) + bh(m) + 3 : by(m) - 11;
+		return new int[]{bx(m) - 1, ny, nb};
+	}
+
+	/** Das ✕ direkt neben dem Namen: {x, y, b, h}. */
+	private int[] loeschFeld(HudModul m) {
+		int[] n = namensFeld(m);
+		return new int[]{n[0] + n[2] + 2, n[1], 10, 9};
+	}
+
+	private boolean aufLoeschen(HudModul m, double mx, double my) {
+		if (m == null || !sichtbar(m)) {
+			return false;
+		}
+		int[] f = loeschFeld(m);
+		return Neon.ueber(mx, my, f[0], f[1], f[2], f[3]);
+	}
+
+	/** Über der Namenszeile samt ✕ – etwas großzügiger, damit die Lücke zum Modul nicht stört. */
+	private boolean aufBeschriftung(HudModul m, double mx, double my) {
+		if (m == null || !sichtbar(m)) {
+			return false;
+		}
+		int[] n = namensFeld(m);
+		int[] f = loeschFeld(m);
+		return Neon.ueber(mx, my, n[0] - 2, n[1] - 3, f[0] + f[2] - n[0] + 4, f[3] + 6);
+	}
+
+	/** Modul ausblenden: aus im HUD und im Mod-Menü. */
+	private void ausblenden(HudModul m) {
+		m.pos().an = false;
+		ausgeblendet.push(m);
+		markiert = null;
+		BambusClient.config.speichern();
+		Hinweise.zeige("hud", m.name + " ausgeblendet", "Strg+Z holt es zurück · im Mod-Menü wieder einschalten", Farben.NEON_PINK);
+	}
+
+	private void zurueckholen() {
+		HudModul m = ausgeblendet.poll();
+		if (m == null) {
+			return;
+		}
+		m.pos().an = true;
+		BambusClient.config.speichern();
+		Hinweise.zeige("hud", m.name + " wieder da", "", Farben.NEON);
+	}
+
 	private HudModul oben(double mx, double my) {
 		for (int i = BambusClient.MODULE.size() - 1; i >= 0; i--) {
 			HudModul m = BambusClient.MODULE.get(i);
@@ -84,7 +146,9 @@ public class HudEditorScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics g, int mausX, int mausY, float delta) {
-		HudModul hover = gezogen != null ? gezogen : groesseAendern != null ? groesseAendern : oben(mausX, mausY);
+		HudModul hover = gezogen != null ? gezogen : groesseAendern != null ? groesseAendern
+				: aufBeschriftung(markiert, mausX, mausY) ? markiert : oben(mausX, mausY);
+		markiert = hover;
 
 		for (HudModul m : BambusClient.MODULE) {
 			if (!sichtbar(m)) {
@@ -102,12 +166,16 @@ public class HudEditorScreen extends Screen {
 				g.fill(gx, gy, x + b + 1, y + h + 1, Farben.alpha(Farben.NEON, (int) (255 * k)));
 				g.fill(gx + 1, gy + 1, x + b, y + h, Farben.alpha(0xFF05080C, (int) (255 * k)));
 				g.fill(gx + 2, gy + 2, x + b - 1, y + h - 1, Farben.alpha(Farben.NEON, (int) (255 * k)));
-				// Name darüber
+				// Name darüber, daneben ✕ zum Ausblenden
 				String name = m.name + "  " + Math.round(m.skala() * 100) + " %";
-				int nb = (int) (font.width(name) * 0.75f) + 6;
-				int ny = y - 11 < 0 ? y + h + 3 : y - 11;
-				g.fill(x - 1, ny, x - 1 + nb, ny + 9, Farben.alpha(0xFF05080C, (int) (220 * k)));
-				Neon.text(g, font, name, x + 2, ny + 1, 0.75f, Farben.alpha(Farben.NEON, (int) (255 * k)), false);
+				int[] n = namensFeld(m);
+				g.fill(n[0], n[1], n[0] + n[2], n[1] + 9, Farben.alpha(0xFF05080C, (int) (220 * k)));
+				Neon.text(g, font, name, x + 2, n[1] + 1, 0.75f, Farben.alpha(Farben.NEON, (int) (255 * k)), false);
+				int[] f = loeschFeld(m);
+				boolean ueberX = Neon.ueber(mausX, mausY, f[0], f[1], f[2], f[3]);
+				g.fill(f[0], f[1], f[0] + f[2], f[1] + f[3], Farben.alpha(ueberX ? Farben.ROT : 0xFF05080C, (int) (230 * k)));
+				g.renderOutline(f[0], f[1], f[2], f[3], Farben.alpha(Farben.ROT, (int) (255 * k)));
+				Neon.text(g, font, "✕", f[0] + 3, f[1] + 1, 0.75f, Farben.alpha(ueberX ? Farben.WEISS : Farben.ROT, (int) (255 * k)), false);
 			}
 		}
 
@@ -122,16 +190,28 @@ public class HudEditorScreen extends Screen {
 			Neon.leuchtText(g, font, p, width / 2 - (int) (font.width(p) * 1.5f), 18, 3f, Farben.NEON);
 		}
 
-		String tipp = "Ziehen = verschieben   ·   Ecke oder Mausrad = Größe   ·   Shift = ohne Einrasten   ·   Rechtsklick = 100 %";
-		int tb = (int) (font.width(tipp) * 0.75f);
-		g.fill(width / 2 - tb / 2 - 6, height - 44, width / 2 + tb / 2 + 6, height - 33, 0xB005080C);
-		Neon.text(g, font, tipp, width / 2 - tb / 2, height - 42, 0.75f, Farben.WEISS, false);
+		String[] tipps = {"Ziehen = verschieben  ·  Ecke/Mausrad = Größe  ·  Shift = frei  ·  Rechtsklick = 100 %",
+				"✕ oder Entf = ausblenden  ·  Strg+Z = zurückholen"};
+		String eineZeile = tipps[0] + "  ·  " + tipps[1];
+		if (font.width(eineZeile) * 0.75f <= width - 24) {
+			tipps = new String[]{eineZeile};
+		}
+		for (int i = 0; i < tipps.length; i++) {   // von unten nach oben über den Knöpfen
+			int tb = (int) (font.width(tipps[i]) * 0.75f);
+			int ty = height - 42 - (tipps.length - 1 - i) * 11;
+			g.fill(width / 2 - tb / 2 - 6, ty - 2, width / 2 + tb / 2 + 6, ty + 9, 0xB005080C);
+			Neon.text(g, font, tipps[i], width / 2 - tb / 2, ty, 0.75f, Farben.WEISS, false);
+		}
 		super.render(g, mausX, mausY, delta);
 	}
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
 		if (super.mouseClicked(e, doppelt)) {
+			return true;
+		}
+		if (e.button() == 0 && aufLoeschen(markiert, e.x(), e.y())) {
+			ausblenden(markiert);
 			return true;
 		}
 		HudModul m = oben(e.x(), e.y());
@@ -246,6 +326,19 @@ public class HudEditorScreen extends Screen {
 			return true;
 		}
 		return super.mouseReleased(e);
+	}
+
+	@Override
+	public boolean keyPressed(KeyEvent e) {
+		if (e.key() == InputConstants.KEY_DELETE && markiert != null && gezogen == null && groesseAendern == null) {
+			ausblenden(markiert);
+			return true;
+		}
+		if (e.key() == InputConstants.KEY_Z && (e.modifiers() & (2 | 8)) != 0) {   // Strg+Z (Mac: Cmd+Z)
+			zurueckholen();
+			return true;
+		}
+		return super.keyPressed(e);
 	}
 
 	@Override
