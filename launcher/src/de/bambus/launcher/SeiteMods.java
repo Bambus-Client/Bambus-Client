@@ -312,11 +312,7 @@ final class SeiteMods extends JPanel {
 			g.setColor(NeonUI.GRAU);
 			g.drawString(an ? "An · bis zu doppelte FPS, weniger Ruckler" : "Aus · Klicken für mehr FPS", 20, 64);
 			int sb = 54, sh = 26, sx = b - sb - 20, sy = (h - sh) / 2;
-			RoundRectangle2D bahn = new RoundRectangle2D.Float(sx, sy, sb, sh, sh, sh);
-			g.setColor(an ? NeonUI.alpha(NeonUI.NEON, 70) : new Color(0x1E2A3C));
-			g.fill(bahn);
-			g.setColor(an ? NeonUI.NEON : NeonUI.GRAU);
-			g.fillOval(an ? sx + sb - sh + 4 : sx + 4, sy + 4, sh - 8, sh - 8);
+			NeonUI.schalter(g, sx, sy, sb, sh, an ? 1f : 0f, an, NeonUI.NEON);
 			g.dispose();
 		}
 	}
@@ -397,11 +393,7 @@ final class SeiteMods extends JPanel {
 			}
 			// Schalter
 			int sb = 40, sh = 20, sx = b - sb - 12, sy = (h - sh) / 2;
-			RoundRectangle2D bahn = new RoundRectangle2D.Float(sx, sy, sb, sh, sh, sh);
-			g.setColor(an ? NeonUI.alpha(farbe, 70) : new Color(0x1E2A3C));
-			g.fill(bahn);
-			g.setColor(an ? farbe : NeonUI.GRAU);
-			g.fillOval(an ? sx + sb - sh + 3 : sx + 3, sy + 3, sh - 6, sh - 6);
+			NeonUI.schalter(g, sx, sy, sb, sh, an ? 1f : 0f, an, farbe);
 			g.dispose();
 		}
 	}

@@ -20,6 +20,11 @@ final class UebersetzteGrafik extends Graphics2D {
 		this.d = d;
 	}
 
+	/** Die Zeichenfläche darunter (ohne Übersetzung). */
+	Graphics2D innen() {
+		return d;
+	}
+
 	@Override public void drawString(String s, int x, int y) { d.drawString(Sprache.t(s), x, y); }
 	@Override public void drawString(String s, float x, float y) { d.drawString(Sprache.t(s), x, y); }
 	@Override public void drawString(AttributedCharacterIterator it, int x, int y) { d.drawString(it, x, y); }

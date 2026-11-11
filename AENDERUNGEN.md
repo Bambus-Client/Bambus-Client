@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Launcher im Pixel-Look wie der Client: eigene Pixelschrift, Treppen-Ecken, eckige Schalter, Pixel-Leuchten, Partikel und Ringe aus Blöcken
 - Bambus-Helfer: Hilfe-Chat im Launcher zu Client und Minecraft (Rezepte, Tipps, Probleme, Nether-Rechner) – ohne Internet und kostenlos
 - Willkommens-Seite beim ersten Start: Sprache, Minecraft-Name, Look und Leistung einstellen
 - Der Launcher gibt es jetzt auf Deutsch und Englisch (umschaltbar unter Einstellungen)

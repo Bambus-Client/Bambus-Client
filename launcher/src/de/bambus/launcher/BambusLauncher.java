@@ -101,6 +101,10 @@ public final class BambusLauncher extends JFrame {
 		System.setProperty("apple.awt.application.appearance", "NSAppearanceNameDarkAqua");
 		UIManager.put("ToolTip.background", NeonUI.KARTE);
 		UIManager.put("ToolTip.foreground", NeonUI.TEXT);
+		UIManager.put("ToolTip.font", NeonUI.normal(12));
+		UIManager.put("ToolTip.border", javax.swing.BorderFactory.createCompoundBorder(
+				javax.swing.BorderFactory.createLineBorder(NeonUI.NEON, PixelGrafik.P),
+				javax.swing.BorderFactory.createEmptyBorder(4, 6, 4, 6)));
 		SwingUtilities.invokeLater(() -> {
 			BambusLauncher l = new BambusLauncher();
 			l.setVisible(true);
@@ -240,7 +244,7 @@ public final class BambusLauncher extends JFrame {
 		try {
 			GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 			if (gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSPARENT)) {
-				setShape(new RoundRectangle2D.Double(0, 0, BREITE, HOEHE, 22, 22));
+				setShape(PixelGrafik.treppe(0, 0, BREITE, HOEHE, 11));   // Treppen-Ecken wie im Spiel
 			}
 		} catch (Exception ignoriert) {
 			// eckig ist auch in Ordnung
@@ -566,8 +570,7 @@ public final class BambusLauncher extends JFrame {
 			g.setFont(NeonUI.titel(30));
 			NeonUI.leuchtText(g, "BAMBUS", 64, 66, NeonUI.NEON, 2);
 			g.setFont(NeonUI.mono(12));
-			g.setColor(NeonUI.CYAN);
-			g.drawString("C L I E N T", 66, 86);
+			NeonUI.schattenText(g, "C L I E N T", 66, 86, NeonUI.CYAN);
 
 			g.setColor(NeonUI.LINIE);
 			g.fillRect(20, 122, LEISTE - 40, 1);
@@ -610,9 +613,9 @@ public final class BambusLauncher extends JFrame {
 			g.fillRect(LEISTE, KOPF - 1, b - LEISTE, 1);
 
 			// Rahmen
-			g.setColor(NeonUI.alpha(NeonUI.NEON, 70));
-			g.setStroke(new BasicStroke(1.5f));
-			g.draw(new RoundRectangle2D.Float(0.75f, 0.75f, b - 1.5f, h - 1.5f, 22, 22));
+			g.setColor(NeonUI.alpha(NeonUI.NEON, 90));
+			NeonUI.ring(g, 0, 0, b, h, 11, 0, PixelGrafik.P);
+			NeonUI.ecken(g, LEISTE + 8, KOPF + 8, b - LEISTE - 16, h - KOPF - 16, 14, NeonUI.alpha(NeonUI.CYAN, 70));
 			g.dispose();
 		}
 	}
@@ -647,8 +650,7 @@ public final class BambusLauncher extends JFrame {
 			g.fillOval(12, getHeight() / 2 - 4, 8, 8);
 			g.setFont(NeonUI.mono(11));
 			String t = drin ? konto.name() : "MICROSOFT · ANMELDEN";
-			g.setColor(drin ? NeonUI.TEXT : NeonUI.GRAU);
-			g.drawString(t, 28, getHeight() / 2 + 4);
+			NeonUI.schattenText(g, t, 28, getHeight() / 2 + 4, drin ? NeonUI.TEXT : NeonUI.GRAU);
 			g.dispose();
 		}
 	}
@@ -679,21 +681,23 @@ public final class BambusLauncher extends JFrame {
 			boolean aktiv = id.equals(seite);
 			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 12, 12);
 			if (aktiv) {
-				g.setPaint(new GradientPaint(0, 0, NeonUI.alpha(NeonUI.NEON, 50), b, 0, NeonUI.alpha(NeonUI.NEON, 0)));
+				// wie die gewählte Kategorie im Bambus-Menü: Fläche, Leiste links, Pixelrahmen
+				g.setPaint(new GradientPaint(0, 0, NeonUI.alpha(NeonUI.NEON, 50), b, 0, NeonUI.alpha(NeonUI.NEON, 6)));
 				g.fill(form);
+				g.setColor(NeonUI.alpha(NeonUI.NEON, (int) (30 + 40 * NeonUI.puls())));
+				g.fillRect(0, 4, 8, h - 8);
 				g.setColor(NeonUI.NEON);
-				g.fillRoundRect(0, 9, 4, h - 18, 4, 4);
-				g.setColor(NeonUI.alpha(NeonUI.NEON, (int) (40 + 50 * NeonUI.puls())));
-				g.fillRoundRect(0, 6, 8, h - 12, 8, 8);
+				g.fillRect(0, 6, 4, h - 12);
+				NeonUI.ecken(g, 1, 1, b - 2, h - 2, 6, NeonUI.alpha(NeonUI.NEON, 120));
 			} else if (ueber) {
 				g.setColor(NeonUI.alpha(Color.WHITE, 12));
 				g.fill(form);
 			}
-			g.setFont(NeonUI.titel(15));
-			g.setColor(aktiv ? NeonUI.NEON : ueber ? NeonUI.TEXT : NeonUI.GRAU);
-			g.drawString(symbol, 20, h / 2 + 6);
+			Color farbe = aktiv ? NeonUI.NEON : ueber ? NeonUI.TEXT : NeonUI.GRAU;
+			g.setFont(NeonUI.normal(15));
+			NeonUI.schattenText(g, symbol, 18, h / 2 + 7, farbe);
 			g.setFont(NeonUI.mono(13));
-			g.drawString(titel, 48, h / 2 + 5);
+			NeonUI.schattenText(g, titel, 48, h / 2 + 4, farbe);
 			g.dispose();
 		}
 	}
@@ -716,9 +720,8 @@ public final class BambusLauncher extends JFrame {
 				g.setColor(schliessen ? NeonUI.alpha(NeonUI.PINK, 70) : NeonUI.alpha(Color.WHITE, 20));
 				g.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 8, 8);
 			}
-			g.setFont(NeonUI.titel(13));
-			g.setColor(ueber ? NeonUI.TEXT : NeonUI.GRAU);
-			NeonUI.zentriert(g, getText(), 0, 0, getWidth(), getHeight());
+			g.setFont(NeonUI.titel(15));
+			NeonUI.zentriertSchatten(g, getText(), 0, 0, getWidth(), getHeight(), ueber ? NeonUI.TEXT : NeonUI.GRAU);
 			g.dispose();
 		}
 	}

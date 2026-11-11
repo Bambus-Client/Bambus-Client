@@ -115,17 +115,15 @@ final class SeiteStart extends JPanel {
 
 		// --- Titel
 		g.setFont(NeonUI.mono(12));
-		g.setColor(NeonUI.CYAN);
-		g.drawString("MINECRAFT " + Installer.MC_VERSION + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72);
-		g.setFont(NeonUI.titel(56));
-		NeonUI.leuchtText(g, "BAMBUS", 38, 136, NeonUI.NEON, 3);
+		NeonUI.schattenText(g, "MINECRAFT " + Installer.MC_VERSION + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72, NeonUI.CYAN);
+		g.setFont(NeonUI.titel(48));
+		NeonUI.leuchtText(g, "BAMBUS", 40, 130, NeonUI.NEON, 3);
 		int tb = g.getFontMetrics().stringWidth("BAMBUS ");
-		g.setFont(NeonUI.titel(56));
-		NeonUI.leuchtText(g, "CLIENT", 38 + tb, 136, NeonUI.TEXT, 1);
+		NeonUI.leuchtText(g, "CLIENT", 40 + tb, 130, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(15));
-		g.setColor(NeonUI.GRAU);
-		g.drawString("Dein PvP-Client im Neon-Look. Module, Kosmetik und HUD –", 42, 172);
-		g.drawString("alles mit einem Klick an- und ausschaltbar.", 42, 194);
+		NeonUI.schattenText(g, "Dein PvP-Client im Neon-Look.", 42, 168, NeonUI.GRAU);
+		NeonUI.schattenText(g, "Module, Kosmetik und HUD –", 42, 190, NeonUI.GRAU);
+		NeonUI.schattenText(g, "alles mit einem Klick an- und ausschaltbar.", 42, 212, NeonUI.GRAU);
 
 		emblem(g, b - 120, 150);
 
@@ -137,17 +135,19 @@ final class SeiteStart extends JPanel {
 		ClientEinstellungen c = l.client;
 		String cape = c.cape();
 		String[][] werte = {
-				{"MODULE AKTIV", c.anzahlAktiv() + " / " + ClientEinstellungen.anzahlGesamt(), "◧"},
-				{"KOSMETIK", ClientEinstellungen.AUS.equals(cape) ? "Kein Cape" : ClientEinstellungen.name(ClientEinstellungen.CAPES, cape), "✦"},
-				{"ARBEITSSPEICHER", l.ramGb + " GB", "⚙"},
+				{"MODULE AKTIV", c.anzahlAktiv() + " / " + ClientEinstellungen.anzahlGesamt(), "alle"},
+				{"KOSMETIK", ClientEinstellungen.AUS.equals(cape) ? "Kein Cape" : ClientEinstellungen.name(ClientEinstellungen.CAPES, cape), "kosmetik"},
+				{"ARBEITSSPEICHER", l.ramGb + " GB", "speicher"},
 		};
 		Color[] farben = {NeonUI.NEON, NeonUI.PINK, NeonUI.CYAN};
 		for (int i = 0; i < infoKarten.length; i++) {
 			Rectangle r = infoKarten[i];
 			boolean hover = i == hoverKarte;
 			RoundRectangle2D form = new RoundRectangle2D.Float(r.x, r.y, r.width, r.height, 14, 14);
-			g.setColor(hover ? NeonUI.KARTE_HOVER : NeonUI.alpha(NeonUI.KARTE, 230));
+			g.setPaint(new GradientPaint(0, r.y, hover ? NeonUI.KARTE_HOVER : new Color(0x0B1626), 0, r.y + r.height, new Color(0x050A10)));
 			g.fill(form);
+			NeonUI.gitter(g, r.x + 2, r.y + 2, r.width - 4, r.height - 4, 12, NeonUI.alpha(NeonUI.CYAN, hover ? 20 : 10));
+			NeonUI.ecken(g, r.x - 3, r.y - 3, r.width + 6, r.height + 6, 10, NeonUI.alpha(farben[i], hover ? 255 : 110));
 			if (hover) {
 				NeonUI.leuchten(g, form, farben[i], 3);
 			} else {
@@ -158,42 +158,45 @@ final class SeiteStart extends JPanel {
 			g.setPaint(new GradientPaint(r.x + 16, 0, farben[i], r.x + r.width - 16, 0, NeonUI.alpha(farben[i], 0)));
 			g.fillRect(r.x + 16, r.y, r.width - 32, 2);
 			g.setFont(NeonUI.mono(10));
-			g.setColor(NeonUI.GRAU);
-			g.drawString(werte[i][0], r.x + 18, r.y + 28);
+			NeonUI.schattenText(g, werte[i][0], r.x + 18, r.y + 28, NeonUI.GRAU);
 			g.setFont(NeonUI.titel(22));
-			g.setColor(NeonUI.TEXT);
-			g.drawString(werte[i][1], r.x + 18, r.y + 62);
-			g.setFont(NeonUI.titel(20));
-			g.setColor(NeonUI.alpha(farben[i], hover ? 255 : 150));
-			g.drawString(werte[i][2], r.x + r.width - 38, r.y + 32);
-			g.setFont(NeonUI.mono(9));
-			g.setColor(NeonUI.alpha(farben[i], hover ? 255 : 0));
-			g.drawString("ÖFFNEN →", r.x + r.width - 70, r.y + r.height - 12);
+			if (g.getFontMetrics().stringWidth(werte[i][1]) > r.width - 36) g.setFont(NeonUI.titel(13));
+			NeonUI.schattenText(g, werte[i][1], r.x + 18, r.y + 62, NeonUI.TEXT);
+			Symbole.zeichne(g, werte[i][2], r.x + r.width - 36, r.y + 16, 2, NeonUI.alpha(farben[i], hover ? 255 : 150));
+			if (hover) {
+				g.setFont(NeonUI.mono(9));
+				NeonUI.schattenText(g, "ÖFFNEN →", r.x + r.width - 70, r.y + r.height - 12, farben[i]);
+			}
 		}
 
 		// --- Status und Fortschritt
 		int sy = 420;
 		g.setFont(NeonUI.mono(10));
-		g.setColor(NeonUI.GRAU);
-		g.drawString("STATUS", 42, sy);
+		NeonUI.schattenText(g, "STATUS", 42, sy, NeonUI.GRAU);
 		g.setFont(NeonUI.normal(15));
-		g.setColor(beschaeftigt ? NeonUI.CYAN : NeonUI.TEXT);
-		g.drawString(status, 42, sy + 26);
+		if (g.getFontMetrics().stringWidth(status) > 420) g.setFont(NeonUI.normal(12));   // lange Meldungen kleiner
+		NeonUI.schattenText(g, status, 42, sy + 26, beschaeftigt ? NeonUI.CYAN : NeonUI.TEXT);
 
 		int bx = 42;
 		int by = sy + 44;
 		int bb = 400;
-		g.setColor(new Color(255, 255, 255, 18));
-		g.fillRoundRect(bx, by, bb, 8, 8, 8);
+		// Fortschritt aus Pixel-Blöcken
+		g.setColor(new Color(255, 255, 255, 14));
+		g.fillRect(bx - 2, by - 2, bb + 4, 12);
+		for (int x = 0; x < bb; x += 8) {
+			g.setColor(new Color(255, 255, 255, 10));
+			g.fillRect(bx + x, by, 6, 8);
+		}
 		if (prozent > 0) {
 			int w = bb * prozent / 100;
 			g.setPaint(new GradientPaint(bx, 0, NeonUI.NEON, bx + bb, 0, NeonUI.CYAN));
-			g.fillRoundRect(bx, by, w, 8, 8, 8);
-			g.setColor(NeonUI.alpha(NeonUI.NEON, 60));
-			g.fillRoundRect(bx, by - 3, w, 14, 14, 14);
+			for (int x = 0; x + 6 <= w; x += 8) {
+				g.fillRect(bx + x, by, 6, 8);
+			}
+			g.setColor(NeonUI.alpha(NeonUI.NEON, 40));
+			g.fillRect(bx - 2, by - 4, w + 2, 16);
 			g.setFont(NeonUI.mono(10));
-			g.setColor(NeonUI.NEON);
-			g.drawString(prozent + "%", bx + bb + 10, by + 8);
+			NeonUI.schattenText(g, prozent + "%", bx + bb + 10, by + 8, NeonUI.NEON);
 		}
 
 		g.setFont(NeonUI.normal(12));
@@ -243,45 +246,65 @@ final class SeiteStart extends JPanel {
 		NeonUI.zentriert(g, "✕", tippZu.x, tippZu.y, tippZu.width, tippZu.height);
 	}
 
-	/** Rotierende Neon-Ringe um das Bambus-Zeichen. */
+	/** Rotierende Neon-Ringe um das Bambus-Zeichen – aus Pixel-Blöcken wie im Spiel. */
 	private static void emblem(Graphics2D g, int cx, int cy) {
 		double t = System.currentTimeMillis() / 1000.0;
 		float p = NeonUI.puls();
 
-		g.setColor(NeonUI.alpha(NeonUI.NEON, (int) (14 + 16 * p)));
-		g.fill(new Ellipse2D.Double(cx - 70, cy - 70, 140, 140));
+		pixelScheibe(g, cx, cy, 70, 4, NeonUI.alpha(NeonUI.NEON, (int) (14 + 16 * p)));
 
 		Object[][] ringe = {
-				{92, NeonUI.NEON, 40.0, 110.0, 2.2f},
-				{78, NeonUI.CYAN, -65.0, 80.0, 1.6f},
-				{104, NeonUI.PINK, 25.0, 50.0, 1.2f},
+				{92, NeonUI.NEON, 40.0, 110.0, 4},
+				{78, NeonUI.CYAN, -65.0, 80.0, 4},
+				{104, NeonUI.PINK, 25.0, 50.0, 2},
 		};
 		for (Object[] r : ringe) {
 			int rad = (Integer) r[0];
 			Color farbe = (Color) r[1];
 			double winkel = ((Double) r[2]) * t;
 			double laenge = (Double) r[3];
-			float dicke = (Float) r[4];
+			int block = (Integer) r[4];
 			for (int k = 0; k < 2; k++) {
-				Arc2D bogen = new Arc2D.Double(cx - rad, cy - rad, rad * 2, rad * 2, winkel + k * 180, laenge, Arc2D.OPEN);
-				for (int i = 4; i >= 1; i--) {
-					g.setColor(NeonUI.alpha(farbe, 50 / i));
-					g.setStroke(new BasicStroke(dicke + i * 2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-					g.draw(bogen);
-				}
-				g.setColor(farbe);
-				g.setStroke(new BasicStroke(dicke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-				g.draw(bogen);
+				double von = Math.toRadians(winkel + k * 180);
+				double bis = von + Math.toRadians(laenge);
+				pixelBogen(g, cx, cy, rad, von, bis, block + 4, NeonUI.alpha(farbe, 40));
+				pixelBogen(g, cx, cy, rad, von, bis, block, farbe);
 			}
 		}
 		// Punkte auf der äußeren Bahn
 		for (int i = 0; i < 6; i++) {
 			double w = t * 0.8 + i * Math.PI / 3;
-			int x = (int) (cx + Math.cos(w) * 118);
-			int y = (int) (cy + Math.sin(w) * 118);
-			g.setColor(NeonUI.alpha(NeonUI.CYAN, 120));
-			g.fillOval(x - 2, y - 2, 4, 4);
+			int x = (int) (cx + Math.cos(w) * 118) / 2 * 2;
+			int y = (int) (cy + Math.sin(w) * 118) / 2 * 2;
+			g.setColor(NeonUI.alpha(NeonUI.CYAN, 50));
+			g.fillRect(x - 4, y - 4, 8, 8);
+			g.setColor(NeonUI.alpha(NeonUI.CYAN, 160));
+			g.fillRect(x - 2, y - 2, 4, 4);
 		}
-		NeonUI.logo(g, cx - 12, cy - 30, 60);
+		NeonUI.logo(g, cx - 16, cy - 30, 60);
+	}
+
+	/** Bogen aus quadratischen Blöcken auf einem festen Raster (wie gezeichnete Pixel-Kunst). */
+	private static void pixelBogen(Graphics2D g, int cx, int cy, int rad, double von, double bis, int block, Color farbe) {
+		g.setColor(farbe);
+		java.util.Set<Long> fertig = new java.util.HashSet<>();
+		double schritt = 1.0 / rad;
+		for (double w = von; w <= bis; w += schritt) {
+			int x = Math.floorDiv((int) Math.round(cx + Math.cos(w) * rad - block / 2.0), 2) * 2;
+			int y = Math.floorDiv((int) Math.round(cy - Math.sin(w) * rad - block / 2.0), 2) * 2;
+			if (fertig.add(((long) x << 32) ^ (y & 0xffffffffL))) {
+				g.fillRect(x, y, block, block);
+			}
+		}
+	}
+
+	/** Gefüllter Kreis aus Pixel-Zeilen. */
+	private static void pixelScheibe(Graphics2D g, int cx, int cy, int rad, int p, Color farbe) {
+		g.setColor(farbe);
+		for (int y = -rad; y < rad; y += p) {
+			double my = y + p / 2.0;
+			int halb = (int) Math.round(Math.sqrt(Math.max(0, rad * rad - my * my)) / p) * p;
+			if (halb > 0) g.fillRect(cx - halb, cy + y, halb * 2, p);
+		}
 	}
 }

@@ -56,8 +56,8 @@ final class Hintergruende {
 			float py = (float) ((p[1] - t * p[2]) % 1.0);
 			if (py < 0) py += 1;
 			float px = (float) (p[0] + 0.02 * Math.sin(t * 0.6 + i));
-			pos[i][0] = x + px * b;
-			pos[i][1] = y + py * h;
+			pos[i][0] = (int) (x + px * b) / 2 * 2;   // auf das 2-Pixel-Raster
+			pos[i][1] = (int) (y + py * h) / 2 * 2;
 		}
 		g.setStroke(new BasicStroke(1f));
 		for (int i = 0; i < ANZAHL; i++) {
@@ -71,12 +71,16 @@ final class Hintergruende {
 			}
 		}
 		for (int i = 0; i < ANZAHL; i++) {
-			float s = PUNKTE[i][3];
+			// Pixel-Partikel wie im Bambus-Hauptmenü: Schein, Kern, heller Mittelpunkt
+			int s = Math.max(1, Math.round(PUNKTE[i][3] / 1.5f));
+			int px = (int) pos[i][0], py = (int) pos[i][1];
 			Color c = i % 3 == 0 ? NeonUI.CYAN : i % 7 == 0 ? NeonUI.PINK : NeonUI.NEON;
-			g.setColor(NeonUI.alpha(c, 40));
-			g.fillOval((int) (pos[i][0] - s * 2.5f), (int) (pos[i][1] - s * 2.5f), (int) (s * 5), (int) (s * 5));
-			g.setColor(NeonUI.alpha(c, 170));
-			g.fillOval((int) (pos[i][0] - s / 2), (int) (pos[i][1] - s / 2), (int) Math.max(2, s), (int) Math.max(2, s));
+			g.setColor(NeonUI.alpha(c, 22));
+			g.fillRect(px - s * 4, py - s * 4, s * 8, s * 8);
+			g.setColor(NeonUI.alpha(c, 60));
+			g.fillRect(px - s * 2, py - s * 2, s * 4, s * 4);
+			g.setColor(NeonUI.alpha(c, 200));
+			g.fillRect(px - s, py - s, s * 2, s * 2);
 		}
 	}
 
@@ -87,7 +91,12 @@ final class Hintergruende {
 		// Sonne
 		int r = (int) (h * 0.2);
 		g.setPaint(new GradientPaint(0, horizont - 2 * r, NeonUI.alpha(new Color(0xFFC846), 60), 0, horizont, NeonUI.alpha(NeonUI.PINK, 50)));
-		g.fillOval(mitte - r, horizont - 2 * r + r / 3, 2 * r, 2 * r);
+		int sonneY = horizont - 2 * r + r / 3;
+		for (int zy = 0; zy < 2 * r; zy += 4) {        // Sonne aus 4-Pixel-Zeilen
+			double my = zy + 2 - r;
+			int halb = (int) Math.round(Math.sqrt(Math.max(0, r * r - my * my)) / 4) * 4;
+			if (halb > 0) g.fillRect(mitte - halb, sonneY + zy, halb * 2, 4);
+		}
 		g.setColor(NeonUI.HG);
 		for (int i = 0; i < 6; i++) {
 			int sy = horizont - r / 2 - i * (r / 6) + (int) ((t * 6) % (r / 6));
@@ -123,8 +132,8 @@ final class Hintergruende {
 	private static final long AURORA_MS = 66;   // Bänder 15-mal pro Sekunde erneuern – sie wogen ohnehin langsam
 
 	/**
-	 * Weiche Nordlicht-Bänder, die langsam wogen. Die Bänder sind ohnehin weich – darum in halber Auflösung
-	 * malen, weich hochskalieren und nur 15-mal pro Sekunde erneuern; jedes Bild kopiert nur das fertige Bild.
+	 * Nordlicht-Bänder, die langsam wogen. Im Pixel-Look in Viertel-Auflösung gemalt und blockig
+	 * hochskaliert; nur 15-mal pro Sekunde erneuert – jedes Bild kopiert nur das fertige Bild.
 	 */
 	private static void aurora(Graphics2D g, int x, int y, int b, int h, double t) {
 		NeonUI.gitter(g, x, y, b, h, 28, new Color(255, 255, 255, 3));
@@ -137,15 +146,15 @@ final class Hintergruende {
 		g.drawImage(auroraVoll, x, y, null);
 		// funkelnde Sterne (scharf, in voller Auflösung)
 		for (int i = 0; i < 40; i++) {
-			float sx = PUNKTE[i][0] * b, sy = PUNKTE[i][1] * h * 0.5f;
+			int sx = (int) (PUNKTE[i][0] * b) / 2 * 2, sy = (int) (PUNKTE[i][1] * h * 0.5f) / 2 * 2;
 			int al = (int) (60 + 60 * Math.sin(t * 2 + i));
 			g.setColor(new Color(255, 255, 255, Math.max(0, al)));
-			g.fillRect(x + (int) sx, y + (int) sy, 2, 2);
+			g.fillRect(x + sx, y + sy, 2, 2);
 		}
 	}
 
 	private static void auroraErneuern(int b, int h, double t) {
-		int hb = Math.max(1, b / 2), hh = Math.max(1, h / 2);
+		int hb = Math.max(1, b / 4), hh = Math.max(1, h / 4);
 		if (auroraKlein == null || auroraKlein.getWidth() != hb || auroraKlein.getHeight() != hh) {
 			auroraKlein = new BufferedImage(hb, hh, BufferedImage.TYPE_INT_ARGB_PRE);
 		}
@@ -156,13 +165,13 @@ final class Hintergruende {
 		k.setComposite(AlphaComposite.Clear);
 		k.fillRect(0, 0, hb, hh);
 		k.setComposite(AlphaComposite.SrcOver);
-		k.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		k.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 		k.scale(hb / (double) b, hh / (double) h);
 		auroraBaender(k, b, h, t);
 		k.dispose();
 		Graphics2D v = auroraVoll.createGraphics();
 		v.setComposite(AlphaComposite.Src);   // ersetzt das alte Bild komplett
-		v.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		v.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		v.drawImage(auroraKlein, 0, 0, b, h, null);
 		v.dispose();
 	}
@@ -213,8 +222,11 @@ final class Hintergruende {
 		if (b <= 0 || h <= 0) return;
 		long schluessel = ((long) b << 48) ^ ((long) h << 32) ^ (NeonUI.CYAN.getRGB() * 31L + NeonUI.NEON.getRGB());
 		if (lichtBild == null || schluessel != lichtSchluessel) {
-			lichtBild = new BufferedImage(b, h, BufferedImage.TYPE_INT_ARGB_PRE);
-			Graphics2D l = lichtBild.createGraphics();
+			// in 4-Pixel-Blöcken gemalt und blockig vergrößert: Licht in Stufen wie im Pixel-Look
+			int q = 4;
+			BufferedImage klein = new BufferedImage(Math.max(1, b / q), Math.max(1, h / q), BufferedImage.TYPE_INT_ARGB_PRE);
+			Graphics2D l = klein.createGraphics();
+			l.scale(1.0 / q, 1.0 / q);
 			l.setPaint(new RadialGradientPaint(b - 120f, 90f, 420f, new float[]{0f, 1f},
 					new Color[]{NeonUI.alpha(NeonUI.CYAN, 38), NeonUI.alpha(NeonUI.CYAN, 0)}));
 			l.fillRect(0, 0, b, h);
@@ -222,6 +234,11 @@ final class Hintergruende {
 					new Color[]{NeonUI.alpha(NeonUI.NEON, 30), NeonUI.alpha(NeonUI.NEON, 0)}));
 			l.fillRect(0, 0, b, h);
 			l.dispose();
+			lichtBild = new BufferedImage(b, h, BufferedImage.TYPE_INT_ARGB_PRE);
+			Graphics2D v = lichtBild.createGraphics();
+			v.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			v.drawImage(klein, 0, 0, klein.getWidth() * q, klein.getHeight() * q, null);
+			v.dispose();
 			lichtSchluessel = schluessel;
 		}
 		g.drawImage(lichtBild, x, 0, null);

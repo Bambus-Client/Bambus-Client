@@ -605,8 +605,7 @@ final class SeiteKosmetik extends JPanel {
 				g.draw(form);
 			}
 			g.setFont(NeonUI.mono(10));
-			g.setColor(aktiv ? NeonUI.TEXT : NeonUI.GRAU);
-			NeonUI.zentriert(g, TAB_NAMEN[nummer], 0, 0, getWidth(), getHeight());
+			NeonUI.zentriertSchatten(g, TAB_NAMEN[nummer], 0, 0, getWidth(), getHeight(), aktiv ? NeonUI.TEXT : NeonUI.GRAU);
 			g.dispose();
 		}
 	}

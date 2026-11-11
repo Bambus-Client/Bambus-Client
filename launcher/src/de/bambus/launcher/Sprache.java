@@ -91,6 +91,7 @@ final class Sprache {
 		// ---------------------------------------------------------------- Start
 		g("SPIELEN", "PLAY"); g("Dein PvP-Client im Neon-Look. Module, Kosmetik und HUD –", "Your PvP client in neon style. Modules, cosmetics and HUD –");
 		g("alles mit einem Klick an- und ausschaltbar.", "everything on and off with a single click.");
+		g("Dein PvP-Client im Neon-Look.", "Your PvP client in neon style."); g("Module, Kosmetik und HUD –", "Modules, cosmetics and HUD –");
 		g("MODULE AKTIV", "MODULES ACTIVE"); g("STATUS", "STATUS"); g("TIPP", "TIP");
 		g("System bereit. Klicke auf SPIELEN.", "System ready. Click PLAY.");
 		g("Erster Start: Alles wird automatisch eingerichtet.", "First start: everything is set up automatically.");

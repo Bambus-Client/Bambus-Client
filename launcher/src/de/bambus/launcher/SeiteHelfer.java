@@ -19,7 +19,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
@@ -212,11 +211,7 @@ final class SeiteHelfer extends JPanel {
 
 	/** Zeichnen ohne Übersetzung (die Texte sind schon in der richtigen Sprache). */
 	private static Graphics2D roh(Graphics graphics) {
-		Graphics2D g = (Graphics2D) graphics.create();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-		return g;
+		return NeonUI.pixel(graphics);
 	}
 
 	private static List<String> umbrechen(FontMetrics fm, String text, int max) {

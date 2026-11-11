@@ -427,10 +427,7 @@ final class Willkommen extends JDialog {
 		g.drawString("FPS-Boost: Sodium, Lithium & Co. für flüssigeres Spielen", fx + 24, fy + 62);
 		// Schalter
 		int sx = fx + fb - 80, sy = fy + fh / 2 - 14;
-		g.setColor(an ? NeonUI.alpha(NeonUI.NEON, 90) : new Color(0x2A3445));
-		g.fillRoundRect(sx, sy, 56, 28, 28, 28);
-		g.setColor(an ? NeonUI.NEON : NeonUI.GRAU);
-		g.fillOval(an ? sx + 31 : sx + 3, sy + 3, 22, 22);
+		NeonUI.schalter(g, sx, sy, 56, 28, an ? 1f : 0f, an, NeonUI.NEON);
 		felder.add(new Feld(fx, fy, fb, fh, () -> l.mods.setzeFpsBoost(!l.mods.fpsBoost())));
 	}
 
