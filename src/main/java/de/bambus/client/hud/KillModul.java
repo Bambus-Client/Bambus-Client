@@ -11,7 +11,7 @@ import java.util.List;
 public class KillModul extends TextModul {
 
 	public KillModul() {
-		super("kills", "Kill-Zähler", 4, 162, false, "Kills, Tode und K/D dieser Sitzung", "PVP");
+		super("kills", "Kill-Zähler", 10000, 277, false, "Kills, Tode und K/D dieser Sitzung", "PVP");
 	}
 
 	@Override

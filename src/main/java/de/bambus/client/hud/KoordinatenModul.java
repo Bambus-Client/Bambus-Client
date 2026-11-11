@@ -12,7 +12,7 @@ import java.util.List;
 public class KoordinatenModul extends TextModul {
 
 	public KoordinatenModul() {
-		super("koordinaten", "Koordinaten", 4, 190, false, "Mit Nether-Umrechnung, Taste zum Kopieren", "INFO");
+		super("koordinaten", "Koordinaten", 4, 216, false, "Mit Nether-Umrechnung, Taste zum Kopieren", "INFO");
 	}
 
 	@Override

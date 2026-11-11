@@ -11,7 +11,7 @@ import java.util.List;
 public class StatusModul extends TextModul {
 
 	public StatusModul() {
-		super("status", "Sprint-/Schleich-Status", 4, 172);
+		super("status", "Sprint-/Schleich-Status", 4, 187);
 	}
 
 	@Override

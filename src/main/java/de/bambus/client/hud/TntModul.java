@@ -12,7 +12,7 @@ import java.util.List;
 public class TntModul extends TextModul {
 
 	public TntModul() {
-		super("tnt", "TNT-Timer", 10000, 260, true, "Gezündetes TNT in der Nähe mit Restzeit", "PVP");
+		super("tnt", "TNT-Timer", 10000, 224, true, "Gezündetes TNT in der Nähe mit Restzeit", "PVP");
 	}
 
 	@Override

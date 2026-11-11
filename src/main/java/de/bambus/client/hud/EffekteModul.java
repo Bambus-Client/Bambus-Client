@@ -15,7 +15,7 @@ public class EffekteModul extends TextModul {
 
 	public EffekteModul() {
 		// x = 10000 bedeutet: ganz rechts am Bildschirmrand
-		super("effekte", "Trank-Effekte", 10000, 100);
+		super("effekte", "Trank-Effekte", 10000, 137);
 	}
 
 	@Override

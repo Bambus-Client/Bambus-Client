@@ -17,7 +17,7 @@ public class ZielModul extends HudModul {
 	private static final int B = 140, H = 40;
 
 	public ZielModul() {
-		super("ziel", "Target-HUD", 10000, 60, true, "Name, Leben, Abstand und Schaden deines Ziels", "PVP");
+		super("ziel", "Target-HUD", 10000, 93, true, "Name, Leben, Abstand und Schaden deines Ziels", "PVP");
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import java.util.List;
 public class ComboModul extends TextModul {
 
 	public ComboModul() {
-		super("combo", "Combo-Zähler", 4, 120, true, "Treffer in Folge ohne Gegentreffer", "PVP");
+		super("combo", "Combo-Zähler", 78, 72, true, "Treffer in Folge ohne Gegentreffer", "PVP");
 	}
 
 	@Override

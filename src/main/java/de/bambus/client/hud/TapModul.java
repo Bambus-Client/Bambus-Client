@@ -11,7 +11,7 @@ import java.util.List;
 public class TapModul extends TextModul {
 
 	public TapModul() {
-		super("tap", "W-/S-Tap-Anzeige", 4, 148, false, "Sprint-Reset vor dem Treffer?", "PVP");
+		super("tap", "W-/S-Tap-Anzeige", 78, 129, false, "Sprint-Reset vor dem Treffer?", "PVP");
 	}
 
 	@Override

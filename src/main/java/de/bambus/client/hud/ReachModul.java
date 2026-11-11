@@ -11,7 +11,7 @@ import java.util.List;
 public class ReachModul extends TextModul {
 
 	public ReachModul() {
-		super("reach", "Reach-Anzeige", 4, 134, true, "Abstand beim letzten Treffer", "PVP");
+		super("reach", "Reach-Anzeige", 78, 91, true, "Abstand beim letzten Treffer", "PVP");
 	}
 
 	@Override

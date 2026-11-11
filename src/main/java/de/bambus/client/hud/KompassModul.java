@@ -14,7 +14,7 @@ public class KompassModul extends HudModul {
 	private static final String[] NAMEN = {"N", "NO", "O", "SO", "S", "SW", "W", "NW"};
 
 	public KompassModul() {
-		super("kompass", "Kompass-Balken", 10000, 2, false, "Himmelsrichtungen gleiten beim Umsehen vorbei", "INFO");
+		super("kompass", "Kompass-Balken", 160, 2, false, "Himmelsrichtungen gleiten beim Umsehen vorbei", "INFO");
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.util.List;
 public class ServerModul extends TextModul {
 
 	public ServerModul() {
-		super("server", "Server & Ping", 4, 146);
+		super("server", "Server & Ping", 4, 158);
 	}
 
 	@Override

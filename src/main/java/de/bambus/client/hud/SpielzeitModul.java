@@ -12,7 +12,7 @@ public class SpielzeitModul extends TextModul {
 	private static long sitzungSeit = 0;
 
 	public SpielzeitModul() {
-		super("spielzeit", "Spielzeit", 4, 214, false, "Zeit seit dem Betreten und Ingame-Tag", "INFO");
+		super("spielzeit", "Spielzeit", 4, 245, false, "Zeit seit dem Betreten und Ingame-Tag", "INFO");
 	}
 
 	/** Jeden Tick: Start der Sitzung merken. */

@@ -15,7 +15,7 @@ public class TastenModul extends HudModul {
 	private static final int BREITE = 3 * K + 2 * ABSTAND;
 
 	public TastenModul() {
-		super("tasten", "Keystrokes", 4, 54);
+		super("tasten", "Keystrokes", 4, 72);
 	}
 
 	@Override
