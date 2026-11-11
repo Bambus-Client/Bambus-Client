@@ -93,7 +93,7 @@ public final class Symbole {
 				{"freund", "person"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
 				{"bossbar", "hud"}, {"tab", "hud"}, {"chat", "hud"}, {"hauptmenü", "hud"}, {"menü", "mehr"},
 				{"verlauf", "kosmetik"}, {"benachrichtigung", "update"}, {"lade", "update"}, {"treffer", "ziel"},
-				{"fire", "textur"}, {"shield", "ruestung"}, {"sword", "pvp"}, {"kürbis", "auge"}, {"wasser", "auge"},
+				{"textur", "textur"}, {"fire", "textur"}, {"shield", "ruestung"}, {"sword", "pvp"}, {"kürbis", "auge"}, {"wasser", "auge"},
 		};
 		for (String[] r : regeln) if (n.contains(r[0])) return r[1];
 		return "hud";

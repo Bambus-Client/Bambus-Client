@@ -73,7 +73,8 @@ public class BambusConfig {
 	public boolean discordAn = false;
 	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten
 
-	// Texturen (Mod-Menü → TEXTUREN)
+	// Texturen (Mod-Menü → MODULE → Texturen)
+	public boolean texturenAn = true;     // Hauptschalter der Karte „Texturen“
 	public boolean lowFire = false;
 	public int lowFireStaerke = 30;       // Prozent, siehe Texturen
 	public boolean lowShield = false;

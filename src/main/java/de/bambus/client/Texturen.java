@@ -7,14 +7,17 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.List;
+
 /**
  * Textur-Modul: PvP-Anpassungen wie in Texturpaketen – Low Fire, Low Shield, Side Shield, Short Sword,
  * kein Kürbis-Overlay und klare Sicht unter Wasser. Nur bei dir sichtbar, ändert nichts am Spiel.
+ * Im Mod-Menü eine Karte unter MODULE (Hauptschalter), Einstellungen über ⋮ oder Rechtsklick.
  * Die Mixins (ScreenEffectRendererMixin, ItemInHandRendererMixin, GuiMixin) fragen hier nach.
  */
 public final class Texturen {
 
-	/** Stufen für „tiefer“ in Prozent (Mod-Menü → TEXTUREN). */
+	/** Stufen für „tiefer“ in Prozent. */
 	public static final int MIN_STAERKE = 10;
 	public static final int MAX_STAERKE = 80;
 	public static final int SCHRITT = 10;
@@ -23,9 +26,9 @@ public final class Texturen {
 	public static final int MIN_SCHWERT = 50;
 	public static final int MAX_SCHWERT = 90;
 
-	private static final float FEUER_WEG = 0.5f;    // so weit rutscht das Feuer bei 100 %
-	private static final float SCHILD_WEG = 0.5f;
-	private static final float SCHILD_SEITE = 0.18f;
+	public static final float FEUER_WEG = 0.5f;    // so weit rutscht das Feuer bei 100 %
+	public static final float SCHILD_WEG = 0.5f;
+	public static final float SCHILD_SEITE = 0.18f;
 
 	private Texturen() {}
 
@@ -33,54 +36,116 @@ public final class Texturen {
 		return BambusClient.config;
 	}
 
-	public static int naechsteStaerke(int wert, int richtung) {
-		return Math.max(MIN_STAERKE, Math.min(MAX_STAERKE, wert + richtung * SCHRITT));
+	/** Hauptschalter der Karte „Texturen“. */
+	public static boolean aktiv() {
+		return cfg().texturenAn;
 	}
 
-	public static int naechsteSchwertGroesse(int wert, int richtung) {
-		return Math.max(MIN_SCHWERT, Math.min(MAX_SCHWERT, wert + richtung * SCHRITT));
+	// ------------------------------------------------------------- Einstellungsfenster
+
+	/** Das Textur-Modul im Einstellungsfenster des Mod-Menüs. */
+	public static final Einstellbar MODUL = new Einstellbar() {
+		@Override
+		public String titel() {
+			return "Texturen";
+		}
+
+		@Override
+		public String symbol() {
+			return "textur";
+		}
+
+		@Override
+		public List<Einstellung> einstellungen() {
+			BambusConfig c = cfg();
+			return List.of(
+					new Einstellung.Schalter("Low Fire", () -> c.lowFire, () -> c.lowFire = !c.lowFire),
+					new Einstellung.Stufe("Feuer tiefer", () -> c.lowFireStaerke, w -> c.lowFireStaerke = w,
+							MIN_STAERKE, MAX_STAERKE, SCHRITT, "−%d %%", () -> c.lowFire),
+					new Einstellung.Schalter("Low Shield", () -> c.lowShield, () -> c.lowShield = !c.lowShield),
+					new Einstellung.Stufe("Schild tiefer", () -> c.lowShieldStaerke, w -> c.lowShieldStaerke = w,
+							MIN_STAERKE, MAX_STAERKE, SCHRITT, "−%d %%", () -> c.lowShield),
+					new Einstellung.Schalter("Side Shield", () -> c.sideShield, () -> c.sideShield = !c.sideShield),
+					new Einstellung.Schalter("Short Sword", () -> c.shortSword, () -> c.shortSword = !c.shortSword),
+					new Einstellung.Stufe("Schwert-Größe", () -> c.shortSwordGroesse, w -> c.shortSwordGroesse = w,
+							MIN_SCHWERT, MAX_SCHWERT, SCHRITT, "%d %%", () -> c.shortSword),
+					new Einstellung.Schalter("Kein Kürbis-Overlay", () -> c.keinKuerbisOverlay, () -> c.keinKuerbisOverlay = !c.keinKuerbisOverlay),
+					new Einstellung.Schalter("Klare Sicht im Wasser", () -> c.klaresWasser, () -> c.klaresWasser = !c.klaresWasser));
+		}
+
+		@Override
+		public void standard() {
+			BambusConfig c = cfg();
+			BambusConfig neu = new BambusConfig();
+			c.lowFire = neu.lowFire;
+			c.lowFireStaerke = neu.lowFireStaerke;
+			c.lowShield = neu.lowShield;
+			c.lowShieldStaerke = neu.lowShieldStaerke;
+			c.sideShield = neu.sideShield;
+			c.shortSword = neu.shortSword;
+			c.shortSwordGroesse = neu.shortSwordGroesse;
+			c.keinKuerbisOverlay = neu.keinKuerbisOverlay;
+			c.klaresWasser = neu.klaresWasser;
+		}
+	};
+
+	// ------------------------------------------------------------- Werte für Spiel und Vorschau
+
+	/** Wie weit das Feuer nach unten rutscht (0 = gar nicht, in Bildschirm-Einheiten des Overlays). */
+	public static float feuerVersatz() {
+		return aktiv() && cfg().lowFire ? FEUER_WEG * cfg().lowFireStaerke / 100f : 0f;
 	}
+
+	/** Versatz des Schilds {x, y}; x wird für die linke Hand gespiegelt. */
+	public static float[] schildVersatz(boolean linkeHand) {
+		BambusConfig c = cfg();
+		if (!aktiv()) {
+			return new float[]{0f, 0f};
+		}
+		float x = c.sideShield ? (linkeHand ? -SCHILD_SEITE : SCHILD_SEITE) : 0f;
+		float y = c.lowShield ? -SCHILD_WEG * c.lowShieldStaerke / 100f : 0f;
+		return new float[]{x, y};
+	}
+
+	/** Größe des Schwerts in der Hand (1 = normal). */
+	public static float schwertGroesse() {
+		return aktiv() && cfg().shortSword ? cfg().shortSwordGroesse / 100f : 1f;
+	}
+
+	// ------------------------------------------------------------- Aufrufe aus den Mixins
 
 	/** Low Fire: verschiebt das Feuer am Bildschirmrand nach unten. */
 	public static void feuerVerschieben(PoseStack pose) {
-		if (cfg().lowFire) {
-			pose.translate(0f, -FEUER_WEG * cfg().lowFireStaerke / 100f, 0f);
+		float weg = feuerVersatz();
+		if (weg > 0f) {
+			pose.translate(0f, -weg, 0f);
 		}
 	}
 
 	/** Gegenstand in der eigenen Hand anpassen (nur 1. Person): Low/Side Shield und Short Sword. */
 	public static void handAnpassen(ItemStack stack, ItemDisplayContext kontext, PoseStack pose) {
-		if (!kontext.firstPerson()) {
+		if (!aktiv() || !kontext.firstPerson()) {
 			return;
 		}
 		if (stack.is(Items.SHIELD)) {
-			schild(kontext, pose);
-		} else if (cfg().shortSword && stack.is(ItemTags.SWORDS)) {
-			schwert(pose);
+			float[] v = schildVersatz(kontext.leftHand());
+			pose.translate(v[0], v[1], 0f);
+		} else if (stack.is(ItemTags.SWORDS)) {
+			float f = schwertGroesse();
+			if (f < 1f) {   // kleiner und etwas nach unten, damit der Griff in der Hand bleibt
+				pose.translate(0f, -(1f - f) * 0.15f, 0f);
+				pose.scale(f, f, f);
+			}
 		}
-	}
-
-	private static void schild(ItemDisplayContext kontext, PoseStack pose) {
-		BambusConfig c = cfg();
-		float x = c.sideShield ? (kontext.leftHand() ? -SCHILD_SEITE : SCHILD_SEITE) : 0f;
-		float y = c.lowShield ? -SCHILD_WEG * c.lowShieldStaerke / 100f : 0f;
-		pose.translate(x, y, 0f);
-	}
-
-	/** Short Sword: Schwert kleiner, etwas nach unten, damit der Griff in der Hand bleibt. */
-	private static void schwert(PoseStack pose) {
-		float f = cfg().shortSwordGroesse / 100f;
-		pose.translate(0f, -(1f - f) * 0.15f, 0f);
-		pose.scale(f, f, f);
 	}
 
 	/** Kein Kürbis-Overlay: true, wenn dieses Bildschirm-Overlay ausgeblendet werden soll. */
 	public static boolean overlayAusblenden(Identifier textur) {
-		return cfg().keinKuerbisOverlay && textur.getPath().contains("pumpkinblur");
+		return aktiv() && cfg().keinKuerbisOverlay && textur.getPath().contains("pumpkinblur");
 	}
 
 	/** Klare Sicht unter Wasser: blendet die Wasser-Textur vor dem Auge aus. */
 	public static boolean wasserAusblenden() {
-		return cfg().klaresWasser;
+		return aktiv() && cfg().klaresWasser;
 	}
 }

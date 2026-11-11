@@ -2,6 +2,8 @@ package de.bambus.client.hud;
 
 import de.bambus.client.BambusClient;
 import de.bambus.client.BambusConfig;
+import de.bambus.client.Einstellbar;
+import de.bambus.client.Einstellung;
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,7 +17,7 @@ import java.util.List;
  * Einstellungen: jedes Modul meldet seine Schalter mit {@link #option} an; sie erscheinen im Mod-Menü
  * hinter den drei Punkten (⋮) der Modul-Karte und werden pro Modul in der Config gespeichert.
  */
-public abstract class HudModul {
+public abstract class HudModul implements Einstellbar {
 
 	/** Ein Ein/Aus-Schalter eines Moduls. */
 	public final class Option {
@@ -82,6 +84,32 @@ public abstract class HudModul {
 	/** Alle Schalter auf ihren Standard zurück. */
 	public void optionenZuruecksetzen() {
 		optionenSpeicher().clear();
+	}
+
+	// ---------------------------------------------------------- Einstellbar (Fenster im Mod-Menü)
+
+	@Override
+	public String titel() {
+		return name;
+	}
+
+	@Override
+	public String symbol() {
+		return id;
+	}
+
+	@Override
+	public List<Einstellung> einstellungen() {
+		List<Einstellung> liste = new ArrayList<>();
+		for (Option o : optionen) {
+			liste.add(new Einstellung.Schalter(o.name, o::an, o::umschalten));
+		}
+		return liste;
+	}
+
+	@Override
+	public void standard() {
+		optionenZuruecksetzen();
 	}
 
 	private java.util.Map<String, Boolean> optionenSpeicher() {
