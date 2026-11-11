@@ -10,6 +10,7 @@
 - Animierte Hintergründe im Launcher und im Bambus-Hauptmenü: Partikel, Synthwave, Aurora, Datenregen, Gitter
 - Kosmetik im HD-Look: wehende Umhänge mit Animationen (neu: Polarlicht, Glut), Flügel in echtem 3D (neu: Bambus), animierte Hüte
 - Bambus-Ladebildschirm beim Betreten einer Welt (mit Tipps)
+- Aufgeräumtes Standard-HUD: Bei neuen Einstellungen überdecken sich die Anzeigen nicht mehr (z. B. Richtung über den Keystrokes) – gespeicherte Positionen bleiben unverändert
 - HUD-Editor: Anzeigen rasten an Kanten und anderen Anzeigen ein, Größe per Ecke oder Mausrad
 - Weiche Animationen: Schalter, Tabs, Kategorien und Fenster gleiten
 - Neon-Benachrichtigungen: Update, Freund online, Screenshot, Profil

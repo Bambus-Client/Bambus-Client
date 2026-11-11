@@ -18,7 +18,7 @@ public class PingModul extends HudModul {
 	private final Option verlauf = option("verlauf", "Verlauf der letzten Minute", true);
 
 	public PingModul() {
-		super("pingverlauf", "Ping-Verlauf", 10000, 230, false, "Signalbalken und Ping der letzten Minute", "INFO");
+		super("pingverlauf", "Ping-Verlauf", 10000, 243, false, "Signalbalken und Ping der letzten Minute", "INFO");
 	}
 
 	private static int ping(Minecraft mc) {

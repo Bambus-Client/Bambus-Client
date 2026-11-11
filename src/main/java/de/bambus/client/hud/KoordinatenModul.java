@@ -15,7 +15,7 @@ public class KoordinatenModul extends TextModul {
 	private final Option nether = option("nether", "Nether-/Oberwelt-Umrechnung", true);
 
 	public KoordinatenModul() {
-		super("koordinaten", "Koordinaten", 4, 190, false, "Mit Nether-Umrechnung, Taste zum Kopieren", "INFO");
+		super("koordinaten", "Koordinaten", 4, 216, false, "Mit Nether-Umrechnung, Taste zum Kopieren", "INFO");
 	}
 
 	@Override

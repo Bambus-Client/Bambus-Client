@@ -14,7 +14,7 @@ public class KillModul extends TextModul {
 	private final Option kd = option("kd", "Tode und K/D", true);
 
 	public KillModul() {
-		super("kills", "Kill-Zähler", 4, 162, false, "Kills, Tode und K/D dieser Sitzung", "PVP");
+		super("kills", "Kill-Zähler", 10000, 277, false, "Kills, Tode und K/D dieser Sitzung", "PVP");
 	}
 
 	@Override

@@ -22,7 +22,7 @@ public class TastenModul extends HudModul {
 	private final Option leertaste = option("leertaste", "Leertaste", true);
 
 	public TastenModul() {
-		super("tasten", "Keystrokes", 4, 54);
+		super("tasten", "Keystrokes", 4, 72);
 	}
 
 	private boolean maus() {

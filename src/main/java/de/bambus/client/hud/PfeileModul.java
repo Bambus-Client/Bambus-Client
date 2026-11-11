@@ -16,7 +16,7 @@ public class PfeileModul extends TextModul {
 	private final Option warnung = option("warnung", "Gelb unter 16 Pfeilen", true);
 
 	public PfeileModul() {
-		super("pfeile", "Pfeil-Zähler", 4, 176, true, "Pfeile im Inventar", "PVP");
+		super("pfeile", "Pfeil-Zähler", 78, 110, true, "Pfeile im Inventar", "PVP");
 	}
 
 	static int pfeile(Minecraft mc) {

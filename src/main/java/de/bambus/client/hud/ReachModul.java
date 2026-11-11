@@ -13,7 +13,7 @@ public class ReachModul extends TextModul {
 	private final Option warnung = option("warnung", "Gelb über 3 Blöcke", true);
 
 	public ReachModul() {
-		super("reach", "Reach-Anzeige", 4, 134, true, "Abstand beim letzten Treffer", "PVP");
+		super("reach", "Reach-Anzeige", 78, 91, true, "Abstand beim letzten Treffer", "PVP");
 	}
 
 	@Override

@@ -21,7 +21,7 @@ public class ZielModul extends HudModul {
 	private final Option schaden = option("schaden", "Letzter Schaden / Combo", true);
 
 	public ZielModul() {
-		super("ziel", "Target-HUD", 10000, 60, true, "Name, Leben, Abstand und Schaden deines Ziels", "PVP");
+		super("ziel", "Target-HUD", 10000, 93, true, "Name, Leben, Abstand und Schaden deines Ziels", "PVP");
 	}
 
 	@Override

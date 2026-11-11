@@ -15,7 +15,7 @@ public class ServerModul extends TextModul {
 	private final Option ping = option("ping", "Ping", true);
 
 	public ServerModul() {
-		super("server", "Server & Ping", 4, 146);
+		super("server", "Server & Ping", 4, 158);
 	}
 
 	@Override

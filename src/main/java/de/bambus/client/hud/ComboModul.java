@@ -13,7 +13,7 @@ public class ComboModul extends TextModul {
 	private final Option farbig = option("farbig", "Farbe ab 3 und 5 Treffern", true);
 
 	public ComboModul() {
-		super("combo", "Combo-Zähler", 4, 120, true, "Treffer in Folge ohne Gegentreffer", "PVP");
+		super("combo", "Combo-Zähler", 78, 72, true, "Treffer in Folge ohne Gegentreffer", "PVP");
 	}
 
 	@Override

@@ -17,7 +17,7 @@ public class KompassModul extends HudModul {
 	private final Option zwischen = option("zwischen", "Zwischenrichtungen (NO, SW …)", true);
 
 	public KompassModul() {
-		super("kompass", "Kompass-Balken", 10000, 2, false, "Himmelsrichtungen gleiten beim Umsehen vorbei", "INFO");
+		super("kompass", "Kompass-Balken", 160, 2, false, "Himmelsrichtungen gleiten beim Umsehen vorbei", "INFO");
 	}
 
 	@Override

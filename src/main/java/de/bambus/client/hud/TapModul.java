@@ -13,7 +13,7 @@ public class TapModul extends TextModul {
 	private final Option ohneReset = option("ohnereset", "Auch „Kein Reset“ zeigen", true);
 
 	public TapModul() {
-		super("tap", "W-/S-Tap-Anzeige", 4, 148, false, "Sprint-Reset vor dem Treffer?", "PVP");
+		super("tap", "W-/S-Tap-Anzeige", 78, 129, false, "Sprint-Reset vor dem Treffer?", "PVP");
 	}
 
 	@Override

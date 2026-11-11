@@ -24,7 +24,7 @@ public class WeltModul extends TextModul {
 	private final Option extra;
 
 	public WeltModul(Art art) {
-		super(id(art), name(art), 4, 60 + art.ordinal() * 14, art == Art.RICHTUNG, text(art), "INFO");
+		super(id(art), name(art), 4, stdY(art), art == Art.RICHTUNG, text(art), "INFO");
 		this.art = art;
 		this.extra = switch (art) {
 			case RICHTUNG -> option("grad", "Gradzahl", true);
@@ -32,6 +32,20 @@ public class WeltModul extends TextModul {
 			case TEMPO -> option("kmh", "In km/h statt Blöcke/s", false);
 			case UHR -> option("sekunden", "Sekunden", false);
 			case SPEICHER -> option("prozent", "Prozent", true);
+		};
+	}
+
+	/**
+	 * Standard-Höhe: Richtung (standardmäßig an) direkt unter dem Info-Kasten und über den Keystrokes,
+	 * die übrigen (standardmäßig aus) unten in der linken Spalte unter Koordinaten und Spielzeit.
+	 */
+	private static int stdY(Art a) {
+		return switch (a) {
+			case RICHTUNG -> 53;
+			case BIOM -> 274;
+			case TEMPO -> 293;
+			case UHR -> 312;
+			case SPEICHER -> 331;
 		};
 	}
 

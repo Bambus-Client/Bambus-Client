@@ -14,7 +14,7 @@ public class StatusModul extends TextModul {
 	private final Option schleichen = option("schleichen", "Schleichen anzeigen", true);
 
 	public StatusModul() {
-		super("status", "Sprint-/Schleich-Status", 4, 172);
+		super("status", "Sprint-/Schleich-Status", 4, 187);
 	}
 
 	@Override

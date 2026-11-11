@@ -14,7 +14,7 @@ public class TntModul extends TextModul {
 	private final Option abstand = option("abstand", "Abstand anzeigen", true);
 
 	public TntModul() {
-		super("tnt", "TNT-Timer", 10000, 260, true, "Gezündetes TNT in der Nähe mit Restzeit", "PVP");
+		super("tnt", "TNT-Timer", 10000, 224, true, "Gezündetes TNT in der Nähe mit Restzeit", "PVP");
 	}
 
 	@Override

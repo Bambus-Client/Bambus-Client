@@ -15,7 +15,7 @@ public class CooldownModul extends HudModul {
 	private final Option farbig = option("farbig", "Balken farbig (rot → grün)", true);
 
 	public CooldownModul() {
-		super("cooldown", "Item-Cooldowns", 10000, 200, true, "Enderperle, Schild und Co. mit Restzeit-Balken", "PVP");
+		super("cooldown", "Item-Cooldowns", 10000, 176, true, "Enderperle, Schild und Co. mit Restzeit-Balken", "PVP");
 	}
 
 	private static List<ItemStack> mitCooldown(Minecraft mc) {
