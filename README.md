@@ -97,6 +97,8 @@ Seit 3.3 im neuen HD-Look: weiche Verläufe, Glanz, Leuchten und echte 3D-Formen
   24 Streifen pro Flügel biegen sich ohne Lücken, Deckfedern liegen als eigene Ebene darüber, die Vorderkante
   ist ein echter Knochen, ein Gelenkstück führt in den Rücken, ein Glanz läuft über die Federn.
   Bewegung: schlagen beim Laufen, Springen und Fliegen, gleiten im Stand, anlegen beim Schleichen.
+- **Flügel-Paket 1 (Pixel-Look):** Engel Classic, Drache Classic, Fee, Phönix Classic – aus Blockbench-Modellen
+  umgerechnet mit `werkzeuge/fluegel_aus_bbmodel.py` (quadratische Bilder, Gelenk oben links).
 - **Hüte:** Krone (funkelnde Steine), Zylinder (pulsierendes Neonband), Heiligenschein (kreisende Funken),
   Hörner (gebogen), Katzenohren (zucken), Partyhut (laufende Streifen), Bandana (flatternde Enden), Neon-Visier (Scan-Balken)
 - **Partikel:** Neon-Funken, Sternenstaub, Herzen, Musik, Seelenfeuer, Kirschblüten, Magie, Flammen – kreisen um dich

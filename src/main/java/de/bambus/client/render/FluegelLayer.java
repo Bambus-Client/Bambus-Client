@@ -326,9 +326,11 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		float aussen = basis + 0.10f + 0.30f * Mth.sin(t - 0.7f);
 		float hub = -0.07f * Mth.sin(t - 0.4f);
 		Identifier bild = Kosmetik.fluegelBild(fluegel.id());
+		int l = Kosmetik.fluegelLeuchtet(fluegel.id()) ? VOLL_HELL : licht;
+		float s = Kosmetik.fluegelGroesse(fluegel.id());
 		sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(bild), (pose, vc) -> {
-			zweiFlaechen(pose, vc, licht, -1, innen, aussen, hub);
-			zweiFlaechen(pose, vc, licht, 1, innen, aussen, hub);
+			zweiFlaechen(pose, vc, l, -1, innen, aussen, hub, s);
+			zweiFlaechen(pose, vc, l, 1, innen, aussen, hub, s);
 		});
 	}
 
@@ -336,8 +338,10 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static final float GELENK_U = 0.45f;
 
 	private static void zweiFlaechen(PoseStack.Pose pose, VertexConsumer vc, int licht, int seite,
-									 float winkelInnen, float winkelAussen, float hub) {
-		float breite = 1.05f;
+									 float winkelInnen, float winkelAussen, float hub, float s) {
+		// s: Größe (1 = normal); skaliert Breite und Höhe, das Gelenk am Rücken bleibt an seinem Platz
+		hub *= s;
+		float breite = 1.05f * s;
 		float li = breite * GELENK_U;
 		float la = breite * (1 - GELENK_U);
 		float x0 = seite * 0.08f;
@@ -346,8 +350,8 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		float ze = z0 + li * Mth.sin(winkelInnen);
 		float x1 = xe + seite * la * Mth.cos(winkelAussen);
 		float z1 = ze + la * Mth.sin(winkelAussen);
-		float obenWurzel = -0.05f, obenSpitze = -0.45f;
-		float untenWurzel = 0.72f, untenSpitze = 0.55f;
+		float obenWurzel = -0.05f * s, obenSpitze = -0.45f * s;
+		float untenWurzel = 0.72f * s, untenSpitze = 0.55f * s;
 		float obenGelenk = obenWurzel + (obenSpitze - obenWurzel) * GELENK_U + hub * 0.4f;
 		float untenGelenk = untenWurzel + (untenSpitze - untenWurzel) * GELENK_U + hub * 0.4f;
 		ecke(pose, vc, licht, x0, obenWurzel, z0, 0f, 0f);

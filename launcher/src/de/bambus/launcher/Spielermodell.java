@@ -25,6 +25,7 @@ final class Spielermodell {
 	private boolean schmal;
 	private BufferedImage cape;
 	private BufferedImage fluegel;
+	private double fluegelGroesse = 1;
 	private final Map<String, BufferedImage> schattiert = new HashMap<>();
 
 	void setSkin(BufferedImage bild, boolean schmal) {
@@ -71,6 +72,12 @@ final class Spielermodell {
 	}
 
 	void setFluegel(BufferedImage bild) {
+		setFluegel(bild, 1);
+	}
+
+	/** groesse: Faktor auf Breite und Höhe (1 = normal). */
+	void setFluegel(BufferedImage bild, double groesse) {
+		this.fluegelGroesse = groesse;
 		this.fluegel = bild == null ? null : argb(bild);
 		schattiert.clear();
 	}
@@ -219,11 +226,12 @@ final class Spielermodell {
 			double hub = 0.9 * Math.sin(tt - 0.4);
 			int w = fluegel.getWidth(), h = fluegel.getHeight();
 			boolean breitesBild = w >= h * 1.6;   // 3D-Flügel seit 3.3: Bild 2:1
-			double breite = breitesBild ? 19 : 14;
+			double gr = fluegelGroesse;
+			double breite = (breitesBild ? 19 : 14) * gr;
 			double gelenk = 0.45;
 			int ug = (int) Math.round(w * gelenk);
-			double oben0 = breitesBild ? 23.6 : 24.8, oben1 = breitesBild ? 27.0 : 30.4;
-			double hoehe = breitesBild ? breite * h / w : 12;
+			double oben0 = 24 + ((breitesBild ? 23.6 : 24.8) - 24) * gr, oben1 = 24 + ((breitesBild ? 27.0 : 30.4) - 24) * gr;
+			double hoehe = breitesBild ? breite * h / w : 12 * gr;
 			double obenG = oben0 + (oben1 - oben0) * gelenk + hub * 0.4;
 			for (int seite = -1; fluegelBlock && breitesBild && seite <= 1; seite += 2) {
 				// Blockbench-Stil: vier starre Platten, die stufig knicken; zwei Lagen wirken wie eine dicke Platte

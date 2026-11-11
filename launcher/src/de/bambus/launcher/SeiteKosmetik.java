@@ -221,7 +221,8 @@ final class SeiteKosmetik extends JPanel {
 		String fl = l.client.fluegel();
 		boolean block = l.client.wert("fluegelBlock", false) && fluegelBlockBilder.containsKey(fl);
 		modell.setFluegelBlock(block);
-		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : block ? fluegelBlockBilder.get(fl) : fluegelBilder.get(fl));
+		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : block ? fluegelBlockBilder.get(fl) : fluegelBilder.get(fl),
+				ClientEinstellungen.fluegelGroesse(fl));
 		modell.setHut(l.client.hut());
 	}
 
