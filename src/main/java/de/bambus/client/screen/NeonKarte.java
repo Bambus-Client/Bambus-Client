@@ -75,8 +75,9 @@ public class NeonKarte extends AbstractButton {
 		// Titel und Untertitel
 		Font font = Minecraft.getInstance().font;
 		g.fill(x + 6, motivUnten, x + b - 6, motivUnten + 1, Farben.alpha(Farben.NEON, 90 + (int) (100 * k)));
-		int tb = font.width(titel);
-		Neon.leuchtText(g, font, titel, x + (b - tb) / 2, motivUnten + 6, 1f, Anim.mische(Farben.NEON_CYAN, Farben.NEON, k));
+		float groesse = font.width(titel) > b - 8 ? 0.75f : 1f;   // schmale Karten: kleinerer Titel
+		int tb = (int) (font.width(titel) * groesse);
+		Neon.leuchtText(g, font, titel, x + (b - tb) / 2, motivUnten + (groesse < 1f ? 7 : 6), groesse, Anim.mische(Farben.NEON_CYAN, Farben.NEON, k));
 		int ub = (int) (font.width(untertitel) * 0.6f);
 		Neon.text(g, font, untertitel, x + (b - ub) / 2, motivUnten + 18, 0.6f, Farben.GRAU, false);
 	}

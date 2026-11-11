@@ -7,13 +7,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Erster Bildschirm nach Rechts-Shift: Garderobe, Mod-Menü oder – falls eingeschaltet – Bambus-Helfer öffnen.
+ * Erster Bildschirm nach Rechts-Shift: Garderobe, Mod-Menü, HUD bearbeiten oder – falls eingeschaltet –
+ * Bambus-Helfer öffnen. Bewusst kompakt, damit das Spiel dahinter sichtbar bleibt.
  */
 public class BambusAuswahlScreen extends Screen {
 
-	private static final int KARTE_B = 140;
-	private static final int KARTE_MAX_H = 180;
-	private static final int ABSTAND = 16;
+	private static final int KARTE_B = 84;
+	private static final int KARTE_MAX_H = 100;
+	private static final int ABSTAND = 8;
 
 	/** Motiv: ein Symbol groß und pulsierend in der Kartenmitte. */
 	private static NeonKarte.Motiv symbol(String name) {
@@ -35,19 +36,30 @@ public class BambusAuswahlScreen extends Screen {
 
 	@Override
 	protected void init() {
-		boolean helfer = BambusClient.config.helferAn;
-		int anzahl = helfer ? 3 : 2;
-		int b = Math.min(KARTE_B, (width - 20 - ABSTAND * (anzahl - 1)) / anzahl);
-		int h = Math.max(90, Math.min(KARTE_MAX_H, height - 90));
-		int x = (width - anzahl * b - (anzahl - 1) * ABSTAND) / 2;
-		int y = (height - h) / 2 + 10;
-		addRenderableWidget(new NeonKarte(x, y, b, h, "GARDEROBE", "KOSMETIK ANPASSEN", NeonKarte.AVATAR,
+		java.util.List<NeonKarte> karten = new java.util.ArrayList<>();
+		int h = Math.max(64, Math.min(KARTE_MAX_H, (int) (height * 0.42f)));
+		karten.add(new NeonKarte(0, 0, KARTE_B, h, "GARDEROBE", "KOSMETIK", NeonKarte.AVATAR,
 				() -> minecraft.setScreen(new GarderobeScreen(this))));
-		addRenderableWidget(new NeonKarte(x + b + ABSTAND, y, b, h, "MOD-MENÜ", "MODULE, FUNKTIONEN, HUD", symbol("alle"),
+		karten.add(new NeonKarte(0, 0, KARTE_B, h, "MOD-MENÜ", "MODULE & MEHR", symbol("alle"),
 				() -> minecraft.setScreen(new BambusMenuScreen(this))));
-		if (helfer) {
-			addRenderableWidget(new NeonKarte(x + 2 * (b + ABSTAND), y, b, h, "HELFER", "FRAGEN & TIPPS", symbol("helfer"),
+		if (minecraft.player != null) {   // der HUD-Editor braucht eine Welt
+			karten.add(new NeonKarte(0, 0, KARTE_B, h, "HUD", "BEARBEITEN", symbol("hud"),
+					() -> minecraft.setScreen(new HudEditorScreen(this))));
+		}
+		if (BambusClient.config.helferAn) {
+			karten.add(new NeonKarte(0, 0, KARTE_B, h, "HELFER", "FRAGEN & TIPPS", symbol("helfer"),
 					() -> minecraft.setScreen(new HelferScreen(this))));
+		}
+		int n = karten.size();
+		int b = Math.min(KARTE_B, ((int) (width * 0.85f) - ABSTAND * (n - 1)) / n);   // höchstens 85 % der Breite
+		int x = (width - n * b - (n - 1) * ABSTAND) / 2;
+		int y = (height - h) / 2 + 10;
+		for (NeonKarte k : karten) {
+			k.setX(x);
+			k.setY(y);
+			k.setWidth(b);
+			addRenderableWidget(k);
+			x += b + ABSTAND;
 		}
 	}
 
@@ -65,13 +77,10 @@ public class BambusAuswahlScreen extends Screen {
 		// Kopf: Logo + Schriftzug, mittig über den Karten
 		int kartenOben = children().isEmpty() ? height / 2 : ((NeonKarte) children().get(0)).getY();
 		String titel = "BAMBUS";
-		int tb = (int) (font.width(titel) * 1.5f);
-		int kx = (width - tb - 18) / 2;
-		Neon.logo(g, kx, kartenOben - 40, 16);
-		Neon.leuchtText(g, font, titel, kx + 18, kartenOben - 39, 1.5f, Farben.NEON);
-		String unter = "Was möchtest du öffnen?";
-		int ub = (int) (font.width(unter) * 0.75f);
-		Neon.text(g, font, unter, (width - ub) / 2, kartenOben - 20, 0.75f, Farben.GRAU, false);
+		int tb = font.width(titel);
+		int kx = (width - tb - 16) / 2;
+		Neon.logo(g, kx, kartenOben - 26, 12);
+		Neon.leuchtText(g, font, titel, kx + 16, kartenOben - 24, 1f, Farben.NEON);
 
 		String hinweis = BambusClient.config.helferAn ? "ESC schließen · Helfer abschalten: Mod-Menü → MEHR → EXTRAS" : "ESC schließen";
 		int hb = (int) (font.width(hinweis) * 0.6f);
