@@ -112,7 +112,7 @@ public class BambusMenuScreen extends Screen {
 	@Override
 	protected void init() {
 		suchFeld = new EditBox(font, 0, 0, 120, 14, Component.literal("Suche"));
-		suchFeld.setHint(Component.literal("Modul suchen …"));
+		suchFeld.setHint(Component.literal("Suchen …"));
 		suchFeld.setMaxLength(32);
 		suchFeld.setResponder(t -> scroll = 0);
 		addRenderableWidget(suchFeld);
@@ -222,11 +222,11 @@ public class BambusMenuScreen extends Screen {
 			ih -= 22;
 		}
 
-		// Grundfläche mit Leuchtrahmen
+		// Grundfläche: ruhiger Rahmen, Ecken als einziges Schmuckelement
 		g.fill(px, py, px + pb, py + ph, Farben.PANEL);
-		Neon.gitter(g, px, py, pb, ph, 16, Farben.alpha(Farben.NEON, 6));
-		Neon.leuchtRahmen(g, px, py, pb, ph, Farben.NEON, 0.55f + 0.45f * Farben.puls());
-		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.NEON_CYAN);
+		g.renderOutline(px - 1, py - 1, pb + 2, ph + 2, Farben.alpha(Farben.NEON, 28));
+		g.renderOutline(px, py, pb, ph, Farben.alpha(Farben.NEON, 110));
+		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.alpha(Farben.NEON_CYAN, 170));
 
 		seitenleiste(g, mx, my);
 		kopfzeile(g, mx, my);
@@ -272,7 +272,8 @@ public class BambusMenuScreen extends Screen {
 	/** Kopf rechts: Titel der Seite und Schließen. */
 	private void kopfzeile(GuiGraphics g, int mx, int my) {
 		int x = px + leiste + 10;
-		Neon.leuchtText(g, font, tab.titel.toUpperCase(java.util.Locale.ROOT), x, py + 11, 1.25f, Farben.NEON);
+		g.drawString(font, tab.titel, x, py + 11, Farben.WEISS, false);
+		Neon.text(g, font, tab.untertitel, x + font.width(tab.titel) + 6, py + 12, 0.75f, Farben.GRAU, false);
 
 		int sx = px + pb - 20;
 		int sy = py + 8;
@@ -295,10 +296,9 @@ public class BambusMenuScreen extends Screen {
 		Neon.leuchtText(g, font, "BAMBUS", x + 28, py + 10, 1f, Farben.NEON);
 		Neon.text(g, font, "CLIENT", x + 28, py + 21, 0.6f, Farben.NEON_CYAN, false);
 		g.fill(x + 8, py + 33, x + b - 8, py + 34, Farben.LINIE);
-		Neon.text(g, font, "MENÜ", x + 10, py + 40, 0.6f, Farben.GRAU, false);
 
 		Tab[] alle = Tab.values();
-		int y0 = py + 49, eh = 28, abstand = 2;
+		int y0 = py + 40, eh = 28, abstand = 2;
 		float ziel = tab.ordinal() * (eh + abstand);
 		int markY = y0 + (weich ? Math.round(Anim.zu("menue-markierung", ziel, Anim.GLEITEN)) : (int) ziel);
 		g.fill(x + 4, markY, x + b - 5, markY + eh, Farben.alpha(Farben.NEON, 26));
@@ -325,7 +325,7 @@ public class BambusMenuScreen extends Screen {
 		Neon.text(g, font, "v" + BambusClient.VERSION + " · 1.21.11", x + 10, py + ph - 16, 0.6f, 0xFF4A5A6E, false);
 	}
 
-	/** Fuß rechts unter dem Inhalt: HUD BEARBEITEN, Tipp und FERTIG. */
+	/** Fuß rechts unter dem Inhalt: HUD BEARBEITEN und FERTIG. */
 	private void fuss(GuiGraphics g, int mx, int my) {
 		int y = py + ph - 26;
 		g.fill(ix, y - 5, px + pb - 8, y - 4, Farben.LINIE);
@@ -334,13 +334,6 @@ public class BambusMenuScreen extends Screen {
 		knopf(g, mx, my, "HUD BEARBEITEN", ix, y, 100, 18, false, imSpiel,
 				() -> minecraft.setScreen(new HudEditorScreen(this)));
 		knopf(g, mx, my, "FERTIG", px + pb - 80, y, 70, 18, true, true, this::onClose);
-
-		String tipp = imSpiel ? "RECHTS-SHIFT öffnet dieses Menü" : "HUD bearbeiten geht in einer Welt";
-		int tb = (int) (font.width(tipp) * 0.75f);
-		int frei = (px + pb - 80) - (ix + 100);
-		if (tb + 12 <= frei) {   // nur, wenn er zwischen die Knöpfe passt
-			Neon.text(g, font, tipp, ix + 100 + (frei - tb) / 2, y + 6, 0.75f, Farben.GRAU, false);
-		}
 	}
 
 	// ------------------------------------------------------------- Karten
@@ -488,19 +481,16 @@ public class BambusMenuScreen extends Screen {
 
 			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			g.fill(kx, ky, kx + kb, ky + kh, Anim.mische(Farben.KARTE, Farben.KARTE_HOVER, hk));
-			if (an) {
-				g.fill(kx, ky, kx + 2, ky + kh, k.akzent());
-				g.renderOutline(kx, ky, kb, kh, Farben.alpha(k.akzent(), hover ? 140 : 70));
-			} else {
-				g.renderOutline(kx, ky, kb, kh, hover ? 0xFF2E4058 : Farben.LINIE);
+			g.renderOutline(kx, ky, kb, kh, Anim.mische(Farben.LINIE, 0xFF2E4058, hk));
+			if (an) {   // ein schmaler Balken zeigt „an“ – der Schalter sagt den Rest
+				g.fill(kx, ky + 1, kx + 2, ky + kh - 1, k.akzent());
 			}
 
-			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF5A6A7E);
-			String name = font.plainSubstrByWidth(k.name(), kb - (k.fav() != null ? 82 : 68));
-			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFC8D2DE, false);
-			String text = font.plainSubstrByWidth(k.text(), (int) ((kb - (k.einstellungen() != null ? 28 : 14)) / 0.75f));
-			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, Farben.GRAU, false);
-			Neon.text(g, font, an ? "AN" : "AUS", kx + kb - 44, ky + 8, 0.75f, an ? k.akzent() : Farben.GRAU, false);
+			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF4A5A6E);
+			String name = kuerzen(k.name(), kb - (k.fav() != null ? 66 : 52), 1f);
+			g.drawString(font, name, kx + 20, ky + 7, an ? Farben.WEISS : 0xFFAAB6C4, false);
+			String text = kuerzen(k.text(), kb - (k.einstellungen() != null ? 28 : 14), 0.75f);
+			Neon.text(g, font, text, kx + 8, ky + 22, 0.75f, an ? Farben.GRAU : 0xFF5E6E82, false);
 			Neon.schalter(g, kx + kb - 26, ky + 7, an, k.name());
 
 			bereiche.add(new Bereich(kx, ky, kb, kh, () -> {
@@ -512,9 +502,11 @@ public class BambusMenuScreen extends Screen {
 			}
 			if (k.fav() != null) {
 				boolean fav = cfg().favoriten.contains(k.fav());
-				int sx = kx + kb - 58;
+				int sx = kx + kb - 40;
 				boolean sh = imInhalt(mx, my) && Neon.ueber(mx, my, sx - 2, ky + 4, 12, 12);
-				g.drawString(font, fav ? "★" : "☆", sx, ky + 6, fav ? Farben.GELB : sh ? Farben.WEISS : 0xFF4A5A6E, false);
+				if (fav || hover) {   // leerer Stern nur, wenn man über der Karte ist
+					g.drawString(font, fav ? "★" : "☆", sx, ky + 6, fav ? Farben.GELB : sh ? Farben.WEISS : 0xFF4A5A6E, false);
+				}
 				klick(sx - 2, ky + 4, 12, 12, () -> {
 					if (!cfg().favoriten.remove(k.fav())) {
 						cfg().favoriten.add(k.fav());
@@ -525,6 +517,15 @@ public class BambusMenuScreen extends Screen {
 		}
 		int zeilen = (karten.size() + spalten - 1) / spalten;
 		return zeilen * (kh + abstand);
+	}
+
+	/** Text auf eine Breite kürzen – mit „…“ statt mitten im Wort abzuschneiden. */
+	private String kuerzen(String text, int breite, float groesse) {
+		int max = (int) (breite / groesse);
+		if (font.width(text) <= max) {
+			return text;
+		}
+		return font.plainSubstrByWidth(text, max - font.width("…")).stripTrailing() + "…";
 	}
 
 	/** ⋮ – drei Punkte unten rechts auf der Karte, öffnen die Modul-Einstellungen. */
