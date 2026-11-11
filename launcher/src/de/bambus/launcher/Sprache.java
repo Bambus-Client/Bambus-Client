@@ -221,7 +221,14 @@ final class Sprache {
 				"CurseForge requires your own API key (free):\n1. Sign in at console.curseforge.com\n2. Copy the key under “API keys”\n3. Paste it here\n\nThe key stays on this computer only.");
 		g("Suche auf CurseForge …", "Searching CurseForge …"); g("Keine Verbindung zu CurseForge. Internet prüfen.", "No connection to CurseForge. Check your internet.");
 		g("CurseForge lehnt den Schlüssel ab – bitte unter SCHLÜSSEL prüfen.", "CurseForge rejects the key – please check it under API KEY.");
-		teil("Fabric-Mods für ", "Fabric mods for "); teil(" · „+“ fügt die Mod zum aktiven Profil hinzu", " · “+” adds the mod to the active profile");
+		teil("Fabric-Mods für ", "Fabric mods for "); teil(" · „+“ fügt die Mod zu diesem Profil hinzu", " · “+” adds the mod to this profile");
+		g("SORTIEREN", "SORT"); g("ZULETZT", "RECENT"); g("NEUESTE", "NEWEST"); g("KACHELN", "TILES"); g("LISTE", "LIST");
+		g("+ NEUES PROFIL", "+ NEW PROFILE"); g("← PROFILE", "← PROFILES"); g("AKTIVIEREN", "ACTIVATE"); g("✓ AKTIV", "✓ ACTIVE");
+		g("Wähle ein Profil, um seine Mods einzustellen. Gespielt wird das aktive Profil.", "Pick a profile to set up its mods. You play with the active profile.");
+		g("● Aktives Profil – wird beim nächsten SPIELEN eingerichtet.", "● Active profile – set up the next time you PLAY.");
+		g("○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", "○ Not active – click ACTIVATE to play with this profile.");
+		g("Öffnen und Mods einstellen", "Open and set up mods"); g("Mit diesem Profil spielen", "Play with this profile");
+		g("Zwischen Liste und Kacheln wechseln", "Switch between list and tiles"); g("Zurück zur Liste aller Profile", "Back to all profiles");
 		teil("INSTALLIERT · ", "INSTALLED · "); g("+ NEU", "+ NEW"); teil(" · AKTIV", " · ACTIVE");
 		teil("Profil „", "Profile “"); 
 		teil(": nur direkt bei curseforge.com ladbar – dort laden und mit „+ MOD-DATEI“ hinzufügen", ": only downloadable on curseforge.com – get it there and add it with “+ MOD FILE”");

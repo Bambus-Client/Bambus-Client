@@ -28,14 +28,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * MODS: oben die Profile (wie in der Modrinth-App), darunter zwei Hälften –
- * links die Mods des gewählten Profils, rechts die Suche bei Modrinth und CurseForge. Mit Mod-Icons.
+ * MODS: Zuerst die Liste aller Profile (sortierbar, als Liste oder Kacheln). Ein Klick öffnet ein Profil –
+ * erst dann lassen sich seine Mods einstellen: links die installierten Mods, rechts die Suche bei
+ * Modrinth und CurseForge, mit Mod-Icons. Gespielt wird mit dem aktiven Profil.
  */
 final class SeiteMods extends JPanel {
 
 	private static final int X = 40, HB = 340;          // linke Hälfte: installiert
 	private static final int RX = 396;                  // rechte Hälfte: entdecken (gleich breit)
-	private static final int PROFIL_B = 150;            // Breite einer Profil-Karte
+	private static final int VB = HB * 2 + 16;          // volle Breite
 	private static final int ZEILE = 44;
 
 	private final BambusLauncher l;
@@ -55,6 +56,14 @@ final class SeiteMods extends JPanel {
 	private final Map<String, String> iconAdressen = new HashMap<>();
 	private final Set<String> iconGefragt = new HashSet<>();
 
+	/** Bauteile der Profil-Liste bzw. des geöffneten Profils – je nach Ansicht sichtbar. */
+	private final List<JComponent> listeTeile = new ArrayList<>();
+	private final List<JComponent> profilTeile = new ArrayList<>();
+	private List<JComponent> sammeln;
+	private final Map<String, NeonUI.UmrissKnopf> sortKnoepfe = new HashMap<>();
+	private NeonUI.UmrissKnopf ansichtKnopf, aktivierenKnopf;
+	private boolean profilOffen;
+
 	SeiteMods(BambusLauncher l) {
 		this.l = l;
 		this.mods = l.mods;
@@ -62,23 +71,46 @@ final class SeiteMods extends JPanel {
 		setOpaque(false);
 		setLayout(null);
 
-		// ---- Profile (oben, nebeneinander)
-		JScrollPane profilScroll = scroll(profilListe, X, 114, HB * 2 + 16 - 262, 50);
-		profilScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		profilScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		profilScroll.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 4));
-		add(profilScroll);
-		int kx = X + HB * 2 + 16 - 254;
-		knopf("+ NEU", NeonUI.NEON, kx, 114, 62, 46, this::neuesProfil).setToolTipText("Neues Profil");
-		knopf("NAME", NeonUI.GRAU, kx + 64, 114, 62, 46, this::profilUmbenennen).setToolTipText("Profil umbenennen");
-		knopf("KOPIE", NeonUI.GRAU, kx + 128, 114, 62, 46, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
-		knopf("LÖSCHEN", NeonUI.PINK, kx + 192, 114, 62, 46, this::profilLoeschen).setToolTipText("Profil löschen");
+		// ---- Ansicht 1: Liste aller Profile
+		sammeln = listeTeile;
+		String[][] sortierungen = {
+				{ModVerwaltung.NACH_ZULETZT, "ZULETZT"}, {ModVerwaltung.NACH_NAME, "NAME"},
+				{ModVerwaltung.NACH_MODS, "MODS"}, {ModVerwaltung.NACH_NEU, "NEUESTE"},
+		};
+		for (int i = 0; i < sortierungen.length; i++) {
+			final String nach = sortierungen[i][0];
+			NeonUI.UmrissKnopf k = knopf(sortierungen[i][1], NeonUI.GRAU, X + 70 + i * 84, 104, 80, 28, () -> {
+				mods.setzeProfilSortierung(nach);
+				baueProfile();
+			});
+			sortKnoepfe.put(nach, k);
+		}
+		ansichtKnopf = knopf("KACHELN", NeonUI.CYAN, X + 70 + 4 * 84 + 10, 104, 96, 28, () -> {
+			mods.setzeProfilAnsicht(ModVerwaltung.ALS_LISTE.equals(mods.profilAnsicht()) ? ModVerwaltung.ALS_KACHELN : ModVerwaltung.ALS_LISTE);
+			baueProfile();
+		});
+		ansichtKnopf.setToolTipText("Zwischen Liste und Kacheln wechseln");
+		knopf("+ NEUES PROFIL", NeonUI.NEON, X + VB - 150, 104, 150, 28, this::neuesProfil);
+		teil(scroll(profilListe, X, 144, VB, 430));
+
+		// ---- Ansicht 2: ein geöffnetes Profil
+		sammeln = profilTeile;
+		knopf("← PROFILE", NeonUI.CYAN, X, 104, 104, 30, this::zurListe).setToolTipText("Zurück zur Liste aller Profile");
+		int kx = X + VB - 4 * 80 - 3 * 4;
+		aktivierenKnopf = knopf("AKTIVIEREN", NeonUI.NEON, kx, 104, 80, 30, () -> {
+			mods.setzeAktivesProfil(mods.offenesProfil());
+			aktualisiere();
+		});
+		aktivierenKnopf.setToolTipText("Mit diesem Profil spielen");
+		knopf("NAME", NeonUI.GRAU, kx + 84, 104, 80, 30, this::profilUmbenennen).setToolTipText("Profil umbenennen");
+		knopf("KOPIE", NeonUI.GRAU, kx + 168, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
+		knopf("LÖSCHEN", NeonUI.PINK, kx + 252, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
 
 		// ---- linke Hälfte: installiert
 		boost = new BoostKarte();
 		boost.setBounds(X, 194, HB, 56);
-		add(boost);
-		add(scroll(installiert, X, 256, HB, 278));
+		teil(boost);
+		teil(scroll(installiert, X, 256, HB, 278));
 		knopf("+ MOD-DATEI", NeonUI.PINK, X, 542, HB / 2 - 4, 30, this::dateiHinzufuegen);
 		knopf("ORDNER ÖFFNEN", NeonUI.GRAU, X + HB / 2 + 4, 542, HB / 2 - 4, 30, () -> {
 			try {
@@ -105,19 +137,46 @@ final class SeiteMods extends JPanel {
 		suchFeld.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(NeonUI.LINIE, 1, true), BorderFactory.createEmptyBorder(4, 10, 4, 10)));
 		suchFeld.addActionListener(e -> suche());
-		add(suchFeld);
+		teil(suchFeld);
 		knopf("SUCHEN", NeonUI.CYAN, RX + HB - 86, 228, 86, 32, this::suche);
-		add(scroll(treffer, RX, 268, HB, 304));
-
-		addComponentListener(new java.awt.event.ComponentAdapter() {
-			@Override public void componentShown(java.awt.event.ComponentEvent e) {
-				if (!geladen) suche();   // beim ersten Öffnen: die beliebtesten Mods
-			}
-		});
+		teil(scroll(treffer, RX, 268, HB, 304));
+		sammeln = null;
 
 		baueProfile();
-		baueInstalliert();
 		zeigeTreffer(new ArrayList<>());
+		zeigeAnsicht(false);
+	}
+
+	private <T extends JComponent> T teil(T c) {
+		add(c);
+		if (sammeln != null) sammeln.add(c);
+		return c;
+	}
+
+	/** Profil-Liste (false) oder geöffnetes Profil (true) zeigen. */
+	private void zeigeAnsicht(boolean profil) {
+		profilOffen = profil;
+		for (JComponent c : listeTeile) c.setVisible(!profil);
+		for (JComponent c : profilTeile) c.setVisible(profil);
+		schluesselKnopf.setVisible(profil && ModVerwaltung.CURSEFORGE.equals(quelle));
+		aktivierenKnopf.setVisible(profil && !mods.offenesProfil().equals(mods.aktivesProfil()));
+		repaint();
+	}
+
+	/** Öffnet ein Profil: erst jetzt lassen sich seine Mods einstellen. */
+	private void oeffneProfil(String id) {
+		mods.oeffne(id);
+		baueInstalliert();
+		boost.repaint();
+		zeigeTreffer(letzteTreffer);   // Häkchen passen zum geöffneten Profil
+		zeigeAnsicht(true);
+		if (!geladen) suche();         // beim ersten Öffnen: die beliebtesten Mods
+	}
+
+	private void zurListe() {
+		mods.oeffne(null);
+		baueProfile();
+		zeigeAnsicht(false);
 	}
 
 	private NeonUI.UmrissKnopf knopf(String text, Color farbe, int x, int y, int b, int h, Runnable aktion) {
@@ -125,8 +184,7 @@ final class SeiteMods extends JPanel {
 		k.setFont(NeonUI.mono(11));
 		k.setBounds(x, y, b, h);
 		k.addActionListener(e -> aktion.run());
-		add(k);
-		return k;
+		return teil(k);
 	}
 
 	// ============================================================ Quelle
@@ -160,22 +218,34 @@ final class SeiteMods extends JPanel {
 
 	private void baueProfile() {
 		profilListe.removeAll();
-		int x = 0;
-		for (ModVerwaltung.Profil p : mods.profile()) {
-			ProfilKarte k = new ProfilKarte(p);
-			k.setBounds(x, 0, PROFIL_B, 46);
-			profilListe.add(k);
-			x += PROFIL_B + 6;
+		String nach = mods.profilSortierung();
+		for (Map.Entry<String, NeonUI.UmrissKnopf> e : sortKnoepfe.entrySet()) {
+			e.getValue().setzeFarbe(e.getKey().equals(nach) ? NeonUI.NEON : NeonUI.GRAU);
 		}
-		profilListe.setPreferredSize(new Dimension(Math.max(x - 6, 10), 46));
+		boolean kacheln = ModVerwaltung.ALS_KACHELN.equals(mods.profilAnsicht());
+		ansichtKnopf.setText(kacheln ? "LISTE" : "KACHELN");
+		int b = VB - 10, hoehe;
+		List<ModVerwaltung.Profil> liste = mods.profileSortiert();
+		if (kacheln) {
+			int spalten = 3, kb = (b - (spalten - 1) * 10) / spalten, kh = 118;
+			for (int i = 0; i < liste.size(); i++) {
+				ProfilEintrag k = new ProfilEintrag(liste.get(i), true);
+				k.setBounds((i % spalten) * (kb + 10), (i / spalten) * (kh + 10), kb, kh);
+				profilListe.add(k);
+			}
+			hoehe = ((liste.size() + spalten - 1) / spalten) * (kh + 10);
+		} else {
+			for (int i = 0; i < liste.size(); i++) {
+				ProfilEintrag k = new ProfilEintrag(liste.get(i), false);
+				k.setBounds(0, i * 66, b, 60);
+				profilListe.add(k);
+			}
+			hoehe = liste.size() * 66;
+		}
+		profilListe.setPreferredSize(new Dimension(b, Math.max(hoehe, 10)));
 		profilListe.revalidate();
 		profilListe.repaint();
-	}
-
-	private void waehleProfil(String id) {
-		mods.setzeAktivesProfil(id);
-		aktualisiere();
-		zeigeTreffer(letzteTreffer);   // Häkchen passen zum neuen Profil
+		repaint();
 	}
 
 	private String frageName(String titel, String vorschlag) {
@@ -185,42 +255,37 @@ final class SeiteMods extends JPanel {
 		return name.isEmpty() ? null : name;
 	}
 
-	private ModVerwaltung.Profil aktiv() {
-		for (ModVerwaltung.Profil p : mods.profile()) {
-			if (p.id.equals(mods.aktivesProfil())) return p;
-		}
-		return mods.profile().get(0);
+	/** Das geöffnete Profil. */
+	private ModVerwaltung.Profil offen() {
+		return mods.profil(mods.offenesProfil());
 	}
 
 	private void neuesProfil() {
 		String name = frageName("Neues Profil", "Profil " + (mods.profile().size() + 1));
 		if (name != null) {
-			mods.neuesProfil(name, null);
-			waehleProfil(mods.aktivesProfil());
+			oeffneProfil(mods.neuesProfil(name, null));
 		}
 	}
 
 	private void profilKopieren() {
-		ModVerwaltung.Profil p = aktiv();
+		ModVerwaltung.Profil p = offen();
 		String name = frageName("Profil kopieren", p.name + " 2");
 		if (name != null) {
-			mods.neuesProfil(name, p.id);
-			waehleProfil(mods.aktivesProfil());
+			oeffneProfil(mods.neuesProfil(name, p.id));
 		}
 	}
 
 	private void profilUmbenennen() {
-		ModVerwaltung.Profil p = aktiv();
+		ModVerwaltung.Profil p = offen();
 		String name = frageName("Profil umbenennen", p.name);
 		if (name != null) {
 			mods.benenneProfil(p.id, name);
-			baueProfile();
 			repaint();
 		}
 	}
 
 	private void profilLoeschen() {
-		ModVerwaltung.Profil p = aktiv();
+		ModVerwaltung.Profil p = offen();
 		if (mods.profile().size() <= 1) {
 			JOptionPane.showMessageDialog(l, Sprache.t("Das letzte Profil kann nicht gelöscht werden."));
 			return;
@@ -228,7 +293,7 @@ final class SeiteMods extends JPanel {
 		if (JOptionPane.showConfirmDialog(l, Sprache.t("Profil „" + p.name + "“ löschen?"), Sprache.t("Profil löschen"),
 				JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 			mods.loescheProfil(p.id);
-			waehleProfil(mods.aktivesProfil());
+			zurListe();
 		}
 	}
 
@@ -380,6 +445,7 @@ final class SeiteMods extends JPanel {
 		baueProfile();
 		baueInstalliert();
 		boost.repaint();
+		zeigeAnsicht(profilOffen);
 	}
 
 	// ============================================================ Icons
@@ -409,14 +475,37 @@ final class SeiteMods extends JPanel {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = NeonUI.glatt(graphics);
+		if (!profilOffen) {
+			g.setFont(NeonUI.titel(30));
+			NeonUI.leuchtText(g, "MODS", X, 62, NeonUI.TEXT, 1);
+			g.setFont(NeonUI.normal(13));
+			g.setColor(NeonUI.GRAU);
+			g.drawString("Wähle ein Profil, um seine Mods einzustellen. Gespielt wird das aktive Profil.", X, 84);
+			g.setFont(NeonUI.mono(10));
+			g.setColor(NeonUI.GRAU);
+			g.drawString("SORTIEREN", X, 122);
+			g.dispose();
+			return;
+		}
+		ModVerwaltung.Profil p = offen();
+		boolean aktiv = p.id.equals(mods.aktivesProfil());
 		g.setFont(NeonUI.titel(30));
-		NeonUI.leuchtText(g, "MODS", X, 62, NeonUI.TEXT, 1);
+		String titel = NeonUI.passend(g, p.name.toUpperCase(java.util.Locale.ROOT), VB - 40);
+		NeonUI.leuchtText(g, titel, X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
-		g.setColor(NeonUI.GRAU);
-		g.drawString("Profile mit eigenen Mods · wird beim nächsten SPIELEN eingerichtet.", X, 84);
+		g.setColor(aktiv ? NeonUI.NEON : NeonUI.GRAU);
+		g.drawString(aktiv ? "● Aktives Profil – wird beim nächsten SPIELEN eingerichtet."
+				: "○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", X, 84);
+		if (aktiv) {
+			g.setFont(NeonUI.mono(11));
+			int ax = X + VB - 4 * 80 - 3 * 4;
+			g.setColor(NeonUI.alpha(NeonUI.NEON, 40));
+			g.fillRect(ax, 104, 80, 30);
+			g.setColor(NeonUI.NEON);
+			NeonUI.zentriert(g, "✓ AKTIV", ax, 104, 80, 30);
+		}
 
-		ueberschrift(g, "PROFILE", X, 106);
-		ueberschrift(g, "INSTALLIERT · " + aktiv().name.toUpperCase(java.util.Locale.ROOT), X, 184);
+		ueberschrift(g, "INSTALLIERT", X, 184);
 		ueberschrift(g, "ENTDECKEN", RX, 184);
 		// senkrechte Trennlinie zwischen den Hälften
 		g.setColor(NeonUI.LINIE);
@@ -430,7 +519,7 @@ final class SeiteMods extends JPanel {
 		}
 		g.setFont(NeonUI.mono(10));
 		g.setColor(new Color(0x5C6B80));
-		g.drawString("Fabric-Mods für " + Installer.MC_VERSION + " · „+“ fügt die Mod zum aktiven Profil hinzu", X, 588);
+		g.drawString("Fabric-Mods für " + Installer.MC_VERSION + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
 		g.dispose();
 	}
 
@@ -470,44 +559,120 @@ final class SeiteMods extends JPanel {
 
 	// ============================================================ Bauteile
 
-	/** Ein Profil in der linken Spalte: Anfangsbuchstabe, Name, Anzahl Mods. */
-	private final class ProfilKarte extends JComponent {
+	/**
+	 * Ein Profil in der Liste (Zeile) oder als Kachel: Anfangsbuchstabe, Name, Mods, zuletzt benutzt.
+	 * Klick öffnet das Profil; „AKTIVIEREN“ macht es zum Profil fürs Spielen.
+	 */
+	private final class ProfilEintrag extends JComponent {
 		private final ModVerwaltung.Profil p;
-		private boolean ueber;
+		private final boolean kachel;
+		private boolean ueber, ueberKnopf;
 
-		ProfilKarte(ModVerwaltung.Profil p) {
+		ProfilEintrag(ModVerwaltung.Profil p, boolean kachel) {
 			this.p = p;
+			this.kachel = kachel;
 			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			addMouseListener(new MouseAdapter() {
+			setToolTipText("Öffnen und Mods einstellen");
+			MouseAdapter maus = new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
-				@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
-				@Override public void mouseClicked(MouseEvent e) { waehleProfil(ProfilKarte.this.p.id); }
-			});
+				@Override public void mouseExited(MouseEvent e) { ueber = false; ueberKnopf = false; repaint(); }
+				@Override public void mouseMoved(MouseEvent e) {
+					boolean k = knopf().contains(e.getPoint());
+					if (k != ueberKnopf) { ueberKnopf = k; repaint(); }
+				}
+				@Override public void mouseClicked(MouseEvent e) {
+					if (!istAktiv() && knopf().contains(e.getPoint())) {
+						mods.setzeAktivesProfil(ProfilEintrag.this.p.id);
+						baueProfile();
+					} else {
+						oeffneProfil(ProfilEintrag.this.p.id);
+					}
+				}
+			};
+			addMouseListener(maus);
+			addMouseMotionListener(maus);
+		}
+
+		private boolean istAktiv() {
+			return p.id.equals(mods.aktivesProfil());
+		}
+
+		/** Fläche des AKTIVIEREN-Knopfs bzw. des AKTIV-Abzeichens. */
+		private java.awt.Rectangle knopf() {
+			return kachel ? new java.awt.Rectangle(12, getHeight() - 36, getWidth() - 24, 26)
+					: new java.awt.Rectangle(getWidth() - 236, (getHeight() - 28) / 2, 104, 28);
 		}
 
 		@Override
 		protected void paintComponent(Graphics graphics) {
 			Graphics2D g = NeonUI.glatt(graphics);
 			int b = getWidth(), h = getHeight();
-			boolean aktiv = p.id.equals(mods.aktivesProfil());
+			boolean aktiv = istAktiv();
 			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 10, 10);
-			g.setColor(aktiv ? NeonUI.alpha(NeonUI.NEON, 26) : ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+			g.setColor(ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
 			g.fill(form);
-			g.setColor(aktiv ? NeonUI.NEON : NeonUI.LINIE);
+			g.setColor(aktiv ? NeonUI.NEON : ueber ? NeonUI.alpha(NeonUI.CYAN, 150) : NeonUI.LINIE);
 			g.setStroke(new BasicStroke(1.2f));
 			g.draw(form);
-			if (aktiv) {
-				g.fillRect(8, h - 4, b - 17, 2);
+			Color farbe = aktiv ? NeonUI.NEON : NeonUI.CYAN;
+			String info = p.mods + (p.mods == 1 ? " Mod" : " Mods");
+			boolean en = Sprache.englisch();
+			String wann = p.zuletzt > 0 ? (en ? "last used " : "zuletzt ") + vor(p.zuletzt) : en ? "not used yet" : "noch nicht benutzt";
+			java.awt.Rectangle k = knopf();
+
+			if (kachel) {
+				avatar(g, p.name, 12, 12, 36, farbe);
+				g.setFont(NeonUI.titel(15));
+				g.setColor(NeonUI.TEXT);
+				g.drawString(NeonUI.passend(g, p.name, b - 70), 58, 28);
+				g.setFont(NeonUI.normal(11));
+				g.setColor(NeonUI.GRAU);
+				g.drawString(info, 58, 44);
+				g.drawString(kuerze(g, wann, b - 24), 12, 66);
+			} else {
+				if (aktiv) {
+					g.setColor(NeonUI.NEON);
+					g.fillRect(1, 10, 3, h - 21);
+				}
+				avatar(g, p.name, 14, (h - 36) / 2, 36, farbe);
+				g.setFont(NeonUI.titel(15));
+				g.setColor(NeonUI.TEXT);
+				g.drawString(NeonUI.passend(g, p.name, b - 400), 62, 26);
+				g.setFont(NeonUI.normal(11));
+				g.setColor(NeonUI.GRAU);
+				g.drawString(info + "  ·  " + wann, 62, 44);
+				g.setFont(NeonUI.mono(11));
+				g.setColor(ueber ? NeonUI.CYAN : NeonUI.GRAU);
+				g.drawString("ÖFFNEN →", b - 110, h / 2 + 4);
 			}
-			avatar(g, p.name, 10, (h - 26) / 2, 26, aktiv ? NeonUI.NEON : NeonUI.GRAU);
-			g.setFont(NeonUI.titel(13));
-			g.setColor(aktiv ? NeonUI.TEXT : new Color(0x9AA8BC));
-			g.drawString(NeonUI.passend(g, p.name, b - 52), 44, 20);
-			g.setFont(NeonUI.normal(11));
-			g.setColor(aktiv ? NeonUI.NEON : NeonUI.GRAU);
-			g.drawString(p.mods + (p.mods == 1 ? " Mod" : " Mods") + (aktiv ? " · AKTIV" : ""), 44, 35);
+			// Aktiv-Abzeichen oder AKTIVIEREN-Knopf
+			g.setFont(NeonUI.mono(11));
+			if (aktiv) {
+				g.setColor(NeonUI.alpha(NeonUI.NEON, 40));
+				g.fillRect(k.x, k.y, k.width, k.height);
+				g.setColor(NeonUI.NEON);
+				NeonUI.zentriert(g, "✓ AKTIV", k.x, k.y, k.width, k.height);
+			} else {
+				g.setColor(ueberKnopf ? NeonUI.alpha(NeonUI.NEON, 50) : NeonUI.alpha(NeonUI.NEON, 14));
+				g.fillRect(k.x, k.y, k.width, k.height);
+				g.setColor(NeonUI.alpha(NeonUI.NEON, ueberKnopf ? 255 : 140));
+				g.drawRect(k.x, k.y, k.width - 1, k.height - 1);
+				NeonUI.zentriert(g, "AKTIVIEREN", k.x, k.y, k.width, k.height);
+			}
 			g.dispose();
 		}
+	}
+
+	/** „vor 5 Min.“, „vor 3 Std.“, „vor 2 Tagen“ … */
+	private static String vor(long zeit) {
+		long s = Math.max(0, (System.currentTimeMillis() - zeit) / 1000);
+		boolean en = Sprache.englisch();
+		if (s < 60) return en ? "just now" : "gerade eben";
+		if (s < 3600) return en ? (s / 60) + " min ago" : "vor " + (s / 60) + " Min.";
+		if (s < 86400) return en ? (s / 3600) + " h ago" : "vor " + (s / 3600) + " Std.";
+		long tage = s / 86400;
+		if (tage == 1) return en ? "yesterday" : "gestern";
+		return en ? tage + " days ago" : "vor " + tage + " Tagen";
 	}
 
 	/** Quadrat mit dem Anfangsbuchstaben – ersetzt ein Symbolbild. */

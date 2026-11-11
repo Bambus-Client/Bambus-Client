@@ -76,13 +76,21 @@ final class ModVerwaltung {
 	static final class Profil {
 		final String id, name;
 		final int mods;
+		final long erstellt, zuletzt;   // Millisekunden; zuletzt = zuletzt aktiviert oder gespielt
 
-		Profil(String id, String name, int mods) {
+		Profil(String id, String name, int mods, long erstellt, long zuletzt) {
 			this.id = id;
 			this.name = name;
 			this.mods = mods;
+			this.erstellt = erstellt;
+			this.zuletzt = zuletzt;
 		}
 	}
+
+	/** Sortierung der Profil-Liste. */
+	static final String NACH_ZULETZT = "zuletzt", NACH_NAME = "name", NACH_MODS = "mods", NACH_NEU = "neu";
+	/** Ansicht der Profil-Liste. */
+	static final String ALS_LISTE = "liste", ALS_KACHELN = "kacheln";
 
 	/** Eine .jar im Mods-Ordner, die der Spieler selbst hineingelegt hat. */
 	static final class EigeneMod {
@@ -152,8 +160,23 @@ final class ModVerwaltung {
 		return Json.objekt(daten.get("profile"));
 	}
 
+	/** Mit diesem Profil wird gespielt. */
 	String aktivesProfil() {
 		return (String) daten.get("aktiv");
+	}
+
+	/** Profil, das gerade in der MODS-Seite geöffnet ist (nur im Speicher) – null = keins. */
+	private volatile String offen;
+
+	/** Das geöffnete Profil wird bearbeitet; ist keins offen, gelten Änderungen dem aktiven. */
+	String offenesProfil() {
+		String o = offen;
+		return o != null && alleProfile().containsKey(o) ? o : aktivesProfil();
+	}
+
+	/** Öffnet ein Profil zum Bearbeiten (null = zurück zur Liste). */
+	void oeffne(String id) {
+		offen = id != null && alleProfile().containsKey(id) ? id : null;
 	}
 
 	List<Profil> profile() {
@@ -161,10 +184,62 @@ final class ModVerwaltung {
 		for (Map.Entry<String, Object> e : alleProfile().entrySet()) {
 			Map<String, Object> p = Json.objekt(e.getValue());
 			if (p != null) {
-				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), anzahlMods(p)));
+				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), anzahlMods(p), zahl(p.get("erstellt")), zahl(p.get("zuletzt"))));
 			}
 		}
 		return l;
+	}
+
+	Profil profil(String id) {
+		for (Profil p : profile()) {
+			if (p.id.equals(id)) return p;
+		}
+		return profile().get(0);
+	}
+
+	/** Profile in der gewählten Reihenfolge; das aktive steht bei „zuletzt“ immer oben. */
+	List<Profil> profileSortiert() {
+		List<Profil> l = profile();
+		String nach = profilSortierung();
+		java.util.Comparator<Profil> name = (a, b) -> a.name.compareToIgnoreCase(b.name);
+		if (NACH_NAME.equals(nach)) {
+			l.sort(name);
+		} else if (NACH_MODS.equals(nach)) {
+			l.sort((a, b) -> a.mods != b.mods ? Integer.compare(b.mods, a.mods) : name.compare(a, b));
+		} else if (NACH_NEU.equals(nach)) {
+			l.sort((a, b) -> Long.compare(b.erstellt, a.erstellt));
+		} else {
+			String aktiv = aktivesProfil();
+			l.sort((a, b) -> a.id.equals(aktiv) ? -1 : b.id.equals(aktiv) ? 1 : Long.compare(b.zuletzt, a.zuletzt));
+		}
+		return l;
+	}
+
+	String profilSortierung() {
+		return str(daten.get("sortierung"), NACH_ZULETZT);
+	}
+
+	void setzeProfilSortierung(String nach) {
+		daten.put("sortierung", nach);
+		speichern();
+	}
+
+	String profilAnsicht() {
+		return str(daten.get("ansicht"), ALS_LISTE);
+	}
+
+	void setzeProfilAnsicht(String ansicht) {
+		daten.put("ansicht", ansicht);
+		speichern();
+	}
+
+	private static long zahl(Object o) {
+		return o instanceof Number ? ((Number) o).longValue() : 0;
+	}
+
+	private void merkeZuletzt(String id) {
+		Map<String, Object> p = Json.objekt(alleProfile().get(id));
+		if (p != null) p.put("zuletzt", System.currentTimeMillis());
 	}
 
 	/** Eingeschaltete Mods eines Profils (empfohlene + zusätzlich gewählte). */
@@ -188,6 +263,7 @@ final class ModVerwaltung {
 	void setzeAktivesProfil(String id) {
 		if (alleProfile().containsKey(id)) {
 			daten.put("aktiv", id);
+			merkeZuletzt(id);
 			speichern();
 		}
 	}
@@ -216,8 +292,8 @@ final class ModVerwaltung {
 		}
 		p.put("an", an);
 		p.put("extra", extra);
+		p.put("erstellt", System.currentTimeMillis());
 		profile.put(id, p);
-		daten.put("aktiv", id);
 		speichern();
 		return id;
 	}
@@ -237,6 +313,9 @@ final class ModVerwaltung {
 			return false;
 		}
 		profile.remove(id);
+		if (id.equals(offen)) {
+			offen = null;
+		}
 		if (id.equals(daten.get("aktiv"))) {
 			daten.put("aktiv", profile.keySet().iterator().next());
 		}
@@ -276,11 +355,15 @@ final class ModVerwaltung {
 		}
 	}
 
-	/** „an“ und „extra“ gehören zum aktiven Profil, alles andere (z. B. „installiert“) gilt für alle. */
+	/** „an“ und „extra“ gehören zum geöffneten Profil, alles andere (z. B. „installiert“) gilt für alle. */
 	private Map<String, Object> map(String schluessel) {
+		return map(offenesProfil(), schluessel);
+	}
+
+	private Map<String, Object> map(String profilId, String schluessel) {
 		Map<String, Object> ort = daten;
 		if ("an".equals(schluessel) || "extra".equals(schluessel)) {
-			ort = Json.objekt(alleProfile().get(aktivesProfil()));
+			ort = Json.objekt(alleProfile().get(profilId));
 		}
 		Map<String, Object> m = Json.objekt(ort.get(schluessel));
 		if (m == null) {
@@ -291,7 +374,11 @@ final class ModVerwaltung {
 	}
 
 	boolean istAn(String slug) {
-		Object v = map("an").get(slug);
+		return istAn(offenesProfil(), slug);
+	}
+
+	private boolean istAn(String profilId, String slug) {
+		Object v = map(profilId, "an").get(slug);
 		if (v instanceof Boolean) {
 			return (Boolean) v;
 		}
@@ -333,8 +420,12 @@ final class ModVerwaltung {
 
 	/** Zusätzlich gewählte Mods des aktiven Profils von Modrinth und CurseForge (nicht die empfohlenen). */
 	List<Projekt> extras() {
+		return extras(offenesProfil());
+	}
+
+	private List<Projekt> extras(String profilId) {
 		List<Projekt> l = new ArrayList<>();
-		for (Map.Entry<String, Object> e : map("extra").entrySet()) {
+		for (Map.Entry<String, Object> e : map(profilId, "extra").entrySet()) {
 			Map<String, Object> p = Json.objekt(e.getValue());
 			if (p != null) {
 				l.add(new Projekt(e.getKey(), str(p.get("titel"), e.getKey()), str(p.get("beschreibung"), ""), 0,
@@ -582,7 +673,7 @@ final class ModVerwaltung {
 
 	/** Anzeigename einer gewählten Mod (für Hinweise). */
 	private String titel(String schluessel) {
-		Map<String, Object> p = Json.objekt(map("extra").get(schluessel));
+		Map<String, Object> p = Json.objekt(map(aktivesProfil(), "extra").get(schluessel));
 		return p == null ? schluessel : str(p.get("titel"), schluessel);
 	}
 
@@ -596,8 +687,10 @@ final class ModVerwaltung {
 	List<String> installiere(Installer.Fortschritt f, int von, int bis) {
 		List<String> hinweise = new ArrayList<>();
 		List<String> gewuenscht = new ArrayList<>();
-		for (String[] m : EMPFOHLEN) if (istAn(m[0])) gewuenscht.add(m[0]);
-		for (Projekt p : extras()) if (istAn(p.slug)) gewuenscht.add(p.slug);
+		String aktiv = aktivesProfil();   // gespielt wird immer das aktive Profil, egal welches gerade offen ist
+		for (String[] m : EMPFOHLEN) if (istAn(aktiv, m[0])) gewuenscht.add(m[0]);
+		for (Projekt p : extras(aktiv)) if (istAn(aktiv, p.slug)) gewuenscht.add(p.slug);
+		merkeZuletzt(aktiv);
 
 		Map<String, Object> installiert = map("installiert");
 		Map<String, String> neu = new LinkedHashMap<>();

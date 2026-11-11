@@ -1,5 +1,5 @@
 ## Neu in dieser Version
-- Neue MODS-Seite im Launcher: Profile mit eigener Mod-Auswahl (anlegen, kopieren, umbenennen, löschen), zwei Hälften INSTALLIERT und ENTDECKEN mit Mod-Icons, Suche bei Modrinth und CurseForge (CurseForge braucht einen eigenen kostenlosen API-Schlüssel)
+- Neue MODS-Seite im Launcher: Profil-Liste (sortierbar, als Liste oder Kacheln) – ein Profil öffnen, dann seine Mods einstellen; aktives Profil zum Spielen wählen; anlegen, kopieren, umbenennen, löschen; zwei Hälften INSTALLIERT und ENTDECKEN mit Mod-Icons, Suche bei Modrinth und CurseForge (CurseForge braucht einen eigenen kostenlosen API-Schlüssel)
 - Launcher im Pixel-Look wie im Spiel: Pixelschrift, eckige Karten, gleiche Symbole und Namen (MOD-MENÜ, GARDEROBE)
 - Farbthemen im Launcher (Neon, Ozean, Sakura, Gold, Lila, Eis, RGB) – eine Einstellung für Launcher und Spiel
 - Flügel in zwei Stilen: HD (weich) oder Blockbench (eckig mit groben Pixeln) – umschaltbar im Launcher und in der Garderobe
