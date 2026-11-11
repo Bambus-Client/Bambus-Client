@@ -215,7 +215,7 @@ public class BambusTitelScreen extends Screen {
 			g.fill(cx, cy, cx + cb, cy + ch, 0xC0080D16);
 			Neon.ecken(g, cx - 3, cy - 3, cb + 6, ch + 6, 8, Farben.NEON_CYAN);
 			Neon.text(g, font, "TASTEN", cx + 8, cy + 7, 0.75f, Farben.NEON_CYAN, false);
-			String[][] tasten = {{"Rechts-Shift", "Bambus-Menü"}, {"C", "Zoom"}, {"Linke Alt", "Freelook"}, {"H", "HUD an/aus"}};
+			String[][] tasten = {{"Rechts-Shift", "Auswahl-Menü"}, {"C", "Zoom"}, {"Linke Alt", "Freelook"}, {"H", "HUD an/aus"}};
 			for (int i = 0; i < tasten.length; i++) {
 				Neon.text(g, font, tasten[i][0], cx + 8, cy + 20 + i * 11, 0.75f, Farben.WEISS, false);
 				Neon.text(g, font, tasten[i][1], cx + 72, cy + 20 + i * 11, 0.75f, Farben.GRAU, false);

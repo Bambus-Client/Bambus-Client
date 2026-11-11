@@ -76,7 +76,7 @@ final class Sprache {
 
 	static {
 		// ---------------------------------------------------------------- Navigation & Rahmen
-		g("START", "HOME"); g("MODULE", "MODULES"); g("KOSMETIK", "COSMETICS"); g("MODS", "MODS");
+		g("START", "HOME"); g("MODULE", "MODULES"); g("KOSMETIK", "COSMETICS"); g("MOD-MENÜ", "MOD MENU"); g("Launcher im Pixel-Look wie im Spiel – mit Farbthemen, die auch im Spiel gelten", "Launcher in pixel style like in game – with color themes that also apply in game"); g("Flügel in zwei Stilen: HD oder Blockbench (eckig) – in der Garderobe umschaltbar", "Wings in two styles: HD or Blockbench (blocky) – switch it in the wardrobe"); g("STIL: HD", "STYLE: HD"); g("STIL: BLOCKBENCH", "STYLE: BLOCKBENCH"); g("HD = weich und biegsam · Blockbench = eckig mit groben Pixeln", "HD = smooth and bendy · Blockbench = blocky with chunky pixels"); g("FARBE  –  GILT AUCH IM SPIEL", "COLOR  –  ALSO USED IN GAME"); g("OZEAN", "OCEAN"); g("LILA", "PURPLE"); g("EIS", "ICE"); g("GARDEROBE", "WARDROBE"); g("MODS", "MODS");
 		g("SERVER", "SERVERS"); g("NEUIGKEITEN", "NEWS"); g("HELFER", "HELPER");
 		g("SENDEN  ➤", "SEND  ➤"); g("Schreib deine Frage, z. B. „Wie baue ich ein Netherportal?“", "Type your question, e.g. “How do I build a Nether portal?”");
 		g("Frag mich alles zum Bambus Client und zu Minecraft – ganz ohne Internet.", "Ask me anything about the Bambus Client and Minecraft – no internet needed.");

@@ -20,7 +20,7 @@ import net.minecraft.client.gui.screens.Screen;
 public final class Ladebildschirm {
 
 	private static final String[] TIPPS = {
-			"RECHTS-SHIFT öffnet das Bambus-Menü",
+			"RECHTS-SHIFT: Garderobe, Mod-Menü und Helfer",
 			"Im HUD-Editor rasten Anzeigen an Kanten ein – mit Shift frei schieben",
 			"Mausrad oder Ecke ziehen im HUD-Editor ändert die Größe",
 			"Mit ★ markierst du Lieblingsmodule für die Favoriten-Liste",

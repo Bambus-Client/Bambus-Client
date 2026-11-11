@@ -8,35 +8,97 @@ import java.awt.geom.Rectangle2D;
 import java.text.AttributedCharacterIterator;
 
 /**
- * Zeichenfläche, die jeden Text beim Zeichnen in die gewählte Sprache übersetzt
- * (siehe {@link Sprache}). Breitenberechnungen über getFontMetrics() nutzen ebenfalls
- * den übersetzten Text, damit Zentrierungen stimmen. Alles andere wird nur weitergereicht.
+ * Zeichenfläche des Launchers:
+ * - übersetzt jeden Text beim Zeichnen in die gewählte Sprache (siehe {@link Sprache}); Breiten über
+ *   getFontMetrics() nutzen ebenfalls den übersetzten Text, damit Zentrierungen stimmen;
+ * - macht abgerundete Kästen eckig – für den Pixel-Look wie im Spiel.
+ * Alles andere wird nur weitergereicht.
  */
 final class UebersetzteGrafik extends Graphics2D {
 
 	private final Graphics2D d;
+	private final boolean uebersetzen;
 
 	UebersetzteGrafik(Graphics2D d) {
-		this.d = d;
+		this(d, true);
 	}
 
-	@Override public void drawString(String s, int x, int y) { d.drawString(Sprache.t(s), x, y); }
-	@Override public void drawString(String s, float x, float y) { d.drawString(Sprache.t(s), x, y); }
+	UebersetzteGrafik(Graphics2D d, boolean uebersetzen) {
+		this.d = d;
+		this.uebersetzen = uebersetzen;
+	}
+
+	Graphics innen() { return d; }
+
+	private String t(String s) { return uebersetzen && Sprache.englisch() ? Sprache.t(s) : s; }
+
+	/** Abgerundete Rechtecke werden eckig (Pixel-Look). */
+	private static java.awt.Shape eckig(java.awt.Shape s) {
+		if (s instanceof java.awt.geom.RoundRectangle2D) {
+			java.awt.geom.RoundRectangle2D r = (java.awt.geom.RoundRectangle2D) s;
+			return new Rectangle2D.Double(Math.round(r.getX()), Math.round(r.getY()), Math.round(r.getWidth()), Math.round(r.getHeight()));
+		}
+		return s;
+	}
+
+	@Override public void drawString(String s, int x, int y) { zeichne(t(s), x, y); }
+	@Override public void drawString(String s, float x, float y) { zeichne(t(s), x, y); }
+
+	/** Zeichen, die die Pixelschrift nicht kennt (z. B. ✓ ⚠ ➤), kommen aus einer normalen Schrift. */
+	private void zeichne(String s, float x, float y) {
+		Font f = d.getFont();
+		if (s == null || f == null || f.canDisplayUpTo(s) < 0) {
+			d.drawString(s, x, y);
+			return;
+		}
+		Font ersatz = ersatz(f);
+		int i = 0;
+		while (i < s.length()) {
+			int cp = s.codePointAt(i);
+			boolean kann = f.canDisplay(cp);
+			int j = i;
+			while (j < s.length() && f.canDisplay(s.codePointAt(j)) == kann) j += Character.charCount(s.codePointAt(j));
+			String teil = s.substring(i, j);
+			d.setFont(kann ? f : ersatz);
+			d.drawString(teil, x, y);
+			x += d.getFontMetrics().stringWidth(teil);
+			i = j;
+		}
+		d.setFont(f);
+	}
+
+	static Font ersatz(Font f) {
+		return new Font(Font.DIALOG, Font.BOLD, Math.round(f.getSize2D() * 1.1f));
+	}
+
+	/** Breite mit Ersatzschrift für unbekannte Zeichen. */
+	static int breite(FontMetrics m, String s, java.util.function.Function<Font, FontMetrics> metrik) {
+		Font f = m.getFont();
+		if (s == null || f.canDisplayUpTo(s) < 0) return m.stringWidth(s);
+		FontMetrics em = metrik.apply(ersatz(f));
+		int w = 0;
+		for (int i = 0; i < s.length(); ) {
+			int cp = s.codePointAt(i);
+			w += f.canDisplay(cp) ? m.charWidth(cp) : em.charWidth(cp);
+			i += Character.charCount(cp);
+		}
+		return w;
+	}
 	@Override public void drawString(AttributedCharacterIterator it, int x, int y) { d.drawString(it, x, y); }
 	@Override public void drawString(AttributedCharacterIterator it, float x, float y) { d.drawString(it, x, y); }
-	@Override public Graphics create() { return new UebersetzteGrafik((Graphics2D) d.create()); }
-	@Override public FontMetrics getFontMetrics() { return new Metrik(d.getFontMetrics()); }
-	@Override public FontMetrics getFontMetrics(Font f) { return new Metrik(d.getFontMetrics(f)); }
+	@Override public Graphics create() { return new UebersetzteGrafik((Graphics2D) d.create(), uebersetzen); }
+	@Override public FontMetrics getFontMetrics() { return new Metrik(d.getFontMetrics(), uebersetzen, d); }
+	@Override public FontMetrics getFontMetrics(Font f) { return new Metrik(d.getFontMetrics(f), uebersetzen, d); }
 
 	@Override public void scale(double a0, double a1) { d.scale(a0, a1); }
-	@Override public void fill(java.awt.Shape a0) { d.fill(a0); }
+	@Override public void fill(java.awt.Shape a0) { d.fill(eckig(a0)); }
 	@Override public void transform(java.awt.geom.AffineTransform a0) { d.transform(a0); }
 	@Override public void rotate(double a0) { d.rotate(a0); }
 	@Override public void rotate(double a0, double a1, double a2) { d.rotate(a0, a1, a2); }
 	@Override public boolean hit(java.awt.Rectangle a0, java.awt.Shape a1, boolean a2) { return d.hit(a0, a1, a2); }
 	@Override public java.awt.Paint getPaint() { return d.getPaint(); }
 	@Override public void setPaint(java.awt.Paint a0) { d.setPaint(a0); }
-	@Override public void draw(java.awt.Shape a0) { d.draw(a0); }
+	@Override public void draw(java.awt.Shape a0) { d.draw(eckig(a0)); }
 	@Override public boolean drawImage(java.awt.Image a0, java.awt.geom.AffineTransform a1, java.awt.image.ImageObserver a2) { return d.drawImage(a0, a1, a2); }
 	@Override public void drawImage(java.awt.image.BufferedImage a0, java.awt.image.BufferedImageOp a1, int a2, int a3) { d.drawImage(a0, a1, a2, a3); }
 	@Override public void drawRenderedImage(java.awt.image.RenderedImage a0, java.awt.geom.AffineTransform a1) { d.drawRenderedImage(a0, a1); }
@@ -82,8 +144,8 @@ final class UebersetzteGrafik extends Graphics2D {
 	@Override public java.awt.Shape getClip() { return d.getClip(); }
 	@Override public void copyArea(int a0, int a1, int a2, int a3, int a4, int a5) { d.copyArea(a0, a1, a2, a3, a4, a5); }
 	@Override public void clearRect(int a0, int a1, int a2, int a3) { d.clearRect(a0, a1, a2, a3); }
-	@Override public void drawRoundRect(int a0, int a1, int a2, int a3, int a4, int a5) { d.drawRoundRect(a0, a1, a2, a3, a4, a5); }
-	@Override public void fillRoundRect(int a0, int a1, int a2, int a3, int a4, int a5) { d.fillRoundRect(a0, a1, a2, a3, a4, a5); }
+	@Override public void drawRoundRect(int a0, int a1, int a2, int a3, int a4, int a5) { d.drawRect(a0, a1, a2, a3); }
+	@Override public void fillRoundRect(int a0, int a1, int a2, int a3, int a4, int a5) { d.fillRect(a0, a1, a2, a3); }
 	@Override public void drawOval(int a0, int a1, int a2, int a3) { d.drawOval(a0, a1, a2, a3); }
 	@Override public void fillOval(int a0, int a1, int a2, int a3) { d.fillOval(a0, a1, a2, a3); }
 	@Override public void drawArc(int a0, int a1, int a2, int a3, int a4, int a5) { d.drawArc(a0, a1, a2, a3, a4, a5); }
@@ -96,14 +158,18 @@ final class UebersetzteGrafik extends Graphics2D {
 	/** Breiten mit dem übersetzten Text. */
 	private static final class Metrik extends FontMetrics {
 		private final FontMetrics m;
+		private final boolean uebersetzen;
+		private final Graphics2D d;
 
-		Metrik(FontMetrics m) {
+		Metrik(FontMetrics m, boolean uebersetzen, Graphics2D d) {
 			super(m.getFont());
 			this.m = m;
+			this.uebersetzen = uebersetzen;
+			this.d = d;
 		}
 
-		@Override public int stringWidth(String s) { return m.stringWidth(Sprache.t(s)); }
-		@Override public Rectangle2D getStringBounds(String s, Graphics g) { return m.getStringBounds(Sprache.t(s), g); }
+		@Override public int stringWidth(String s) { return breite(m, uebersetzen && Sprache.englisch() ? Sprache.t(s) : s, d::getFontMetrics); }
+		@Override public Rectangle2D getStringBounds(String s, Graphics g) { return m.getStringBounds(uebersetzen && Sprache.englisch() ? Sprache.t(s) : s, g); }
 		@Override public int getAscent() { return m.getAscent(); }
 		@Override public int getDescent() { return m.getDescent(); }
 		@Override public int getLeading() { return m.getLeading(); }

@@ -22,6 +22,8 @@ final class SeiteNeu extends JPanel {
 	/** {Version, Untertitel, Farbe(hex), Symbol, Punkte …} – neueste zuerst. */
 	private static final String[][] VERSIONEN = {
 			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
+					"Launcher im Pixel-Look wie im Spiel – mit Farbthemen, die auch im Spiel gelten",
+					"Flügel in zwei Stilen: HD oder Blockbench (eckig) – in der Garderobe umschaltbar",
 					"3D-Flügel: biegen sich ohne Lücken, mit Knochen, Deckfedern und Glanz – neu: Bambus",
 					"Umhänge wehen im Wind und leuchten – neu: Polarlicht und Glut",
 					"Bambus-Ladebildschirm mit Tipps beim Betreten einer Welt",

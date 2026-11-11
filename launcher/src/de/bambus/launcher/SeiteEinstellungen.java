@@ -37,18 +37,20 @@ final class SeiteEinstellungen extends JPanel {
 		for (int i = 0; i < ordner.length; i++) {
 			final Path p = ordner[i];
 			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf("ÖFFNEN", NeonUI.CYAN);
-			k.setBounds(X + 560, 236 + i * 52, 120, 38);
+			k.setBounds(X + 560, 230 + i * 44, 120, 38);
 			k.addActionListener(e -> l.oeffne(p));
 			add(k);
 		}
 
 		if (BambusLauncher.istWindows()) {
 			NeonUI.UmrissKnopf desktop = new NeonUI.UmrissKnopf("AUF DEN DESKTOP", NeonUI.NEON);
-			desktop.setBounds(X, 482, 200, 38);
+			desktop.setFont(NeonUI.mono(10));
+			desktop.setBounds(X, 494, 170, 30);
 			desktop.addActionListener(e -> verknuepfung("Desktop", "auf dem Desktop"));
 			add(desktop);
 			NeonUI.UmrissKnopf startmenue = new NeonUI.UmrissKnopf("INS STARTMENÜ", NeonUI.NEON);
-			startmenue.setBounds(X + 212, 482, 200, 38);
+			startmenue.setFont(NeonUI.mono(10));
+			startmenue.setBounds(X + 180, 494, 170, 30);
 			startmenue.addActionListener(e -> verknuepfung("Programs", "im Startmenü"));
 			add(startmenue);
 		}
@@ -64,6 +66,7 @@ final class SeiteEinstellungen extends JPanel {
 		add(de);
 		add(en);
 		NeonUI.UmrissKnopf willkommen = new NeonUI.UmrissKnopf("WILLKOMMENS-SEITE", NeonUI.CYAN);
+		willkommen.setFont(NeonUI.mono(10));
 		willkommen.setBounds(X + 564, 36, 132, 32);
 		willkommen.addActionListener(e -> new Willkommen(l).setVisible(true));
 		add(willkommen);
@@ -72,7 +75,7 @@ final class SeiteEinstellungen extends JPanel {
 		for (int i = 0; i < Hintergruende.ARTEN.length; i++) {
 			final String id = Hintergruende.ARTEN[i][0];
 			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(Hintergruende.ARTEN[i][1], id.equals(l.hintergrund) ? NeonUI.NEON : NeonUI.GRAU);
-			k.setBounds(X + i * 137, 424, 129, 36);
+			k.setBounds(X + i * 137, 388, 129, 34);
 			k.addActionListener(e -> {
 				l.hintergrund = id;
 				l.client.setze("menueHintergrund", id);   // gleicher Hintergrund im Bambus-Hauptmenü
@@ -84,6 +87,10 @@ final class SeiteEinstellungen extends JPanel {
 			hgKnoepfe.add(k);
 			add(k);
 		}
+		// Farbthema – gleiche Themen und gleiche Einstellung wie im Spiel
+		Farbwahl farben = new Farbwahl();
+		farben.setBounds(X, 452, 696, 36);
+		add(farben);
 		zuruecksetzen.setBounds(X, 532, 330, 40);
 		zuruecksetzen.addActionListener(e -> zuruecksetzen());
 		add(zuruecksetzen);
@@ -147,11 +154,11 @@ final class SeiteEinstellungen extends JPanel {
 		g.setColor(NeonUI.GRAU);
 		g.drawString("4–6 GB reichen für die meisten Computer. Nicht mehr als die Hälfte deines RAMs wählen.", X, 190);
 
-		ueberschrift(g, "ORDNER", 222);
+		ueberschrift(g, "ORDNER", 216);
 		String[] namen = {"Minecraft", "Bambus-Spielordner", "Mods"};
 		Path[] pfade = {l.installer.mcOrdner, l.installer.spielOrdner, l.installer.modsOrdner};
 		for (int i = 0; i < namen.length; i++) {
-			int y = 236 + i * 52;
+			int y = 230 + i * 44;
 			RoundRectangle2D form = new RoundRectangle2D.Float(X, y, 548, 38, 10, 10);
 			g.setColor(NeonUI.KARTE);
 			g.fill(form);
@@ -166,13 +173,65 @@ final class SeiteEinstellungen extends JPanel {
 			g.drawString(kuerzen(g.getFontMetrics(), pfade[i].toString(), 370), X + 168, y + 24);
 		}
 
-		ueberschrift(g, "HINTERGRUND", 412);
+		ueberschrift(g, "HINTERGRUND", 376);
+		ueberschrift(g, "FARBE  –  GILT AUCH IM SPIEL", 442);
 		if (BambusLauncher.istWindows()) {
 			g.setFont(NeonUI.normal(11));
 			g.setColor(NeonUI.GRAU);
-			g.drawString("Taskleiste: Rechtsklick aufs Symbol → „Anheften“", X + 424, 497);
+			g.drawString("Taskleiste: Rechtsklick aufs Symbol → „Anheften“", X + 362, 513);
 		}
 		g.dispose();
+	}
+
+	/** Sieben Farbfelder: Neon, Ozean, Sakura, Gold, Lila, Eis, RGB. */
+	private final class Farbwahl extends javax.swing.JComponent {
+		private static final int FB = 92, ABSTAND = 8;
+		private int ueber = -1;
+
+		Farbwahl() {
+			setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+			java.awt.event.MouseAdapter m = new java.awt.event.MouseAdapter() {
+				@Override public void mouseMoved(java.awt.event.MouseEvent e) { int u = bei(e.getX()); if (u != ueber) { ueber = u; repaint(); } }
+				@Override public void mouseExited(java.awt.event.MouseEvent e) { ueber = -1; repaint(); }
+				@Override public void mouseClicked(java.awt.event.MouseEvent e) {
+					int i = bei(e.getX());
+					if (i < 0) return;
+					l.client.setze("thema", i);
+					NeonUI.themaAnwenden(i);
+					l.repaint();
+				}
+			};
+			addMouseListener(m);
+			addMouseMotionListener(m);
+		}
+
+		private int bei(int x) {
+			int i = x / (FB + ABSTAND);
+			return i >= 0 && i < NeonUI.THEMEN.length && x - i * (FB + ABSTAND) < FB ? i : -1;
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g = NeonUI.glatt(graphics);
+			int h = getHeight();
+			for (int i = 0; i < NeonUI.THEMEN.length; i++) {
+				int x = i * (FB + ABSTAND);
+				boolean aktiv = i == NeonUI.thema(), rgb = NeonUI.THEMEN[i].equals("RGB");
+				java.awt.Color c = rgb ? java.awt.Color.getHSBColor((System.currentTimeMillis() % 4000L) / 4000f, 0.75f, 1f) : NeonUI.themaFarbe(i);
+				g.setColor(i == ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+				g.fillRect(x, 1, FB, h - 3);
+				g.setStroke(new BasicStroke(aktiv ? 2f : 1.2f));
+				g.setColor(aktiv ? c : NeonUI.LINIE);
+				g.drawRect(x, 1, FB, h - 3);
+				if (aktiv) NeonUI.ecken(g, x - 2, -1, FB + 4, h + 1, 6, c);
+				g.setColor(c);
+				g.fillRect(x + 9, 10, 14, h - 21);
+				g.setFont(NeonUI.mono(10));
+				g.setColor(aktiv ? NeonUI.TEXT : NeonUI.GRAU);
+				g.drawString(NeonUI.THEMEN[i], x + 31, h / 2 + 4);
+			}
+			g.dispose();
+		}
 	}
 
 	private static String kuerzen(FontMetrics fm, String text, int max) {

@@ -228,7 +228,7 @@ final class SeiteMods extends JPanel {
 			g.drawString(suchStatus, RX + 4, 196);
 		}
 		if (deine.getComponentCount() == 0) {
-			g.setFont(NeonUI.normal(12));
+			g.setFont(NeonUI.normal(10));
 			g.setColor(NeonUI.GRAU);
 			g.drawString("Noch keine. Suche oben oder füge eine .jar hinzu.", RX + 4, 432);
 		}
@@ -308,7 +308,7 @@ final class SeiteMods extends JPanel {
 			}
 			g.setFont(NeonUI.titel(24));
 			NeonUI.leuchtText(g, "⚡ FPS-BOOST", 20, 40, an ? NeonUI.NEON : NeonUI.GRAU, an ? 1 : 0);
-			g.setFont(NeonUI.normal(12));
+			g.setFont(NeonUI.normal(10));
 			g.setColor(NeonUI.GRAU);
 			g.drawString(an ? "An · bis zu doppelte FPS, weniger Ruckler" : "Aus · Klicken für mehr FPS", 20, 64);
 			int sb = 54, sh = 26, sx = b - sb - 20, sy = (h - sh) / 2;
@@ -316,7 +316,7 @@ final class SeiteMods extends JPanel {
 			g.setColor(an ? NeonUI.alpha(NeonUI.NEON, 70) : new Color(0x1E2A3C));
 			g.fill(bahn);
 			g.setColor(an ? NeonUI.NEON : NeonUI.GRAU);
-			g.fillOval(an ? sx + sb - sh + 4 : sx + 4, sy + 4, sh - 8, sh - 8);
+			g.fillRect(an ? sx + sb - sh + 4 : sx + 4, sy + 4, sh - 8, sh - 8);
 			g.dispose();
 		}
 	}
@@ -401,7 +401,7 @@ final class SeiteMods extends JPanel {
 			g.setColor(an ? NeonUI.alpha(farbe, 70) : new Color(0x1E2A3C));
 			g.fill(bahn);
 			g.setColor(an ? farbe : NeonUI.GRAU);
-			g.fillOval(an ? sx + sb - sh + 3 : sx + 3, sy + 3, sh - 6, sh - 6);
+			g.fillRect(an ? sx + sb - sh + 3 : sx + 3, sy + 3, sh - 6, sh - 6);
 			g.dispose();
 		}
 	}

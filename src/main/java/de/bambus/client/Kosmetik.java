@@ -56,6 +56,11 @@ public final class Kosmetik {
 	}
 
 	/** Ebene eines eingebauten 3D-Flügels: "hinten" (Schwungfedern) oder "vorne" (Deckfedern, Knochen). */
+	/** Grobe Pixel-Textur der eingebauten Flügel für den Blockbench-Stil (32×16). */
+	public static Identifier fluegelBlock(String id) {
+		return Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "textures/fluegel/" + id + "_block.png");
+	}
+
 	public static Identifier fluegelEbene(String id, String ebene) {
 		return Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "textures/fluegel/" + id + "_" + ebene + ".png");
 	}

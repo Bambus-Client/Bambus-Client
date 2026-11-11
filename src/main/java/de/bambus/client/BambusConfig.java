@@ -102,6 +102,7 @@ public class BambusConfig {
 	public String capeDesign = "bambus";
 	public String partikel = "aus";
 	public String fluegel = "aus";
+	public boolean fluegelBlock = false;  // Flügel-Stil: false = HD (weich, 24 Streifen), true = Blockbench (eckig, grobe Pixel)
 	public String hut = "aus";
 	public String killEffekt = "aus";
 	public String spur = "aus";

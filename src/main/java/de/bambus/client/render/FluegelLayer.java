@@ -22,6 +22,8 @@ import net.minecraft.world.phys.Vec3;
  * einzeln biegen – so entstehen beim Schlagen keine Lücken. Die Deckfedern (Ebene "vorne") liegen etwas
  * vor und hinter den Schwungfedern (Ebene "hinten"), die Vorderkante ist ein echter 3D-Knochen und ein
  * Gelenkstück führt in den Rücken. Ein Glanzstreifen läuft über den Flügel.
+ * Blockbench-Stil (Einstellung fluegelBlock): dieselben Flügel eckig wie ein Minecraft-Modell – vier starre
+ * Platten mit groben Pixeln und kantigen Knochen-Würfeln statt der weichen Streifen.
  * Selbst erstellte Flügel (ein Bild im alten Format) werden weiter mit zwei Flächen gezeichnet.
  * Nur auf deinem Bildschirm sichtbar.
  */
@@ -74,6 +76,8 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		Kosmetik.FluegelForm form = Kosmetik.fluegelForm(fluegel.id());
 		if (form == null) {
 			alteFluegel(poseStack, sammler, licht, zustand, fluegel);
+		} else if (BambusClient.config.fluegelBlock) {
+			blockFluegel(poseStack, sammler, licht, zustand, mc.player, fluegel.id(), form);
 		} else {
 			neueFluegel(poseStack, sammler, licht, zustand, mc.player, fluegel.id(), form);
 		}
@@ -132,6 +136,68 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
 		sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(Kosmetik.fluegelEbene(id, "hinten")), hinten::zeichne);
 		sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(Kosmetik.fluegelEbene(id, "vorne")), vorne::zeichne);
+		if (!knochen.leer()) {
+			sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(WEISS), knochen::zeichne);
+		}
+	}
+
+	// ================================================================== Blockbench-Stil
+
+	private static final int NB = 4;                  // starre Platten pro Flügel (N muss durch NB teilbar sein)
+	private static final float PLATTE = 2f * PX;      // halbe Plattendicke
+
+	/**
+	 * Eckige Flügel wie ein Blockbench-Modell: vier starre Platten, die an Scharnieren knicken (gleiche Bewegung
+	 * wie die HD-Flügel, nur stufig), grobe Pixel-Textur und kantige Knochen-Würfel an der Vorderkante.
+	 */
+	private void blockFluegel(PoseStack poseStack, SubmitNodeCollector sammler, int licht, AvatarRenderState zustand,
+							  LocalPlayer spieler, String id, Kosmetik.FluegelForm form) {
+		bewege(zustand, spieler);
+		int l = form.leuchtet() ? VOLL_HELL : licht;
+		boolean umhang = CapeLayer.zeigtUmhang(spieler);
+		float sb = WTW / NB;          // Plattenbreite in px
+		int proPlatte = N / NB;       // so viele HD-Streifen stecken in einer Platte
+
+		Geometrie platten = new Geometrie(), knochen = new Geometrie();
+		for (int seite = 1; seite >= -1; seite -= 2) {
+			Ziel ziel = new Ziel(seite * 0.125f, 0.1125f, umhang ? 0.225f : 0.13f);
+			Rahmen wurzel = new Rahmen().spiegelX(seite).dreheY(P[0]).dreheZ(P[1]);
+
+			if (form.dicke() > 0) {   // Gelenk-Würfel am Rücken
+				float tk = form.dicke() * 2 * PX * 1.6f;
+				quader(knochen, ziel, wurzel.kopie().dreheY(-35).schiebe(-tk * 0.9f, 0, 0), tk * 1.4f, tk, true, form, l);
+			}
+
+			Rahmen m = wurzel.kopie().schiebe(0, -kante(form, 0) * PX, 0);
+			for (int s = 0; s < NB; s++) {
+				float u0 = s / (float) NB, u1 = (s + 1) / (float) NB;
+				// drei Lagen ergeben eine dicke Platte; jede zweite Platte ist etwas dunkler (kantiger Look)
+				float hell = s % 2 == 0 ? 1.0f : 0.93f;
+				flaeche(platten, ziel, m, 0, 0, sb, WTH, PLATTE, u0, 0, u1, 1, Geometrie.grau(hell), l);
+				flaeche(platten, ziel, m, 0, 0, sb, WTH, 0, u0, 0, u1, 1, Geometrie.grau(hell * 0.9f), l);
+				flaeche(platten, ziel, m, 0, 0, sb, WTH, -PLATTE, u0, 0, u1, 1, Geometrie.grau(hell * 0.8f), l);
+
+				// Knochen: ein gerader Würfel pro Platte
+				float x0 = s * sb / PX, x1 = (s + 1) * sb / PX;
+				if (form.dicke() > 0 && x0 < form.knochenBis()) {
+					float xe = Math.min(x1, form.knochenBis());
+					float y = (kante(form, x0) + kante(form, xe)) / 2f * PX;
+					float t = form.dicke() * 2 * PX * 1.5f * (1 - 0.4f * s / (float) NB);
+					quader(knochen, ziel, m.kopie().schiebe(0, y, 0), (xe - x0) * PX, t, true, form, l);
+				}
+
+				// Scharnier zur nächsten Platte: Summe der Biegungen der HD-Streifen in dieser Platte
+				float drehpunkt = kante(form, x1) * PX;
+				float dY = 0, dZ = 0;
+				for (int i = s * proPlatte; i < (s + 1) * proPlatte; i++) {
+					dY += 24 * W_WOELBUNG[i] + P[2] * W_GELENK[i];
+					dZ += -8 * W_BOGEN_INNEN[i] + 14 * W_BOGEN_AUSSEN[i] + P[3] * W_GELENK[i] + P[4] * W_SPITZE[i];
+				}
+				m.schiebe(sb, drehpunkt, 0).dreheY(dY).dreheZ(dZ).schiebe(0, -drehpunkt, 0);
+			}
+		}
+
+		sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(Kosmetik.fluegelBlock(id)), platten::zeichne);
 		if (!knochen.leer()) {
 			sammler.submitCustomGeometry(poseStack, RenderTypes.entityCutoutNoCull(WEISS), knochen::zeichne);
 		}

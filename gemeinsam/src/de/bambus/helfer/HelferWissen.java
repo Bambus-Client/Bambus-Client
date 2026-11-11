@@ -172,9 +172,9 @@ public final class HelferWissen {
 				"Öffne im Spiel das Bambus-Menü (RECHTS-SHIFT) und klick auf HUD BEARBEITEN. Dann kannst du jede Anzeige mit der Maus ziehen – sie rastet an Kanten ein (mit Shift frei schieben). Größe ändern: Ecke unten rechts ziehen oder Mausrad, Rechtsklick setzt auf 100 %.",
 				"Open the Bambus menu in game (RIGHT SHIFT) and click EDIT HUD. Then drag any display with the mouse – it snaps to edges (hold Shift to move freely). Resize: drag the bottom-right corner or use the mouse wheel; right-click resets to 100%.");
 		e("modul,module,anschalten,ausschalten,aktivieren,modules,turn on,enable",
-				"Module schaltest du auf der Seite MODULE an und aus – ein Klick auf die Karte genügt. Im Spiel geht das auch im Bambus-Menü (RECHTS-SHIFT). Mit H blendest du das ganze HUD aus und ein.",
-				"You turn modules on and off on the MODULES page – just click the card. In game you can also do it in the Bambus menu (RIGHT SHIFT). Press H to hide or show the whole HUD.")
-				.aktion("MODULE öffnen", "Open MODULES", "module");
+				"Module schaltest du im Launcher auf der Seite MOD-MENÜ an und aus – ein Klick auf die Karte genügt. Im Spiel geht das auch im Bambus-Menü (RECHTS-SHIFT). Mit H blendest du das ganze HUD aus und ein.",
+				"You turn modules on and off in the launcher on the MOD MENU page – just click the card. In game you can also do it in the Bambus menu (RIGHT SHIFT). Press H to hide or show the whole HUD.")
+				.aktion("MOD-MENÜ öffnen", "Open MOD MENU", "module");
 		e("fps,ruckelt,ruckeln,lag,laggt,langsam,fps boost,performance,stutter,slow,more fps,mehr fps,fps erhoehen",
 				"Mehr FPS: 1) Auf der Seite MODS den FPS-BOOST einschalten (Sodium, Lithium & Co. – oft doppelt so viele FPS). 2) Im Spiel die Sichtweite auf 8–12 Chunks stellen. 3) Bei sehr langsamen PCs den Low-End-Modus einschalten. 4) Andere Programme schließen.",
 				"More FPS: 1) Turn on FPS BOOST on the MODS page (Sodium, Lithium & more – often double the FPS). 2) Set render distance to 8–12 chunks in game. 3) On very slow PCs turn on low-end mode. 4) Close other programs.")
@@ -184,9 +184,9 @@ public final class HelferWissen {
 				"4–6 GB is enough for most computers. Never pick more than half of your real memory, or the computer gets slower. You can change it under SETTINGS.")
 				.aktion("EINSTELLUNGEN öffnen", "Open SETTINGS", "einstellungen");
 		e("cape,umhang,fluegel,wings,kosmetik,cosmetics,hut,hat,partikel,particles",
-				"Kosmetik wählst du auf der Seite KOSMETIK: Umhänge, 3D-Flügel, Hüte, Partikel, Kill-Effekte und Pfeil-Spuren. Die Figur kannst du mit der Maus drehen. Im Spiel geht es in der Garderobe: RECHTS-SHIFT → GARDEROBE oder ESC → GARDEROBE. Sehen kannst du sie mit F5 (3. Person).",
-				"You pick cosmetics on the COSMETICS page: capes, 3D wings, hats, particles, kill effects and arrow trails. Rotate the figure with the mouse. In game use the wardrobe: RIGHT SHIFT → WARDROBE or ESC → WARDROBE. Press F5 (third person) to see them.")
-				.aktion("KOSMETIK öffnen", "Open COSMETICS", "kosmetik");
+				"Kosmetik wählst du im Launcher auf der Seite GARDEROBE: Umhänge, 3D-Flügel, Hüte, Partikel, Kill-Effekte und Pfeil-Spuren. Die Figur kannst du mit der Maus drehen. Im Spiel geht es in der Garderobe: RECHTS-SHIFT → GARDEROBE oder ESC → GARDEROBE. Sehen kannst du sie mit F5 (3. Person).",
+				"You pick cosmetics in the launcher on the WARDROBE page: capes, 3D wings, hats, particles, kill effects and arrow trails. Rotate the figure with the mouse. In game use the wardrobe: RIGHT SHIFT → WARDROBE or ESC → WARDROBE. Press F5 (third person) to see them.")
+				.aktion("GARDEROBE öffnen", "Open WARDROBE", "kosmetik");
 		e("garderobe,wardrobe,kosmetik im spiel,kosmetik ingame,cosmetics in game,umziehen",
 				"Die Garderobe öffnest du im Spiel mit RECHTS-SHIFT → GARDEROBE oder im Escape-Menü über die Karte mit deinem Avatar. Links wählst du die Art (Capes, Flügel, Partikel, Hüte, Kill-Effekte, Pfeil-Spuren), rechts das Design – es wird sofort gespeichert.",
 				"Open the wardrobe in game with RIGHT SHIFT → WARDROBE or in the pause menu via the card with your avatar. Pick the type on the left (capes, wings, particles, hats, kill effects, arrow trails) and the design on the right – it saves instantly.");
@@ -199,14 +199,18 @@ public final class HelferWissen {
 		e("sehen andere,andere spieler,others see,can others see,sichtbar fuer andere",
 				"Die Bambus-Kosmetik siehst nur du selbst. Andere Spieler sehen sie nicht – dafür bräuchte Bambus einen eigenen Server.",
 				"Only you can see Bambus cosmetics. Other players can't see them – that would need a Bambus server.");
+		e("blockbench,fluegel stil,hd fluegel,eckige fluegel,wing style,blocky wings",
+				"Flügel gibt es in zwei Stilen: HD (weich, biegt sich) und Blockbench (eckig mit groben Pixeln, wie ein Minecraft-Modell). Umschalten: im Launcher auf der Seite GARDEROBE bei FLÜGEL mit dem Knopf „STIL“, im Spiel in der Garderobe oben rechts bei den Flügeln.",
+				"Wings come in two styles: HD (smooth, bends) and Blockbench (blocky with chunky pixels, like a Minecraft model). Switch it in the launcher on the WARDROBE page under WINGS with the “STYLE” button, or in game in the wardrobe at the top right of the wings.")
+				.aktion("GARDEROBE öffnen", "Open WARDROBE", "kosmetik");
 		e("eigenes cape,eigene fluegel,studio,selbst machen,eigenes bild,custom cape,own cape,make my own",
-				"Im Kosmetik-Studio baust du eigene Capes und Flügel: auf der Seite KOSMETIK bei Capes oder Flügel auf „+ Erstellen“ klicken. Du kannst Vorlagen, Farben und Initialen wählen oder ein eigenes Bild nehmen.",
-				"In the cosmetics studio you can build your own capes and wings: on the COSMETICS page click “+ Create” under capes or wings. Pick templates, colors and initials, or use your own image.")
-				.aktion("KOSMETIK öffnen", "Open COSMETICS", "kosmetik");
+				"Im Kosmetik-Studio baust du eigene Capes und Flügel: im Launcher auf der Seite GARDEROBE bei Capes oder Flügel auf „+ Erstellen“ klicken. Du kannst Vorlagen, Farben und Initialen wählen oder ein eigenes Bild nehmen.",
+				"In the cosmetics studio you can build your own capes and wings: in the launcher on the WARDROBE page click “+ Create” under capes or wings. Pick templates, colors and initials, or use your own image.")
+				.aktion("GARDEROBE öffnen", "Open WARDROBE", "kosmetik");
 		e("skin,skin laden,mein skin,load skin,change skin,skin aendern",
 				"Auf der Seite KOSMETIK deinen Minecraft-Namen eingeben und LADEN klicken – dann siehst du deinen Skin in der 3D-Vorschau. Deinen echten Skin im Spiel änderst du auf minecraft.net in deinem Profil.",
 				"On the COSMETICS page enter your Minecraft name and click LOAD – then you see your skin in the 3D preview. To change your real in-game skin, go to your profile on minecraft.net.")
-				.aktion("KOSMETIK öffnen", "Open COSMETICS", "kosmetik");
+				.aktion("GARDEROBE öffnen", "Open WARDROBE", "kosmetik");
 		e("zoom,zoomen,ranzoomen,optifine zoom",
 				"Zoom: C gedrückt halten, mit dem Mausrad zoomst du weiter rein oder raus. Die Taste kannst du unter Tastenbelegung ändern.",
 				"Zoom: hold C, and use the mouse wheel to zoom further in or out. You can change the key under key binds.");
@@ -214,9 +218,9 @@ public final class HelferWissen {
 				"Freelook: Linke Alt-Taste (Mac: Option) halten und mit der Maus umschauen, ohne die Laufrichtung zu ändern. Achtung: Auf manchen Servern ist Freelook nicht erlaubt.",
 				"Freelook: hold left Alt (Mac: Option) and look around with the mouse without changing your direction. Note: some servers don't allow freelook.");
 		e("toggle sprint,sprinten,immer sprinten,toggle sneak,schleichen,sprint",
-				"Toggle Sprint und Toggle Sneak schaltest du auf der Seite MODULE bei den Funktionen an. Dann reicht ein Druck auf die Sprint- bzw. Schleich-Taste, und es bleibt an.",
-				"Turn on toggle sprint and toggle sneak on the MODULES page under features. Then one press of the sprint or sneak key keeps it on.")
-				.aktion("MODULE öffnen", "Open MODULES", "module");
+				"Toggle Sprint und Toggle Sneak schaltest du im Launcher auf der Seite MOD-MENÜ bei den Funktionen an. Dann reicht ein Druck auf die Sprint- bzw. Schleich-Taste, und es bleibt an.",
+				"Turn on toggle sprint and toggle sneak in the launcher on the MOD MENU page under features. Then one press of the sprint or sneak key keeps it on.")
+				.aktion("MOD-MENÜ öffnen", "Open MOD MENU", "module");
 		e("koordinaten,koordinaten kopieren,coords,coordinates,copy coordinates,nether koordinaten",
 				"Schalte das Modul „Koordinaten“ an – es zeigt auch die passenden Nether-Koordinaten (Oberwelt ÷ 8). Zum Kopieren legst du im Spiel unter Tastenbelegung → „Bambus Client“ eine Taste für „Koordinaten kopieren“ fest.",
 				"Turn on the “Coordinates” module – it also shows the matching Nether coordinates (overworld ÷ 8). To copy them, set a key for “Copy coordinates” under Key Binds → “Bambus Client” in game.");

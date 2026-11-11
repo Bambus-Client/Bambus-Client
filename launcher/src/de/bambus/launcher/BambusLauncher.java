@@ -50,14 +50,14 @@ public final class BambusLauncher extends JFrame {
 	static final int KOPF = 46;
 
 	private static final String[][] SEITEN = {
-			{"start", "START", "▶"},
-			{"module", "MODULE", "◧"},
-			{"kosmetik", "KOSMETIK", "✦"},
-			{"mods", "MODS", "⬢"},
-			{"server", "SERVER", "◉"},
-			{"neu", "NEUIGKEITEN", "✉"},
-			{"helfer", "HELFER", "?"},
-			{"einstellungen", "EINSTELLUNGEN", "⚙"},
+			{"start", "START", "spielen"},          // {Seite, Name wie im Spiel, Pixel-Symbol}
+			{"module", "MOD-MENÜ", "alle"},
+			{"kosmetik", "GARDEROBE", "person"},
+			{"mods", "MODS", "blitz"},
+			{"server", "SERVER", "server"},
+			{"neu", "NEUIGKEITEN", "update"},
+			{"helfer", "HELFER", "helfer"},
+			{"einstellungen", "EINSTELLUNGEN", "zahnrad"},
 	};
 
 	final Installer installer = new Installer(Installer.findeMinecraftOrdner());
@@ -121,6 +121,7 @@ public final class BambusLauncher extends JFrame {
 		setIconImages(symbole());
 		dockSymbol();
 		ladeLauncherEinstellungen();
+		NeonUI.themaAnwenden(client.zahl("thema", 0));   // gleiche Farben wie im Spiel
 
 		Hintergrund wurzel = new Hintergrund();
 		wurzel.setLayout(null);
@@ -222,6 +223,7 @@ public final class BambusLauncher extends JFrame {
 	 */
 	private void animationsSchritt() {
 		if (!isVisible() || getState() == ICONIFIED) return;
+		if (NeonUI.rgb()) NeonUI.themaAnwenden(NeonUI.thema());   // RGB-Thema dreht sich weiter
 		int ziel = !isActive() ? BILD_MS_HINTERGRUND
 				: zeichenMs > 22 ? BILD_MS_SPARSAM
 				: zeichenMs > 12 ? BILD_MS_LANGSAM
@@ -588,7 +590,8 @@ public final class BambusLauncher extends JFrame {
 			g.drawString(Installer.MC_VERSION, 110, h - 88);
 			g.drawString("Fabric " + Installer.LOADER_VERSION, 110, h - 70);
 			// Pflichthinweis nach den Minecraft-Markenrichtlinien von Mojang
-			g.setFont(NeonUI.normal(9));
+			g.setFont(new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.PLAIN, 9));   // Pflichthinweis gut lesbar in normaler Schrift
+			g.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING, java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 			g.setColor(new Color(0x5C6B80));
 			g.drawString("Kein offizielles Minecraft-Produkt.", 24, h - 44);
 			g.drawString("Nicht von Mojang oder Microsoft genehmigt", 24, h - 32);
@@ -689,11 +692,14 @@ public final class BambusLauncher extends JFrame {
 				g.setColor(NeonUI.alpha(Color.WHITE, 12));
 				g.fill(form);
 			}
-			g.setFont(NeonUI.titel(15));
-			g.setColor(aktiv ? NeonUI.NEON : ueber ? NeonUI.TEXT : NeonUI.GRAU);
-			g.drawString(symbol, 20, h / 2 + 6);
+			Color farbe = aktiv ? NeonUI.NEON : ueber ? NeonUI.TEXT : NeonUI.GRAU;
+			Symbole.zeichne(g, symbol, 18, h / 2 - 8, 2, farbe);
 			g.setFont(NeonUI.mono(13));
-			g.drawString(titel, 48, h / 2 + 5);
+			if (aktiv) NeonUI.schattenText(g, titel, 46, h / 2 + 5, farbe);
+			else {
+				g.setColor(farbe);
+				g.drawString(titel, 46, h / 2 + 5);
+			}
 			g.dispose();
 		}
 	}

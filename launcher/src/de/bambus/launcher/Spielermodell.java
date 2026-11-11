@@ -62,6 +62,14 @@ final class Spielermodell {
 		f.add(new Flaeche(new double[]{x1, y1, z1}, new double[]{x1, y1, z0}, new double[]{x1, y0, z1}, bild, k, 0, 0, 1, 1, 0.78f, true, 1));
 	}
 
+	private boolean fluegelBlock;
+
+	/** Blockbench-Stil: vier starre Platten mit groben Pixeln statt zwei weicher Flächen. */
+	void setFluegelBlock(boolean block) {
+		this.fluegelBlock = block;
+		schattiert.clear();
+	}
+
 	void setFluegel(BufferedImage bild) {
 		this.fluegel = bild == null ? null : argb(bild);
 		schattiert.clear();
@@ -217,7 +225,25 @@ final class Spielermodell {
 			double oben0 = breitesBild ? 23.6 : 24.8, oben1 = breitesBild ? 27.0 : 30.4;
 			double hoehe = breitesBild ? breite * h / w : 12;
 			double obenG = oben0 + (oben1 - oben0) * gelenk + hub * 0.4;
-			for (int seite = -1; seite <= 1; seite += 2) {
+			for (int seite = -1; fluegelBlock && breitesBild && seite <= 1; seite += 2) {
+				// Blockbench-Stil: vier starre Platten, die stufig knicken; zwei Lagen wirken wie eine dicke Platte
+				int platten = 4;
+				double x = seite * 1.3, z = cape != null ? -3.6 : -2.6, oben = oben0;
+				for (int s = 0; s < platten; s++) {
+					double winkel = innen + (aussen - innen) * s / (platten - 1.0);
+					double nx = x + seite * breite / platten * Math.cos(winkel);
+					double nz = z - breite / platten * Math.sin(winkel);
+					double noben = oben0 + (oben1 - oben0 + hub) * (s + 1) / platten;
+					int u = w * s / platten, ub = w * (s + 1) / platten - u;
+					float hell = s % 2 == 0 ? 0.98f : 0.88f;
+					f.add(new Flaeche(new double[]{x, oben, z - 0.45}, new double[]{nx, noben, nz - 0.45}, new double[]{x, oben - hoehe, z - 0.45},
+							fluegel, "fb", u, 0, ub, h, hell * 0.75f, true, w));
+					f.add(new Flaeche(new double[]{x, oben, z}, new double[]{nx, noben, nz}, new double[]{x, oben - hoehe, z},
+							fluegel, "fb", u, 0, ub, h, hell, true, w));
+					x = nx; z = nz; oben = noben;
+				}
+			}
+			for (int seite = -1; !(fluegelBlock && breitesBild) && seite <= 1; seite += 2) {
 				double x0 = seite * 1.3;
 				double z0 = cape != null ? -3.6 : -2.6;
 				double xe = x0 + seite * breite * gelenk * Math.cos(innen);
@@ -269,7 +295,7 @@ final class Spielermodell {
 			}
 			// Seiten, die man genau von der Kante sieht, weglassen – manche Grafiktreiber
 			// zeichnen bei solchen fast flachen Abbildungen sonst falsche Flächen.
-			if (Math.abs(kreuz) < 2.0) {
+			if (Math.abs(kreuz) < ("fb".equals(fl.schluessel) ? 90.0 : 2.0)) {   // Block-Platten: fast von der Kante gesehen → weglassen
 				continue;
 			}
 			// Tiefe = Mittelpunkt der Fläche (größer = näher)
@@ -310,6 +336,21 @@ final class Spielermodell {
 			return;
 		}
 		BufferedImage quelle = schattiert(fl.bild, fl.schluessel, fl.helligkeit).getSubimage(su, sv, sb, sh);
+		boolean rand = "fb".equals(fl.schluessel);
+		if (rand) {
+			// Block-Platten: eigene Kopie mit durchsichtigem Rand – sonst ziehen manche Grafiktreiber die
+			// Randpixel beim Vergrößern als Streifen über die Fläche hinaus
+			String k = "fb" + fl.helligkeit + ":" + su + ":" + sb;
+			BufferedImage kopie = schattiert.get(k);
+			if (kopie == null) {
+				kopie = new BufferedImage(sb + 2, sh + 2, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D kg = kopie.createGraphics();
+				kg.drawImage(quelle, 1, 1, null);
+				kg.dispose();
+				schattiert.put(k, kopie);
+			}
+			quelle = kopie;
+		}
 
 		// Fläche minimal vergrößern, damit keine Ritzen zwischen den Seiten entstehen
 		double ax = fl.sTr[0] - fl.sTl[0], ay = fl.sTr[1] - fl.sTl[1];
@@ -324,6 +365,7 @@ final class Spielermodell {
 				ax * fa / sb, ay * fa / sb,
 				bx * fb / sh, by * fb / sh,
 				ox, oy);
+		if (rand) t.translate(-1, -1);
 		g.drawImage(quelle, t, null);
 	}
 

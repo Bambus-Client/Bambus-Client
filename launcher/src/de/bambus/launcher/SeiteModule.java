@@ -82,7 +82,7 @@ final class SeiteModule extends JPanel {
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = NeonUI.glatt(graphics);
 		g.setFont(NeonUI.titel(30));
-		NeonUI.leuchtText(g, "MODULE", X, 62, NeonUI.TEXT, 1);
+		NeonUI.leuchtText(g, "MOD-MENÜ", X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(NeonUI.GRAU);
 		g.drawString("Karte anklicken = an/aus. Gilt ab dem nächsten Spielstart · im Spiel: RECHTS-SHIFT.", X, 84);

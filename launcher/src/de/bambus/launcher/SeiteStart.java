@@ -122,7 +122,7 @@ final class SeiteStart extends JPanel {
 		int tb = g.getFontMetrics().stringWidth("BAMBUS ");
 		g.setFont(NeonUI.titel(56));
 		NeonUI.leuchtText(g, "CLIENT", 38 + tb, 136, NeonUI.TEXT, 1);
-		g.setFont(NeonUI.normal(15));
+		g.setFont(NeonUI.normal(12));
 		g.setColor(NeonUI.GRAU);
 		g.drawString("Dein PvP-Client im Neon-Look. Module, Kosmetik und HUD –", 42, 172);
 		g.drawString("alles mit einem Klick an- und ausschaltbar.", 42, 194);
@@ -137,9 +137,9 @@ final class SeiteStart extends JPanel {
 		ClientEinstellungen c = l.client;
 		String cape = c.cape();
 		String[][] werte = {
-				{"MODULE AKTIV", c.anzahlAktiv() + " / " + ClientEinstellungen.anzahlGesamt(), "◧"},
-				{"KOSMETIK", ClientEinstellungen.AUS.equals(cape) ? "Kein Cape" : ClientEinstellungen.name(ClientEinstellungen.CAPES, cape), "✦"},
-				{"ARBEITSSPEICHER", l.ramGb + " GB", "⚙"},
+				{"MODULE AKTIV", c.anzahlAktiv() + " / " + ClientEinstellungen.anzahlGesamt(), "alle"},
+				{"GARDEROBE", ClientEinstellungen.AUS.equals(cape) ? "Kein Cape" : ClientEinstellungen.name(ClientEinstellungen.CAPES, cape), "person"},
+				{"ARBEITSSPEICHER", l.ramGb + " GB", "speicher"},
 		};
 		Color[] farben = {NeonUI.NEON, NeonUI.PINK, NeonUI.CYAN};
 		for (int i = 0; i < infoKarten.length; i++) {
@@ -155,6 +155,7 @@ final class SeiteStart extends JPanel {
 				g.setStroke(new BasicStroke(1.2f));
 				g.draw(form);
 			}
+			NeonUI.ecken(g, r.x, r.y, r.width, r.height, 8, NeonUI.alpha(farben[i], hover ? 255 : 150));   // Eckwinkel wie die Karten im Spiel
 			g.setPaint(new GradientPaint(r.x + 16, 0, farben[i], r.x + r.width - 16, 0, NeonUI.alpha(farben[i], 0)));
 			g.fillRect(r.x + 16, r.y, r.width - 32, 2);
 			g.setFont(NeonUI.mono(10));
@@ -163,9 +164,7 @@ final class SeiteStart extends JPanel {
 			g.setFont(NeonUI.titel(22));
 			g.setColor(NeonUI.TEXT);
 			g.drawString(werte[i][1], r.x + 18, r.y + 62);
-			g.setFont(NeonUI.titel(20));
-			g.setColor(NeonUI.alpha(farben[i], hover ? 255 : 150));
-			g.drawString(werte[i][2], r.x + r.width - 38, r.y + 32);
+			Symbole.zeichne(g, werte[i][2], r.x + r.width - 38, r.y + 16, 2, NeonUI.alpha(farben[i], hover ? 255 : 150));
 			g.setFont(NeonUI.mono(9));
 			g.setColor(NeonUI.alpha(farben[i], hover ? 255 : 0));
 			g.drawString("ÖFFNEN →", r.x + r.width - 70, r.y + r.height - 12);
@@ -196,7 +195,7 @@ final class SeiteStart extends JPanel {
 			g.drawString(prozent + "%", bx + bb + 10, by + 8);
 		}
 
-		g.setFont(NeonUI.normal(12));
+		g.setFont(NeonUI.normal(10));
 		g.setColor(NeonUI.GRAU);
 		g.drawString("◆  Anmeldung nur über dein Microsoft-Konto im offiziellen Minecraft Launcher – Bambus sieht nie dein Passwort.", 42, 540);
 		g.dispose();

@@ -386,6 +386,8 @@ final class Willkommen extends JDialog {
 			felder.add(new Feld(x - 4, sy - 4, sg + 8, sg + 26, () -> {
 				thema = nr;
 				l.client.setze("thema", nr);
+				NeonUI.themaAnwenden(nr);
+				l.repaint();
 			}));
 		}
 	}
@@ -430,7 +432,7 @@ final class Willkommen extends JDialog {
 		g.setColor(an ? NeonUI.alpha(NeonUI.NEON, 90) : new Color(0x2A3445));
 		g.fillRoundRect(sx, sy, 56, 28, 28, 28);
 		g.setColor(an ? NeonUI.NEON : NeonUI.GRAU);
-		g.fillOval(an ? sx + 31 : sx + 3, sy + 3, 22, 22);
+		g.fillRect(an ? sx + 31 : sx + 3, sy + 3, 22, 22);
 		felder.add(new Feld(fx, fy, fb, fh, () -> l.mods.setzeFpsBoost(!l.mods.fpsBoost())));
 	}
 

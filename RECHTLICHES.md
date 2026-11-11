@@ -86,6 +86,7 @@ der Client ist eine Fabric-Mod, der Launcher richtet Fabric, Fabric API und die 
 | Fabric Loader | Apache-2.0 | wird beim Spielen heruntergeladen |
 | Fabric API | Apache-2.0 | wird beim Spielen heruntergeladen |
 | Fabric Loom (nur zum Bauen) | MIT | Gradle-Plugin |
+| Schrift „Monocraft“ von Idrees Hassan | SIL Open Font License 1.1 | Pixelschrift im Launcher, unverändert mitgeliefert (`launcher/resources/Monocraft.ttf`, Lizenztext `OFL-Monocraft.txt`) |
 | Eclipse Temurin / OpenJDK | GPLv2 mit Classpath Exception | im Mac-/Windows-Installer eingebaut |
 | Mods aus dem MODS-Tab (Sodium, Lithium, Mod Menu, …) | Lizenz der jeweiligen Autoren | nur auf Wunsch direkt von modrinth.com heruntergeladen, nicht mitgeliefert |
 

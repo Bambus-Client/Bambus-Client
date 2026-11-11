@@ -24,26 +24,122 @@ final class NeonUI {
 
 	static final Color HG = new Color(0x05070D);
 	static final Color SEITENLEISTE = new Color(0x080C14);
-	static final Color KARTE = new Color(0x0D1420);
-	static final Color KARTE_HOVER = new Color(0x132036);
-	static final Color LINIE = new Color(0x1A2638);
-	static final Color NEON = new Color(0x3DFF8A);
-	static final Color CYAN = new Color(0x00E5FF);
-	static final Color PINK = new Color(0xFF2BD6);
+	static final Color KARTE = new Color(0x0B1322);
+	static final Color KARTE_HOVER = new Color(0x112038);
+	static final Color LINIE = new Color(0x1A2A40);
 	static final Color TEXT = new Color(0xE6F1FF);
 	static final Color GRAU = new Color(0x7D8DA6);
 	static final Color DUNKEL = new Color(0x04110A);
 
+	// Akzentfarben – nicht final, weil das Farbthema sie ändert (gleiche Themen wie im Spiel)
+	static Color NEON = new Color(0x3DFF8A);
+	static Color CYAN = new Color(0x00E5FF);
+	static Color PINK = new Color(0xFF2BD6);
+
+	/** Farbthemen wie im Spiel (Farben.THEMEN der Mod): {Name, Haupt, Akzent, Zweitakzent}. */
+	static final String[] THEMEN = {"NEON", "OZEAN", "SAKURA", "GOLD", "LILA", "EIS", "RGB"};
+	private static final int[][] THEMA_FARBEN = {
+			{0x3DFF8A, 0x00E5FF, 0xFF2BD6},
+			{0x00E5FF, 0x2B6BFF, 0x7DF9FF},
+			{0xFF8CC0, 0xFFC2DD, 0xFF2BD6},
+			{0xFFC846, 0xFF8A3D, 0xFF4D6D},
+			{0xB06BFF, 0xFF2BD6, 0x00E5FF},
+			{0xAEEBFF, 0xFFFFFF, 0x5AE6FF},
+			{0x3DFF8A, 0x00E5FF, 0xFF2BD6},
+	};
+	private static int thema;
+
+	static int thema() { return thema; }
+
+	/** Hauptfarbe eines Themas (für Farbfelder in den Einstellungen). */
+	static Color themaFarbe(int t) {
+		return new Color(THEMA_FARBEN[Math.floorMod(t, THEMEN.length)][0]);
+	}
+
+	/** Setzt die Farben des Themas. Bei RGB jedes Bild aufrufen, dann dreht sich die Farbe langsam weiter. */
+	static void themaAnwenden(int t) {
+		thema = Math.floorMod(t, THEMEN.length);
+		if (THEMEN[thema].equals("RGB")) {
+			float h = (System.currentTimeMillis() % 8000L) / 8000f;
+			NEON = Color.getHSBColor(h, 0.75f, 1f);
+			CYAN = Color.getHSBColor((h + 0.33f) % 1f, 0.8f, 1f);
+			PINK = Color.getHSBColor((h + 0.66f) % 1f, 0.8f, 1f);
+		} else {
+			NEON = new Color(THEMA_FARBEN[thema][0]);
+			CYAN = new Color(THEMA_FARBEN[thema][1]);
+			PINK = new Color(THEMA_FARBEN[thema][2]);
+		}
+	}
+
+	static boolean rgb() { return THEMEN[thema].equals("RGB"); }
+
+	// =================================================================== Pixelschrift
+
+	/**
+	 * Pixelschrift im Minecraft-Stil: „Monocraft“ von Idrees Hassan (SIL Open Font License 1.1,
+	 * siehe resources/OFL-Monocraft.txt). Ein Schrift-Pixel ist 1/9 der Schriftgröße – darum werden
+	 * die Größen auf passende Stufen gerundet, damit die Pixel scharf bleiben.
+	 */
+	private static Font pixel;
+	private static boolean pixelGeladen;
+
+	private static Font pixelSchrift() {
+		if (!pixelGeladen) {
+			pixelGeladen = true;
+			try (java.io.InputStream in = NeonUI.class.getResourceAsStream("/Monocraft.ttf")) {
+				if (in != null) pixel = Font.createFont(Font.TRUETYPE_FONT, in);
+			} catch (Exception e) {
+				pixel = null;
+			}
+		}
+		return pixel;
+	}
+
+	/** Gewünschte Größe (wie früher bei der normalen Schrift) → Pixelschrift-Größe. */
+	static float pixelGroesse(int groesse) {
+		if (groesse <= 11) return 9f;
+		if (groesse <= 14) return 12f;
+		if (groesse <= 17) return 13.5f;
+		if (groesse <= 22) return 18f;
+		if (groesse <= 28) return 27f;
+		if (groesse <= 40) return 36f;
+		return 45f;
+	}
+
+	private static Font schrift(int stil, int groesse) {
+		Font p = pixelSchrift();
+		if (p == null) return new Font(Font.SANS_SERIF, stil, groesse);
+		return p.deriveFont(Font.PLAIN, pixelGroesse(groesse));
+	}
+
 	static Font titel(int groesse) {
-		return new Font(Font.SANS_SERIF, Font.BOLD, groesse);
+		return schrift(Font.BOLD, groesse);
 	}
 
 	static Font normal(int groesse) {
-		return new Font(Font.SANS_SERIF, Font.PLAIN, groesse);
+		return schrift(Font.PLAIN, groesse);
 	}
 
 	static Font mono(int groesse) {
-		return new Font(Font.MONOSPACED, Font.BOLD, groesse);
+		return schrift(Font.BOLD, groesse);
+	}
+
+	/** Text (schon übersetzt) so kürzen, dass er in die Breite passt – mit „…“ am Ende. */
+	static String passend(Graphics2D g, String text, int max) {
+		String t = Sprache.englisch() ? Sprache.t(text) : text;
+		FontMetrics fm = g.getFontMetrics();
+		if (fm.stringWidth(t) <= max) return t;
+		while (t.length() > 1 && fm.stringWidth(t + "…") > max) t = t.substring(0, t.length() - 1);
+		return t.trim() + "…";
+	}
+
+	/** Schatten unter Text – wie bei Minecraft eine dunkle Kopie der Farbe, um ein Schrift-Pixel versetzt. */
+	static void schattenText(Graphics2D g, String text, int x, int y, Color farbe) {
+		int d = Math.max(1, Math.round(g.getFont().getSize2D() / 9f));
+		g.setColor(new Color(farbe.getRed() / 4, farbe.getGreen() / 4, farbe.getBlue() / 4, farbe.getAlpha()));
+		g.drawString(text, x + d, y + d);
+		g.setColor(farbe);
+		g.drawString(text, x, y);
 	}
 
 	static Color alpha(Color c, int a) {
@@ -62,35 +158,37 @@ final class NeonUI {
 	static Graphics2D glatt(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics.create();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		// Pixelschrift ohne Kantenglättung, damit die Pixel scharf bleiben
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+				pixelSchrift() != null ? RenderingHints.VALUE_TEXT_ANTIALIAS_OFF : RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		return Sprache.englisch() ? new UebersetzteGrafik(g) : g;   // Texte in der gewählten Sprache
+		return new UebersetzteGrafik(g);   // Sprache + eckige Kästen (Pixel-Look)
 	}
 
 	/** Neon-Leuchten um eine Form. */
 	static void leuchten(Graphics2D g, Shape form, Color farbe, int staerke) {
 		for (int i = staerke; i >= 1; i--) {
 			g.setColor(alpha(farbe, (int) (60.0 / (i + 1))));
-			g.setStroke(new BasicStroke(i * 2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setStroke(new BasicStroke(i * 2f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
 			g.draw(form);
 		}
-		g.setStroke(new BasicStroke(1.4f));
+		g.setStroke(new BasicStroke(2f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
 		g.setColor(farbe);
 		g.draw(form);
 	}
 
 	/** Leuchtender Text. */
 	static void leuchtText(Graphics2D g, String text, int x, int y, Color farbe, int staerke) {
-		for (int i = staerke; i >= 1; i--) {
-			g.setColor(alpha(farbe, 22));
-			for (int dx = -i; dx <= i; dx += i) {
-				for (int dy = -i; dy <= i; dy += i) {
+		if (staerke > 1 && farbe != TEXT) {   // leichtes Leuchten nur bei farbigen Überschriften
+			g.setColor(alpha(farbe, 26));
+			for (int dx = -2; dx <= 2; dx += 2) {
+				for (int dy = -2; dy <= 2; dy += 2) {
 					g.drawString(text, x + dx, y + dy);
 				}
 			}
 		}
-		g.setColor(farbe);
-		g.drawString(text, x, y);
+		schattenText(g, text, x, y, farbe);
 	}
 
 	static void gitter(Graphics2D g, int x, int y, int b, int h, int abstand, Color farbe) {
@@ -197,22 +295,25 @@ final class NeonUI {
 
 	/** Umrandeter Knopf. */
 	static final class UmrissKnopf extends Knopf {
-		private Color farbe;
+		private Color fest;
+		private int rolle;   // 0 = feste Farbe, 1 = NEON, 2 = CYAN, 3 = PINK (folgt dem Farbthema)
 
 		void setzeFarbe(Color f) {
-			this.farbe = f;
+			rolle = f == NEON ? 1 : f == CYAN ? 2 : f == PINK ? 3 : 0;
+			this.fest = f;
 			repaint();
 		}
 
 		UmrissKnopf(String text, Color farbe) {
 			super(text);
-			this.farbe = farbe;
+			setzeFarbe(farbe);
 			setFont(mono(12));
 		}
 
 		@Override
 		protected void paintComponent(Graphics graphics) {
 			Graphics2D g = glatt(graphics);
+			Color farbe = rolle == 1 ? NEON : rolle == 2 ? CYAN : rolle == 3 ? PINK : fest;
 			RoundRectangle2D form = new RoundRectangle2D.Float(2, 2, getWidth() - 5, getHeight() - 5, 10, 10);
 			g.setColor(ueber ? alpha(farbe, 40) : KARTE);
 			g.fill(form);
@@ -309,10 +410,10 @@ final class NeonUI {
 			g.setFont(titel(15));
 			if (g.getFontMetrics().stringWidth(titel) > b - 62 - 8 - tx) g.setFont(titel(13));   // Platz für den Schalter lassen
 			g.setColor(an ? TEXT : new Color(0xB5C2D4));
-			g.drawString(titel, tx, 30);
+			g.drawString(passend(g, titel, b - 62 - 8 - tx), tx, 30);
 			g.setFont(normal(12));
 			g.setColor(GRAU);
-			g.drawString(text, 18, 50);
+			g.drawString(passend(g, text, b - 30), 18, 50);
 			if (warn) {
 				g.setFont(mono(10));
 				g.setColor(alpha(PINK, 220));
@@ -332,7 +433,7 @@ final class NeonUI {
 			}
 			int kx = (int) (sx + 3 + animation * (sb - sh));
 			g.setColor(an ? akzent : GRAU);
-			g.fillOval(kx, sy + 3, sh - 6, sh - 6);
+			g.fillRect(kx, sy + 3, sh - 6, sh - 6);
 			g.dispose();
 		}
 	}
@@ -371,7 +472,7 @@ final class NeonUI {
 				leuchten(g, bahn, alpha(NEON, 200), 2);
 			}
 			g.setColor(an ? NEON : GRAU);
-			g.fillOval(an ? x + b - h + 3 : x + 3, y + 3, h - 6, h - 6);
+			g.fillRect(an ? x + b - h + 3 : x + 3, y + 3, h - 6, h - 6);
 			g.dispose();
 		}
 	}

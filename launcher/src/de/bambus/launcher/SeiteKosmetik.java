@@ -44,6 +44,8 @@ final class SeiteKosmetik extends JPanel {
 	private final SkinLader skinLader;
 	private final Map<String, BufferedImage> capeBilder = new HashMap<>();
 	private final Map<String, BufferedImage> fluegelBilder = new HashMap<>();
+	private final Map<String, BufferedImage> fluegelBlockBilder = new HashMap<>();
+	private NeonUI.UmrissKnopf stil;
 	private final List<Kachel> kacheln = new ArrayList<>();
 	private final JTextField nameFeld = new JTextField();
 
@@ -77,6 +79,8 @@ final class SeiteKosmetik extends JPanel {
 		for (String[] f : ClientEinstellungen.FLUEGEL) {
 			Image b = BambusLauncher.bild("/fluegel/" + f[0] + ".png");
 			if (b instanceof BufferedImage) fluegelBilder.put(f[0], (BufferedImage) b);
+			Image bb = BambusLauncher.bild("/fluegel/" + f[0] + "_block.png");   // grobe Pixel für den Blockbench-Stil
+			if (bb instanceof BufferedImage) fluegelBlockBilder.put(f[0], (BufferedImage) bb);
 		}
 
 		// Knöpfe unter der Vorschau
@@ -130,6 +134,21 @@ final class SeiteKosmetik extends JPanel {
 		ordner.setToolTipText("Hier liegen deine eigenen Capes und Flügel als PNG");
 		ordner.addActionListener(e -> oeffneOrdner());
 		add(ordner);
+
+		// Flügel-Stil: HD (weich) oder Blockbench (eckig wie ein Minecraft-Modell) – gilt auch im Spiel
+		stil = new NeonUI.UmrissKnopf("", NeonUI.CYAN);
+		stil.setFont(NeonUI.mono(10));
+		stil.setText(l.client.wert("fluegelBlock", false) ? "STIL: BLOCKBENCH" : "STIL: HD");
+		stil.setBounds(R_X + 138, 490, 126, 30);
+		stil.setToolTipText("HD = weich und biegsam · Blockbench = eckig mit groben Pixeln");
+		stil.addActionListener(e -> {
+			boolean block = !l.client.wert("fluegelBlock", false);
+			l.client.setze("fluegelBlock", block);
+			stil.setText(block ? "STIL: BLOCKBENCH" : "STIL: HD");
+			aktualisiereModell();
+			repaint();
+		});
+		add(stil);
 
 		vorschau.setBounds(V_X, V_Y, V_B, V_H);
 		add(vorschau);
@@ -200,7 +219,9 @@ final class SeiteKosmetik extends JPanel {
 		String cape = l.client.cape();
 		modell.setCape(ClientEinstellungen.AUS.equals(cape) ? null : capeBilder.get(cape));
 		String fl = l.client.fluegel();
-		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : fluegelBilder.get(fl));
+		boolean block = l.client.wert("fluegelBlock", false) && fluegelBlockBilder.containsKey(fl);
+		modell.setFluegelBlock(block);
+		modell.setFluegel(ClientEinstellungen.AUS.equals(fl) ? null : block ? fluegelBlockBilder.get(fl) : fluegelBilder.get(fl));
 		modell.setHut(l.client.hut());
 	}
 
@@ -337,6 +358,7 @@ final class SeiteKosmetik extends JPanel {
 		int seiten = Math.max(1, (eintraege.size() + PRO_SEITE - 1) / PRO_SEITE);
 		seite = Math.max(0, Math.min(seite, seiten - 1));
 		if (ordner != null) ordner.setVisible(art == CAPES || art == FLUEGEL);
+		if (stil != null) stil.setVisible(art == FLUEGEL);
 		zurueck.setVisible(seiten > 1);
 		weiter.setVisible(seiten > 1);
 		zurueck.setEnabled(seite > 0);
@@ -362,7 +384,7 @@ final class SeiteKosmetik extends JPanel {
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = NeonUI.glatt(graphics);
 		g.setFont(NeonUI.titel(30));
-		NeonUI.leuchtText(g, "KOSMETIK", X, 62, NeonUI.TEXT, 1);
+		NeonUI.leuchtText(g, "GARDEROBE", X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(NeonUI.GRAU);
 		g.drawString("Deine Figur mit der Maus drehen. Cape, Flügel und Partikel sind nur für dich sichtbar.", X, 84);

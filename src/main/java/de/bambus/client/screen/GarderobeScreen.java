@@ -160,6 +160,13 @@ public class GarderobeScreen extends Screen {
 			kleinKnopf(g, mx, my, "⟳ LADEN", x + b - 50, 14, 50, EigeneKosmetik::neuLaden);
 			kleinKnopf(g, mx, my, "ORDNER", x + b - 104, 14, 50, () -> Util.getPlatform().openPath(EigeneKosmetik.ordner()));
 		}
+		// Flügel-Stil: HD (weich) oder Blockbench (eckig wie ein Minecraft-Modell)
+		if (art == Garderobe.Art.FLUEGEL) {
+			kleinKnopf(g, mx, my, BambusClient.config.fluegelBlock ? "STIL: BLOCKBENCH" : "STIL: HD", x + b - 198, 14, 90, () -> {
+				BambusClient.config.fluegelBlock = !BambusClient.config.fluegelBlock;
+				BambusClient.config.speichern();
+			});
+		}
 
 		// Vorschau mit Spielerfigur – kompakte Box, nur wenn genug Platz ist
 		int vb = b >= 260 ? VORSCHAU_B : 0;

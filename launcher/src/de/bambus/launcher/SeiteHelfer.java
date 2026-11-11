@@ -212,11 +212,8 @@ final class SeiteHelfer extends JPanel {
 
 	/** Zeichnen ohne Übersetzung (die Texte sind schon in der richtigen Sprache). */
 	private static Graphics2D roh(Graphics graphics) {
-		Graphics2D g = (Graphics2D) graphics.create();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-		return g;
+		Graphics2D g = NeonUI.glatt(graphics);
+		return g instanceof UebersetzteGrafik ? new UebersetzteGrafik((Graphics2D) ((UebersetzteGrafik) g).innen(), false) : g;
 	}
 
 	private static List<String> umbrechen(FontMetrics fm, String text, int max) {

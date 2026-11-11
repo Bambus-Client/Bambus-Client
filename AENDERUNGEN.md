@@ -1,4 +1,7 @@
 ## Neu in dieser Version
+- Launcher im Pixel-Look wie im Spiel: Pixelschrift, eckige Karten, gleiche Symbole und Namen (MOD-MENÜ, GARDEROBE)
+- Farbthemen im Launcher (Neon, Ozean, Sakura, Gold, Lila, Eis, RGB) – eine Einstellung für Launcher und Spiel
+- Flügel in zwei Stilen: HD (weich) oder Blockbench (eckig mit groben Pixeln) – umschaltbar im Launcher und in der Garderobe
 - Bambus-Helfer: Hilfe-Chat im Launcher zu Client und Minecraft (Rezepte, Tipps, Probleme, Nether-Rechner) – ohne Internet und kostenlos
 - Willkommens-Seite beim ersten Start: Sprache, Minecraft-Name, Look und Leistung einstellen
 - Der Launcher gibt es jetzt auf Deutsch und Englisch (umschaltbar unter Einstellungen)
