@@ -60,10 +60,17 @@ public final class Blaetter {
 		stelleUm();
 		if (id == null || id.isEmpty() || Kosmetik.AUS.equals(id)) return false;
 		if (Quests.imStartset(id) || Kosmetik.istEigen(id)) return false;
+		if (istEntwickler()) return false;   // der Entwickler hat alles frei
 		return !menge("shop").contains(id);
 	}
 
 	public static int preis(String art, String id) { return Quests.preis(art, id); }
+
+	/** Spielst du mit dem Konto eines Entwicklers? (Name aus der Minecraft-Anmeldung) */
+	public static boolean istEntwickler() {
+		Minecraft mc = Minecraft.getInstance();
+		return mc != null && mc.getUser() != null && Quests.istEntwickler(mc.getUser().getName());
+	}
 
 	/** Kauft die Kosmetik, wenn genug Blätter da sind. */
 	public static boolean kaufe(String art, String id) {
