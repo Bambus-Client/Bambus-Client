@@ -78,6 +78,34 @@ public final class Quests {
 			{"zauber", "partikel", "Drachenatem", "350"},
 	};
 
+	/** Das Start-Set gehört dir von Anfang an und kostet nie etwas: {Art, id}. */
+	public static final String[][] STARTSET = {
+			{"cape", "bambus"},
+			{"fluegel", "engel_classic"},
+			{"hut", "bandana"},
+			{"partikel", "funken"},
+			{"spur", "funken"},
+	};
+
+	/** Grundpreis je Art in Blättern; einzelne Stücke im SHOP haben eigene Preise. */
+	private static final String[][] PREISE = {
+			{"cape", "150"}, {"fluegel", "220"}, {"hut", "90"},
+			{"partikel", "110"}, {"spur", "110"}, {"killeffekt", "110"},
+	};
+
+	/**
+	 * Saison-Sets: {id, Name, Monate, Preis, Cape, Flügel, Hut, Partikel}.
+	 * Während der Saison gibt es das ganze Set günstiger; einzeln kann man die Stücke immer kaufen.
+	 */
+	public static final String[][] SAISONS = {
+			{"fruehling", "Frühling", "3,4,5", "400", "polarlicht", "sakura", "katzenohren", "kirsche"},
+			{"sommer", "Sommer", "6,7,8", "400", "sunset", "schmetterling", "partyhut", "herzen"},
+			{"herbst", "Herbst", "9,10,11", "400", "glut", "phoenix", "hoerner", "flammen"},
+			{"winter", "Winter", "12,1,2", "580", "eis", "kristall", "krone", "glitzer"},
+	};
+
+	public static final int STUFE_MAX = 5;
+
 	public static final int TAGES_ANZAHL = 3;
 	public static final int HART_ANZAHL = 3;
 
@@ -123,8 +151,54 @@ public final class Quests {
 
 	public static boolean imShop(String id) { return finde(SHOP, id) != null; }
 
-	public static int preis(String id) {
+	/** Gehört das Stück zum Start-Set? Dann ist es immer frei. */
+	public static boolean imStartset(String id) {
+		for (String[] e : STARTSET) if (e[1].equals(id)) return true;
+		return false;
+	}
+
+	/** Preis eines Kosmetik-Stücks: eigener Preis aus dem SHOP, sonst der Grundpreis seiner Art. */
+	public static int preis(String art, String id) {
 		String[] s = finde(SHOP, id);
-		return s == null ? 0 : Integer.parseInt(s[3]);
+        if (s != null) return Integer.parseInt(s[3]);
+		for (String[] p : PREISE) if (p[0].equals(art)) return Integer.parseInt(p[1]);
+		return 150;
+	}
+
+	public static int preis(String id) { return preis("", id); }
+
+	// ================================================================ Saisons
+
+	/** Die Saison zum Monat (1–12). */
+	public static String[] saison(int monat) {
+		for (String[] s : SAISONS) {
+			for (String m : s[2].split(",")) if (Integer.parseInt(m.trim()) == monat) return s;
+		}
+		return SAISONS[0];
+	}
+
+	/** Die vier Stücke eines Saison-Sets, je {Art, id}. */
+	public static String[][] saisonStuecke(String[] s) {
+		return new String[][]{{"cape", s[4]}, {"fluegel", s[5]}, {"hut", s[6]}, {"partikel", s[7]}};
+	}
+
+	/** Was die Stücke einzeln kosten würden. */
+	public static int saisonEinzeln(String[] s) {
+		int summe = 0;
+		for (String[] st : saisonStuecke(s)) summe += preis(st[0], st[1]);
+		return summe;
+	}
+
+	// ================================================================ Stufen
+
+	/** Ziel einer Herausforderung auf der gewünschten Stufe (Stufe 1 = Grundziel). */
+	public static int ziel(String[] q, int stufe) {
+		return Integer.parseInt(q[4]) * Math.max(1, stufe);
+	}
+
+	/** Blätter für eine Herausforderung auf der gewünschten Stufe. */
+	public static int lohn(String[] q, int stufe) {
+		int grund = Integer.parseInt(q[3]);
+		return grund + (Math.max(1, stufe) - 1) * Math.round(grund * 0.6f);
 	}
 }

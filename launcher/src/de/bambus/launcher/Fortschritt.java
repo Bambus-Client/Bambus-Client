@@ -59,9 +59,12 @@ final class Fortschritt {
 
 	/** Beim Start aufrufen: zählt die Serie weiter und schenkt die Blätter des Tages. */
 	void tagesBonus() {
+		stelleUm();
 		String heute = LocalDate.now().toString();
 		if (heute.equals(c.text("letzterTag", ""))) return;
 		boolean gestern = LocalDate.now().minusDays(1).toString().equals(c.text("letzterTag", ""));
+		String vorher = c.text("letzterTag", "");
+		if (!gestern && !vorher.isEmpty() && c.zahl("streak", 0) > 0) rangVerlust();
 		int serie = gestern ? c.zahl("streak", 0) + 1 : 1;
 		c.setze("streak", serie);
 		c.setze("letzterTag", heute);
@@ -75,6 +78,20 @@ final class Fortschritt {
 	}
 
 	int serie() { return c.zahl("streak", 0); }
+
+	/** Wird beim Start gesetzt, wenn die Serie gerissen ist – für die Meldung. */
+	String verlorenerRang = "";
+
+	/**
+	 * Serie gerissen: ein Rang zurück. Gekaufte Kosmetik bleibt dir erhalten,
+	 * nur die gesammelten Blätter fallen auf den Anfang des vorherigen Rangs.
+	 */
+	private void rangVerlust() {
+		int r = rang();
+		if (r <= 0) return;
+		verlorenerRang = Quests.RAENGE[r][0];
+		c.setze("punkteGesamt", Integer.parseInt(Quests.RAENGE[r - 1][1]));
+	}
 
 	// ============================================================ Quests
 
@@ -204,6 +221,87 @@ final class Fortschritt {
 	// ============================================================ Shop
 
 	boolean gekauft(String id) { return menge("shop").contains(id); }
+
+	/**
+	 * Einmalige Umstellung: Wer vorher schon Kosmetik getragen hat, behält sie.
+	 * Das Start-Set gehört sowieso allen.
+	 */
+	void stelleUm() {
+		if (c.wert("kosmetikUmgestellt", false)) return;
+		Set<String> m = menge("shop");
+		for (String[] e : Quests.STARTSET) m.add(e[1]);
+		m.add(c.cape());
+		m.add(c.fluegel());
+		m.add(c.hut());
+		m.add(c.partikel());
+		m.add(c.spur());
+		m.add(c.killEffekt());
+		m.remove(ClientEinstellungen.AUS);
+		m.remove("");
+		merke("shop", m);
+		c.setze("kosmetikUmgestellt", true);
+	}
+
+	/** Ist dieses Kosmetik-Stück noch gesperrt? „Aus“, Start-Set und eigene Sachen nie. */
+	boolean gesperrtKosmetik(String art, String id) {
+		if (id == null || id.isEmpty() || ClientEinstellungen.AUS.equals(id)) return false;
+		if (id.startsWith("+")) return false;   // "+neu" ist der Knopf fürs Studio, keine Kosmetik
+		if (Quests.imStartset(id) || EigeneKosmetik.istEigen(id)) return false;
+		return !gekauft(id);
+	}
+
+	int preisKosmetik(String art, String id) { return Quests.preis(art, id); }
+
+	/** Kauft ein Kosmetik-Stück, wenn genug Blätter da sind. */
+	boolean kaufeKosmetik(String art, String id) {
+		if (!gesperrtKosmetik(art, id)) return false;
+		int p = Quests.preis(art, id);
+		if (blaetter() < p) return false;
+		c.setze("punkte", blaetter() - p);
+		Set<String> m = menge("shop");
+		m.add(id);
+		merke("shop", m);
+		return true;
+	}
+
+	// ============================================================ Saison
+
+	String[] saison() { return Quests.saison(LocalDate.now().getMonthValue()); }
+
+	/** Fehlen noch Stücke aus dem Saison-Set? */
+	boolean saisonOffen() {
+		for (String[] st : Quests.saisonStuecke(saison())) if (gesperrtKosmetik(st[0], st[1])) return true;
+		return false;
+	}
+
+	/** Kauft das ganze Saison-Set auf einmal (günstiger als einzeln). */
+	boolean kaufeSaison() {
+		String[] s = saison();
+		int p = Integer.parseInt(s[3]);
+		if (!saisonOffen() || blaetter() < p) return false;
+		c.setze("punkte", blaetter() - p);
+		Set<String> m = menge("shop");
+		for (String[] st : Quests.saisonStuecke(s)) m.add(st[1]);
+		merke("shop", m);
+		return true;
+	}
+
+	// ============================================================ Stufen der Herausforderungen
+
+	/** Aktuelle Stufe einer Herausforderung (1 = noch nie geschafft). */
+	int stufe(String id) {
+		for (String t : c.text("hartStufe", "").split(",")) {
+			String[] teil = t.split(":");
+			if (teil.length == 2 && teil[0].trim().equals(id)) {
+				try {
+					return Math.max(1, Math.min(Quests.STUFE_MAX, Integer.parseInt(teil[1].trim())));
+				} catch (NumberFormatException e) {
+					return 1;
+				}
+			}
+		}
+		return 1;
+	}
 
 	static String[] shopEintrag(String id) { return Quests.finde(Quests.SHOP, id); }
 

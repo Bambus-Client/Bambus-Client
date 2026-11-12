@@ -36,6 +36,8 @@ final class SeiteKosmetik extends JPanel {
 	private static final int K_B = 81, K_H = 104, ABSTAND = 10;
 
 	private static final int CAPES = 0, FLUEGEL = 1, PARTIKEL = 2, HUETE = 3, KILL = 4, SPUR = 5;
+	/** Namen der Arten für das Quest-System (Preise und Start-Set). */
+	private static final String[] ART_NAMEN = {"cape", "fluegel", "partikel", "hut", "killeffekt", "spur"};
 	private static final String[] TAB_NAMEN = {"CAPES", "FLÜGEL", "PARTIKEL", "HÜTE", "KILL", "PFEIL"};
 	private static final Color[] TAB_FARBEN = {NeonUI.NEON, NeonUI.PINK, NeonUI.CYAN, new Color(0xFFD54A), new Color(0xFF4D6D), new Color(0xB06BFF)};
 
@@ -320,13 +322,43 @@ final class SeiteKosmetik extends JPanel {
 		}
 	}
 
-	private void waehle(String id) {
-		if (l.fortschritt.gesperrt(id)) {   // Shop-Kosmetik erst freischalten
+	/** Fragt nach und schaltet die Kosmetik mit Blättern frei. */
+	private boolean kaufen(String id) {
+		Fortschritt f = l.fortschritt;
+		String artName = ART_NAMEN[art];
+		int preis = f.preisKosmetik(artName, id);
+		String name = ClientEinstellungen.name(listeFuerArt(), id);
+		if (f.blaetter() < preis) {
 			javax.swing.JOptionPane.showMessageDialog(this,
-					Sprache.t("Das gibt es im Quest-Shop für") + " " + l.fortschritt.preis(id) + " " + Sprache.t("Blätter."),
+					Sprache.t("Dafür fehlen dir noch") + " " + (preis - f.blaetter()) + " " + Sprache.t("Blätter.")
+							+ "\n" + Sprache.t("Blätter bekommst du auf der Seite QUESTS."),
 					Sprache.t("Noch gesperrt"), javax.swing.JOptionPane.INFORMATION_MESSAGE);
-			l.zeige("quests");
-			return;
+			return false;
+		}
+		int antwort = javax.swing.JOptionPane.showConfirmDialog(this,
+				Sprache.t(name) + " " + Sprache.t("für") + " " + preis + " " + Sprache.t("Blätter freischalten?"),
+				Sprache.t("Freischalten"), javax.swing.JOptionPane.YES_NO_OPTION);
+		if (antwort != javax.swing.JOptionPane.YES_OPTION || !f.kaufeKosmetik(artName, id)) return false;
+		l.blaetterMeldung(-preis);
+		repaint();
+		return true;
+	}
+
+	/** Die Liste zur gerade gewählten Art (für Namen). */
+	private String[][] listeFuerArt() {
+		switch (art) {
+			case FLUEGEL: return ClientEinstellungen.FLUEGEL;
+			case PARTIKEL: return ClientEinstellungen.PARTIKEL;
+			case HUETE: return ClientEinstellungen.HUETE;
+			case KILL: return ClientEinstellungen.KILL_EFFEKTE;
+			case SPUR: return ClientEinstellungen.SPUREN;
+			default: return ClientEinstellungen.CAPES;
+		}
+	}
+
+	private void waehle(String id) {
+		if (l.fortschritt.gesperrtKosmetik(ART_NAMEN[art], id)) {
+			if (!kaufen(id)) return;   // erst freischalten, dann anziehen
 		}
 		if (art == CAPES) {
 			l.client.setzeCape(id);
@@ -775,7 +807,7 @@ final class SeiteKosmetik extends JPanel {
 				kurz = kurz.substring(0, kurz.length() - 2) + "…";
 			}
 			NeonUI.zentriert(g, kurz, 0, h - 36, b, 14);
-			boolean gesperrt = l.fortschritt.gesperrt(id);
+			boolean gesperrt = l.fortschritt.gesperrtKosmetik(ART_NAMEN[art], id);
 			if (gesperrt) {   // Shop-Kosmetik: abgedunkelt mit Schloss und Preis
 				g.setColor(new Color(11, 19, 34, 190));
 				g.fill(form);
@@ -787,7 +819,7 @@ final class SeiteKosmetik extends JPanel {
 			}
 			g.setFont(NeonUI.mono(9));
 			g.setColor(gesperrt ? NeonUI.CYAN : aktiv ? rahmen : ueber ? NeonUI.TEXT : NeonUI.GRAU);
-			String status = gesperrt ? l.fortschritt.preis(id) + " BLÄTTER"
+			String status = gesperrt ? l.fortschritt.preisKosmetik(ART_NAMEN[art], id) + " BLÄTTER"
 					: NEU.equals(id) ? "STUDIO" : aktiv ? "● AKTIV"
 					: ueber && EigeneKosmetik.istEigen(id) ? "RECHTSKLICK: ✕" : "WÄHLEN";
 			NeonUI.zentriert(g, status, 0, h - 21, b, 12);

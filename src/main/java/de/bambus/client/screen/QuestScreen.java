@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Blaetter;
 import de.bambus.client.Farben;
+import de.bambus.client.Garderobe;
 import de.bambus.client.Hinweise;
 import de.bambus.quests.Quests;
 import net.minecraft.client.gui.GuiGraphics;
@@ -101,6 +102,7 @@ public class QuestScreen extends Screen {
 			y = questZeile(g, q, y);
 		}
 		y += 6;
+		y = saisonKarte(g, mx, my, y);
 		y = ueberschrift(g, "SHOP  –  NUR MIT BLÄTTERN", y);
 		for (String[] s : Quests.SHOP) {
 			y = shopZeile(g, mx, my, s, y);
@@ -148,9 +150,48 @@ public class QuestScreen extends Screen {
 		return y + h + 4;
 	}
 
+	/** Das Set der Jahreszeit: vier Stücke zusammen, günstiger als einzeln. */
+	private int saisonKarte(GuiGraphics g, int mx, int my, int y) {
+		String[] s = Blaetter.saison();
+		boolean offen = Blaetter.saisonOffen();
+		int h = 38;
+		boolean hover = offen && Neon.ueber(mx, my, cx, y, cb - 4, h) && Neon.ueber(mx, my, cx, cy, cb, ch);
+		g.fill(cx, y, cx + cb - 4, y + h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+		g.renderOutline(cx, y, cb - 4, h, offen ? (hover ? Farben.NEON_CYAN : Farben.LINIE) : Farben.alpha(Farben.NEON, 170));
+		Neon.text(g, font, "SAISON: " + s[1].toUpperCase(), cx + 8, y + 5, 0.85f, Farben.WEISS, false);
+		StringBuilder teile = new StringBuilder();
+		for (String[] st : Quests.saisonStuecke(s)) {
+			if (teile.length() > 0) teile.append("  ·  ");
+			teile.append(Garderobe.name(st[0], st[1]));
+		}
+		Neon.text(g, font, teile.toString(), cx + 8, y + 17, 0.6f, Farben.GRAU, false);
+		int einzeln = Quests.saisonEinzeln(s);
+		int preis = Integer.parseInt(s[3]);
+		if (offen) {
+			Neon.text(g, font, "Einzeln: " + einzeln + "  ·  du sparst " + (einzeln - preis),
+					cx + 8, y + 27, 0.6f, Farben.NEON_CYAN, false);
+		}
+		String rechts = offen ? preis + " BLÄTTER" : "✔ KOMPLETT";
+		int rb = (int) (font.width(rechts) * 0.75f);
+		Neon.text(g, font, rechts, cx + cb - 10 - rb, y + 14, 0.75f, offen ? Farben.NEON_CYAN : Farben.NEON, false);
+		if (offen) {
+			final int p = preis;
+			final String name = s[1];
+			bereiche.add(new Bereich(cx, y, cb - 4, h, () -> {
+				if (Blaetter.kaufeSaison()) {
+					Hinweise.zeige("stern", "Set " + name + " freigeschaltet", "In der Garderobe anziehen", Blaetter.rangFarbe());
+				} else {
+					Hinweise.zeige("stern", "Noch nicht genug Blätter",
+							"Es fehlen " + (p - Blaetter.blaetter()), Farben.NEON_CYAN);
+				}
+			}));
+		}
+		return y + h + 8;
+	}
+
 	private int shopZeile(GuiGraphics g, int mx, int my, String[] s, int y) {
 		int h = 24;
-		boolean hat = !Blaetter.gesperrt(s[0]);
+		boolean hat = !Blaetter.gesperrt(s[1], s[0]);
 		boolean hover = !hat && Neon.ueber(mx, my, cx, y, cb - 4, h) && Neon.ueber(mx, my, cx, cy, cb, ch);
 		g.fill(cx, y, cx + cb - 4, y + h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(cx, y, cb - 4, h, hat ? Farben.alpha(Farben.NEON, 170) : hover ? Farben.NEON_CYAN : Farben.LINIE);
@@ -160,10 +201,10 @@ public class QuestScreen extends Screen {
 		int rb = (int) (font.width(rechts) * 0.75f);
 		Neon.text(g, font, rechts, cx + cb - 10 - rb, y + 8, 0.75f, hat ? Farben.NEON : Farben.NEON_CYAN, false);
 		if (!hat) {
-			final String id = s[0], name = s[2];
+			final String id = s[0], art = s[1], name = s[2];
 			final int preis = Integer.parseInt(s[3]);
 			bereiche.add(new Bereich(cx, y, cb - 4, h, () -> {
-				if (Blaetter.kaufe(id)) {
+				if (Blaetter.kaufe(art, id)) {
 					Hinweise.zeige("stern", name + " freigeschaltet", "In der Garderobe anziehen", Blaetter.rangFarbe());
 				} else {
 					Hinweise.zeige("stern", "Noch nicht genug Blätter",

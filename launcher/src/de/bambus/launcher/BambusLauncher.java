@@ -74,6 +74,7 @@ public final class BambusLauncher extends JFrame {
 	volatile Updater.Release update;
 	volatile String updateStatus = "";
 	private UpdateChip updateChip;
+	private BlaetterChip blaetterChip;
 	boolean taskleisteTippGesehen = false;
 	private String seite = "start";
 
@@ -115,6 +116,14 @@ public final class BambusLauncher extends JFrame {
 			}
 			l.fortschritt.tagesBonus();               // Blätter fürs Einloggen
 			l.fortschritt.pruefeErfolge(l);
+			if (!l.fortschritt.verlorenerRang.isEmpty()) {
+				javax.swing.JOptionPane.showMessageDialog(l,
+						Sprache.t("Du warst einen Tag nicht da – die Serie ist gerissen.") + "\n"
+								+ Sprache.t("Dein Rang fällt von") + " " + Sprache.t(l.fortschritt.verlorenerRang) + " "
+								+ Sprache.t("eine Stufe zurück.") + "\n"
+								+ Sprache.t("Deine freigeschaltete Kosmetik behältst du."),
+						Sprache.t("Serie gerissen"), javax.swing.JOptionPane.WARNING_MESSAGE);
+			}
 			if (l.fortschritt.begruessungBlaetter > 0) {
 				javax.swing.Timer t = new javax.swing.Timer(900, e -> l.tagesBonusMeldung());
 				t.setRepeats(false);
@@ -151,8 +160,11 @@ public final class BambusLauncher extends JFrame {
 		KontoChip chip = new KontoChip();
 		chip.setBounds(BREITE - 330, 8, 226, 30);
 		wurzel.add(chip);
+		blaetterChip = new BlaetterChip();
+		blaetterChip.setBounds(BREITE - 452, 8, 112, 30);
+		wurzel.add(blaetterChip);
 		updateChip = new UpdateChip();
-		updateChip.setBounds(BREITE - 486, 8, 146, 30);
+		updateChip.setBounds(BREITE - 608, 8, 146, 30);
 		updateChip.setVisible(false);
 		wurzel.add(updateChip);
 
@@ -280,8 +292,9 @@ public final class BambusLauncher extends JFrame {
 		for (NavPunkt p : nav) p.repaint();
 	}
 
-	/** Kurzer Hinweis unten rechts: „+15 Blätter“. */
+	/** Kurzer Hinweis unten rechts: „+15 Blätter“ – bei negativer Zahl eine Ausgabe. */
 	void blaetterMeldung(int blaetter) {
+		if (blaetterChip != null) blaetterChip.repaint();
 		javax.swing.JWindow w = new javax.swing.JWindow(this);
 		javax.swing.JComponent c = new javax.swing.JComponent() {
 			@Override protected void paintComponent(java.awt.Graphics graphics) {
@@ -289,11 +302,13 @@ public final class BambusLauncher extends JFrame {
 				g.setColor(NeonUI.KARTE);
 				g.fillRect(0, 0, getWidth(), getHeight());
 				g.setStroke(new java.awt.BasicStroke(1.6f));
-				g.setColor(NeonUI.NEON);
+				g.setColor(blaetter < 0 ? NeonUI.CYAN : NeonUI.NEON);
 				g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-				SeiteQuests.blatt(g, 24, getHeight() / 2 - 3, 16, NeonUI.NEON);
+				java.awt.Color f = blaetter < 0 ? NeonUI.CYAN : NeonUI.NEON;
+				SeiteQuests.blatt(g, 24, getHeight() / 2 - 3, 16, f);
 				g.setFont(NeonUI.titel(16));
-				NeonUI.schattenText(g, "+" + blaetter + " " + Sprache.t("Blätter"), 44, getHeight() / 2 + 6, NeonUI.TEXT);
+				NeonUI.schattenText(g, (blaetter < 0 ? "−" + (-blaetter) : "+" + blaetter) + " " + Sprache.t("Blätter"),
+						44, getHeight() / 2 + 6, NeonUI.TEXT);
 				g.dispose();
 			}
 		};
@@ -683,6 +698,40 @@ public final class BambusLauncher extends JFrame {
 
 	/** Eintrag in der Seitenleiste. */
 	/** Oben rechts: Microsoft-Konto (Anmeldung ist optional). */
+	/** Blätter-Guthaben oben rechts neben dem Konto – ein Klick führt zu den Quests. */
+	private final class BlaetterChip extends javax.swing.JComponent {
+		private boolean ueber;
+
+		BlaetterChip() {
+			setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+			setToolTipText("Deine Blätter – auf der Seite QUESTS verdienst du mehr");
+			addMouseListener(new MouseAdapter() {
+				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
+				@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
+				@Override public void mouseClicked(MouseEvent e) { zeige("quests"); }
+			});
+		}
+
+		@Override
+		protected void paintComponent(java.awt.Graphics graphics) {
+			Graphics2D g = NeonUI.glatt(graphics);
+			int h = getHeight();
+			g.setColor(ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+			g.fillRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
+			g.setColor(ueber ? NeonUI.NEON : NeonUI.alpha(NeonUI.NEON, 110));
+			g.drawRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
+			SeiteQuests.blatt(g, 16, h / 2 - 3, 14, NeonUI.NEON);
+			g.setFont(NeonUI.mono(12));
+			g.setColor(NeonUI.TEXT);
+			g.drawString(String.valueOf(fortschritt.blaetter()), 30, h / 2 + 4);
+			g.setFont(NeonUI.mono(9));
+			g.setColor(NeonUI.GRAU);
+			String rang = fortschritt.rangName().toUpperCase();
+			g.drawString(rang, getWidth() - 10 - g.getFontMetrics().stringWidth(Sprache.t(rang)), h / 2 + 4);
+			g.dispose();
+		}
+	}
+
 	private final class KontoChip extends javax.swing.JComponent {
 		private boolean ueber;
 

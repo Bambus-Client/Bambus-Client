@@ -11,6 +11,15 @@ public final class Garderobe {
 
 	private Garderobe() {}
 
+	/** Anzeigename eines Kosmetik-Stücks, z. B. ("cape", "gold") -> "Goldhalm". */
+	public static String name(String art, String id) {
+		Art a = Art.zuSchluessel(art);
+		if (a != null) {
+			for (Eintrag e : a.eintraege()) if (e.id().equals(id)) return e.name();
+		}
+		return id;
+	}
+
 	/** Ein wählbarer Eintrag einer Kosmetik-Art. */
 	public record Eintrag(String id, String name, int farbe, boolean eigen) {}
 
@@ -43,6 +52,24 @@ public final class Garderobe {
 				case PFEIL -> Kosmetik.SPUREN.forEach(e -> liste.add(new Eintrag(e.id(), e.name(), e.farbe(), false)));
 			}
 			return liste;
+		}
+
+		/** Kurzname der Art, wie ihn Quests.java und der Launcher verwenden. */
+		public String schluessel() {
+			return switch (this) {
+				case CAPES -> "cape";
+				case FLUEGEL -> "fluegel";
+				case PARTIKEL -> "partikel";
+				case HUETE -> "hut";
+				case KILL -> "killeffekt";
+				case PFEIL -> "spur";
+			};
+		}
+
+		/** Die Art zu einem Kurznamen, oder null. */
+		public static Art zuSchluessel(String schluessel) {
+			for (Art a : values()) if (a.schluessel().equals(schluessel)) return a;
+			return null;
 		}
 
 		/** Id in der Einstellung (kann „aus“ oder veraltet sein). */

@@ -1,0 +1,30 @@
+BAMBUS – UPDATE HOCHLADEN (14 Dateien)
+======================================
+
+WICHTIG: Lade NICHT die ZIP-Datei hoch! Entpacke sie zuerst (Doppelklick),
+dann lädst du den INHALT des Ordners "Hochladen" hoch.
+
+SO GEHT'S (ein einziger Schritt)
+  1. Im Repo Bambus-Client oben auf "Add file" -> "Upload files".
+  2. Auf dem Mac den Ordner "Hochladen" ÖFFNEN.
+  3. Cmd + A drücken (alles markieren) und alles ins Browser-Fenster ziehen.
+     Du ziehst also: AENDERUNGEN.md, gemeinsam, launcher, src
+     und diese Textdatei brauchst du NICHT mitzuziehen (schadet aber nicht).
+  4. Warten, bis GitHub alles aufgelistet hat -> unten "Commit changes".
+
+GitHub ersetzt genau diese Dateien und lässt alles andere unberührt.
+
+DANACH
+  Oben auf "Actions" klicken. Der Bau läuft 10-15 Minuten.
+  Grüner Haken = fertig. Roter Kreis = Fehler -> Lauf anklicken,
+  roten Schritt aufklappen, Screenshot an Claude schicken.
+
+WAS IN DIESEM UPDATE STECKT
+  - Start-Set gratis: Bambus-Umhang, Engel-Flügel, Bandana, Funken-Partikel,
+    Funken-Spur
+  - Alle weitere Kosmetik kostet Blätter (Preis steht auf jeder Kachel)
+  - Saison-Sets: 4 passende Stücke je Jahreszeit, zusammen günstiger
+  - Serie: jeden Tag mehr Bonus - ein Tag Pause = ein Rang zurück
+  - Blätter + Rang oben rechts neben dem Konto
+  - Herausforderungen steigen in Stufen (5er-Combo -> 10er -> 15er ...)
+  - Alles davon gilt im Launcher UND im Spiel (Garderobe + Rechts-Shift -> QUESTS)

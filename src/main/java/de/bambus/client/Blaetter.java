@@ -52,19 +52,56 @@ public final class Blaetter {
 
 	// ============================================================ Shop
 
-	/** true, wenn die Kosmetik im Shop verkauft wird und noch nicht freigeschaltet ist. */
-	public static boolean gesperrt(String id) {
-		return id != null && Quests.imShop(id) && !menge("shop").contains(id);
+	/**
+	 * Ist dieses Kosmetik-Stück noch gesperrt? „Aus“, das Start-Set und selbst gemachte Sachen nie.
+	 * art ist "cape", "fluegel", "hut", "partikel", "spur" oder "killeffekt".
+	 */
+	public static boolean gesperrt(String art, String id) {
+		stelleUm();
+		if (id == null || id.isEmpty() || Kosmetik.AUS.equals(id)) return false;
+		if (Quests.imStartset(id) || Kosmetik.istEigen(id)) return false;
+		return !menge("shop").contains(id);
 	}
 
+	public static int preis(String art, String id) { return Quests.preis(art, id); }
+
 	/** Kauft die Kosmetik, wenn genug Blätter da sind. */
-	public static boolean kaufe(String id) {
-		if (!gesperrt(id)) return false;
-		int preis = Quests.preis(id);
+	public static boolean kaufe(String art, String id) {
+		if (!gesperrt(art, id)) return false;
+		int preis = Quests.preis(art, id);
 		if (BambusClient.config.punkte < preis) return false;
 		BambusClient.config.punkte -= preis;
+		schalteFrei(id);
+		return true;
+	}
+
+	private static void schalteFrei(String id) {
 		Set<String> m = menge("shop");
 		m.add(id);
+		BambusClient.config.shop = String.join(",", m);
+		BambusClient.config.speichern();
+	}
+
+	// ============================================================ Saison-Set
+
+	public static String[] saison() {
+		return Quests.saison(LocalDate.now().getMonthValue());
+	}
+
+	/** Fehlen noch Stücke aus dem Set der Saison? */
+	public static boolean saisonOffen() {
+		for (String[] st : Quests.saisonStuecke(saison())) if (gesperrt(st[0], st[1])) return true;
+		return false;
+	}
+
+	/** Kauft das ganze Saison-Set auf einmal. */
+	public static boolean kaufeSaison() {
+		String[] s = saison();
+		int preis = Integer.parseInt(s[3]);
+		if (!saisonOffen() || BambusClient.config.punkte < preis) return false;
+		BambusClient.config.punkte -= preis;
+		Set<String> m = menge("shop");
+		for (String[] st : Quests.saisonStuecke(s)) m.add(st[1]);
 		BambusClient.config.shop = String.join(",", m);
 		BambusClient.config.speichern();
 		return true;
@@ -74,6 +111,42 @@ public final class Blaetter {
 
 	public static List<String[]> heute() {
 		return Quests.auswahl(Quests.HART, LocalDate.now().toEpochDay(), Quests.HART_ANZAHL);
+	}
+
+	/** Stufe einer Herausforderung (1 = noch nie geschafft, höchstens Quests.STUFE_MAX). */
+	public static int stufe(String id) {
+		for (String t : BambusClient.config.hartStufe.split(",")) {
+			String[] teil = t.split(":");
+			if (teil.length == 2 && teil[0].trim().equals(id)) {
+				try {
+					return Math.max(1, Math.min(Quests.STUFE_MAX, Integer.parseInt(teil[1].trim())));
+				} catch (NumberFormatException e) {
+					return 1;
+				}
+			}
+		}
+		return 1;
+	}
+
+	private static void stufeHoch(String id) {
+		int neu = Math.min(Quests.STUFE_MAX, stufe(id) + 1);
+		Map<String, Integer> alle = new LinkedHashMap<>();
+		for (String t : BambusClient.config.hartStufe.split(",")) {
+			String[] teil = t.split(":");
+			if (teil.length != 2) continue;
+			try {
+				alle.put(teil[0].trim(), Integer.parseInt(teil[1].trim()));
+			} catch (NumberFormatException ignoriert) {
+				// kaputter Eintrag
+			}
+		}
+		alle.put(id, neu);
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, Integer> e : alle.entrySet()) {
+			if (sb.length() > 0) sb.append(',');
+			sb.append(e.getKey()).append(':').append(e.getValue());
+		}
+		BambusClient.config.hartStufe = sb.toString();
 	}
 
 	public static boolean fertig(String id) {
@@ -92,6 +165,7 @@ public final class Blaetter {
 	private static void setzeStand(String id, int wert) {
 		String[] q = Quests.finde(Quests.HART, id);
 		if (q == null || fertig(id)) return;
+		int ziel = Quests.ziel(q, stufe(id));
 		Map<String, Integer> alle = staende();
 		Integer vorher = alle.get(id);
 		if (vorher != null && vorher >= wert) return;
@@ -102,22 +176,24 @@ public final class Blaetter {
 			sb.append(e.getKey()).append(':').append(e.getValue());
 		}
 		BambusClient.config.hartStand = sb.toString();
-		if (wert >= Integer.parseInt(q[4])) schaffe(id);
+		if (wert >= ziel) abschliessen(id);
 	}
 
-	/** Meldet eine erledigte Herausforderung (nur, wenn sie heute dran ist). */
+	/** Meldet einen geschafften Schritt (z. B. einen Sieg); zählt bis zum Ziel der Stufe. */
 	public static void schaffe(String id) {
-		tagPruefen();
-		if (fertig(id)) return;
-		boolean heuteDran = false;
-		for (String[] q : heute()) if (q[0].equals(id)) heuteDran = true;
-		if (!heuteDran) return;
+		zaehle(id, stand(id) + 1);
+	}
+
+	/** Schließt die Herausforderung ab, gibt die Blätter und hebt die Stufe für morgen an. */
+	private static void abschliessen(String id) {
 		String[] q = Quests.finde(Quests.HART, id);
+		int stufe = stufe(id);
 		Set<String> f = menge("hartFertig");
 		f.add(id);
 		BambusClient.config.hartFertig = String.join(",", f);
-		int p = Integer.parseInt(q[3]);
+		int p = Quests.lohn(q, stufe);
 		gib(p);
+		stufeHoch(id);
 		BambusClient.config.speichern();
 		Hinweise.zeige("stern", "Quest geschafft: " + q[1], "+" + p + " Blätter", rangFarbe());
 	}
@@ -206,8 +282,23 @@ public final class Blaetter {
 		return haupt.is(item) || neben.is(item);
 	}
 
+	/** Einmalig: schon getragene Kosmetik und das Start-Set bleiben frei. */
+	public static void stelleUm() {
+		BambusConfig c = BambusClient.config;
+		if (c.kosmetikUmgestellt) return;
+		Set<String> m = menge("shop");
+		for (String[] e : Quests.STARTSET) m.add(e[1]);
+		for (String id : new String[]{c.capeDesign, c.fluegel, c.hut, c.partikel, c.spur, c.killEffekt}) {
+			if (id != null && !id.isEmpty() && !Kosmetik.AUS.equals(id)) m.add(id);
+		}
+		c.shop = String.join(",", m);
+		c.kosmetikUmgestellt = true;
+		c.speichern();
+	}
+
 	/** Beim Betreten einer Welt: Kill-Zähler als Startpunkt merken. */
 	public static void weltBetreten() {
+		stelleUm();
 		killsBeiWeltstart = Kampf.killsSpieler;
 		sturzEnde();
 		letzteGesetzt = false;
@@ -278,7 +369,10 @@ public final class Blaetter {
 	public static List<String[]> heuteMitStand() {
 		List<String[]> aus = new ArrayList<>();
 		for (String[] q : heute()) {
-			aus.add(new String[]{q[0], q[1], q[2], q[3], q[4], String.valueOf(stand(q[0])), fertig(q[0]) ? "1" : "0"});
+			int stufe = stufe(q[0]);
+			aus.add(new String[]{q[0], q[1] + (stufe > 1 ? "  ·  Stufe " + stufe : ""), q[2],
+					String.valueOf(Quests.lohn(q, stufe)), String.valueOf(Quests.ziel(q, stufe)),
+					String.valueOf(stand(q[0])), fertig(q[0]) ? "1" : "0"});
 		}
 		return aus;
 	}

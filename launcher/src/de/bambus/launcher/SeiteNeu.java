@@ -23,7 +23,13 @@ final class SeiteNeu extends JPanel {
 	private static final String[][] VERSIONEN = {
 			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
 					"Quests, Blätter und Ränge (Bronze bis Legende): Punkte sammeln und Kosmetik freischalten – kostenlos",
+					"Start-Set geschenkt: Umhang, Flügel, Hut, Partikel und Pfeil-Spur gehören dir von Anfang an",
+					"Alle weitere Kosmetik kostet Blätter – Preis steht auf jeder Kachel, Kauf auch in der Garderobe",
+					"Saison-Sets: vier passende Stücke je Jahreszeit, zusammen deutlich günstiger als einzeln",
+					"Serie: jeden Tag mehr Bonus – aber wer einen Tag auslässt, rutscht einen Rang zurück",
+					"Blätter und Rang immer oben rechts neben dem Konto, ein Klick führt zu den Quests",
 					"Drei Herausforderungen am Tag im Spiel: Runde gewinnen, Leiter-MLG, Combo, Sprint und mehr",
+					"Herausforderungen steigen in Stufen: aus der 5er-Combo wird eine 10er, 15er, 20er – mit mehr Blättern",
 					"QUESTS auch im Spiel: Rechts-Shift → QUESTS",
 					"Drei neue Umhänge und zwei neue Partikel im Quest-Shop",
 					"Eigenes Hintergrundbild für Launcher und Bambus-Hauptmenü",

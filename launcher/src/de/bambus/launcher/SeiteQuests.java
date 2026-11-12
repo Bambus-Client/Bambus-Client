@@ -50,20 +50,10 @@ final class SeiteQuests extends JPanel {
 		g.setFont(NeonUI.normal(13));
 		g.setColor(NeonUI.GRAU);
 		g.drawString("Sammle Blätter und schalte Kosmetik frei. Kostet nie Geld.", X, 86);
-
-		// Guthaben oben rechts
-		int kb = 210, kx = X + B - kb;
-		g.setColor(NeonUI.KARTE);
-		g.fillRect(kx, 36, kb, 48);
-		g.setStroke(new BasicStroke(1.4f));
-		g.setColor(NeonUI.alpha(NeonUI.NEON, 160));
-		g.drawRect(kx, 36, kb, 48);
-		blatt(g, kx + 16, 50, 18, NeonUI.NEON);
-		g.setFont(NeonUI.titel(22));
-		NeonUI.schattenText(g, String.valueOf(f.blaetter()), kx + 44, 68, NeonUI.TEXT);
-		g.setFont(NeonUI.mono(10));
+		g.setFont(NeonUI.mono(11));
 		g.setColor(NeonUI.GRAU);
-		g.drawString("BLÄTTER", kx + 44 + g.getFontMetrics(NeonUI.titel(22)).stringWidth(String.valueOf(f.blaetter())) + 10, 68);
+		String serie = Sprache.t("Serie") + ": " + f.serie() + " " + Sprache.t("Tage");
+		g.drawString(serie, X + B - g.getFontMetrics().stringWidth(serie), 86);
 
 		// Rang-Leiste
 		int ry = 104;
@@ -104,10 +94,11 @@ final class SeiteQuests extends JPanel {
 
 		private static final int ZEILE = 54, KACHEL_H = 74, SPALTEN = 3, ABSTAND = 10;
 
+		private static final String SAISON = "#saison";
 		private final List<Rectangle> kaufFlaechen = new ArrayList<>();
 		private final List<String> kaufIds = new ArrayList<>();
 		private int ueber = -1;
-		private int yQuests, yHart, yErfolge, yShop, hoehe;
+		private int ySaison, yQuests, yHart, yErfolge, yShop, hoehe;
 
 		Inhalt() {
 			setOpaque(false);
@@ -138,14 +129,15 @@ final class SeiteQuests extends JPanel {
 		}
 
 		void neuMessen() {
-			yQuests = 126;
+			ySaison = 110;
+			yQuests = ySaison + 104;
 			hoehe = yQuests + 3 * (ZEILE + 8) + 36;
 			yHart = hoehe;
 			hoehe = yHart + Quests.HART_ANZAHL * (ZEILE + 8) + 36;
 			yErfolge = hoehe;
 			int ez = (Quests.ERFOLGE.length + SPALTEN - 1) / SPALTEN;
 			hoehe = yErfolge + ez * (KACHEL_H + ABSTAND) + 36;
-			yShop = hoehe;
+			yShop = hoehe + 10;
 			int sz = (Quests.SHOP.length + SPALTEN - 1) / SPALTEN;
 			hoehe = yShop + sz * (KACHEL_H + 28 + ABSTAND) + 20;
 			setPreferredSize(new Dimension(B, hoehe));
@@ -154,6 +146,10 @@ final class SeiteQuests extends JPanel {
 
 		private void kaufen(String id) {
 			Fortschritt f = l.fortschritt;
+			if (SAISON.equals(id)) {
+				saisonKaufen(f);
+				return;
+			}
 			String[] s = Fortschritt.shopEintrag(id);
 			if (s == null || f.gekauft(id)) return;
 			int preis = Integer.parseInt(s[3]);
@@ -175,6 +171,26 @@ final class SeiteQuests extends JPanel {
 			repaint();
 		}
 
+		private void saisonKaufen(Fortschritt f) {
+			String[] s = f.saison();
+			int preis = Integer.parseInt(s[3]);
+			if (f.blaetter() < preis) {
+				JOptionPane.showMessageDialog(this,
+						Sprache.t("Dafür fehlen dir noch") + " " + (preis - f.blaetter()) + " " + Sprache.t("Blätter."),
+						Sprache.t("Saison-Set"), JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+			int antwort = JOptionPane.showConfirmDialog(this,
+					Sprache.t("Set") + " „" + Sprache.t(s[1]) + "“ " + Sprache.t("für") + " " + preis + " "
+							+ Sprache.t("Blätter freischalten?"),
+					Sprache.t("Saison-Set"), JOptionPane.YES_NO_OPTION);
+			if (antwort != JOptionPane.YES_OPTION || !f.kaufeSaison()) return;
+			l.blaetterMeldung(-preis);
+			l.kosmetik.ladeKacheln();
+			SeiteQuests.this.repaint();
+			repaint();
+		}
+
 		@Override
 		protected void paintComponent(Graphics graphics) {
 			Graphics2D g = NeonUI.glatt(graphics);
@@ -183,6 +199,7 @@ final class SeiteQuests extends JPanel {
 			kaufIds.clear();
 
 			tagesBonus(g, f);
+			saison(g, f);
 			ueberschrift(g, "HEUTE", yQuests - 16);
 			List<String[]> heute = f.heutigeQuests();
 			for (int i = 0; i < heute.size(); i++) {
@@ -193,8 +210,11 @@ final class SeiteQuests extends JPanel {
 			List<String[]> hart = f.heutigeHart();
 			for (int i = 0; i < hart.size(); i++) {
 				String[] q = hart.get(i);
-				int ziel = Integer.parseInt(q[4]);
-				questZeile(g, q, f.hartFertig(q[0]), 0, yHart + i * (ZEILE + 8),
+				int stufe = f.stufe(q[0]);
+				int ziel = Quests.ziel(q, stufe);
+				String[] anzeige = {q[0], q[1] + (stufe > 1 ? "  ·  Stufe " + stufe : ""), q[2],
+						String.valueOf(Quests.lohn(q, stufe))};
+				questZeile(g, anzeige, f.hartFertig(q[0]), 0, yHart + i * (ZEILE + 8),
 						ziel > 1 ? Math.min(f.hartStand(q[0]), ziel) + " / " + ziel : null);
 			}
 
@@ -207,6 +227,9 @@ final class SeiteQuests extends JPanel {
 			}
 
 			ueberschrift(g, "SHOP  –  NUR MIT BLÄTTERN", yShop - 16);
+			g.setFont(NeonUI.normal(10));
+			g.setColor(NeonUI.GRAU);
+			g.drawString("Alle anderen Umhänge, Flügel, Hüte und Partikel schaltest du in der GARDEROBE frei.", 2, yShop - 2);
 			for (int i = 0; i < Quests.SHOP.length; i++) {
 				String[] s = Quests.SHOP[i];
 				int kx = (i % SPALTEN) * (kb + ABSTAND), ky = yShop + (i / SPALTEN) * (KACHEL_H + 28 + ABSTAND);
@@ -215,6 +238,59 @@ final class SeiteQuests extends JPanel {
 				kachel(g, kx, ky, kb, KACHEL_H + 28, s[2], art, Integer.parseInt(s[3]), hat, s[0]);
 			}
 			g.dispose();
+		}
+
+		/** Saison-Set: vier Stücke zusammen, während der Saison günstiger. */
+		private void saison(Graphics2D g, Fortschritt f) {
+			String[] s = f.saison();
+			boolean offen = f.saisonOffen();
+			int y = ySaison, h = 66;
+			boolean hover = offen && ueber >= 0 && ueber < kaufIds.size() && SAISON.equals(kaufIds.get(ueber));
+			g.setColor(hover ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+			g.fillRect(0, y, B, h);
+			g.setStroke(new BasicStroke(1.4f));
+			g.setColor(offen ? NeonUI.PINK : NeonUI.alpha(NeonUI.NEON, 170));
+			g.drawRect(0, y, B, h);
+			NeonUI.ecken(g, -2, y - 2, B + 4, h + 4, 8, offen ? NeonUI.PINK : NeonUI.NEON);
+			g.setFont(NeonUI.titel(16));
+			NeonUI.schattenText(g, Sprache.t("SAISON") + ": " + Sprache.t(s[1]).toUpperCase(), 16, y + 24, NeonUI.TEXT);
+			g.setFont(NeonUI.normal(11));
+			g.setColor(NeonUI.GRAU);
+			StringBuilder stuecke = new StringBuilder();
+			for (String[] st : Quests.saisonStuecke(s)) {
+				if (stuecke.length() > 0) stuecke.append(" · ");
+				stuecke.append(Sprache.t(ClientEinstellungen.name(liste(st[0]), st[1])));
+			}
+			g.drawString(NeonUI.passend(g, stuecke.toString(), B - 190), 16, y + 42);
+			g.setFont(NeonUI.mono(10));
+			g.setColor(NeonUI.alpha(NeonUI.GRAU, 200));
+			int spart = Quests.saisonEinzeln(s) - Integer.parseInt(s[3]);
+			g.drawString(Sprache.t("Einzeln") + ": " + Quests.saisonEinzeln(s) + " " + Sprache.t("Blätter")
+					+ (spart > 0 ? "  ·  " + Sprache.t("du sparst") + " " + spart : ""), 16, y + 57);
+			if (offen) {
+				int preis = Integer.parseInt(s[3]);
+				lohn(g, B - 150, y + 30, preis, NeonUI.PINK, false);
+				g.setFont(NeonUI.mono(10));
+				g.setColor(hover ? NeonUI.PINK : NeonUI.alpha(NeonUI.PINK, 170));
+				String kt = "SET HOLEN →";
+				g.drawString(kt, B - 16 - g.getFontMetrics().stringWidth(Sprache.t(kt)), y + 34);
+				kaufFlaechen.add(new Rectangle(0, y, B, h));
+				kaufIds.add(SAISON);
+			} else {
+				g.setFont(NeonUI.mono(10));
+				g.setColor(NeonUI.NEON);
+				String kt = "✓ KOMPLETT";
+				g.drawString(kt, B - 16 - g.getFontMetrics().stringWidth(Sprache.t(kt)), y + 34);
+			}
+		}
+
+		private String[][] liste(String art) {
+			switch (art) {
+				case "fluegel": return ClientEinstellungen.FLUEGEL;
+				case "hut": return ClientEinstellungen.HUETE;
+				case "partikel": return ClientEinstellungen.PARTIKEL;
+				default: return ClientEinstellungen.CAPES;
+			}
 		}
 
 		/** Tages-Bonus mit Serie als sieben Punkten. */

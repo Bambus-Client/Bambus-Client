@@ -114,6 +114,11 @@ public class BambusConfig {
 	public int spielminuten = 0;        // zählt die Mod hoch
 	public String spielTag = "";
 	public int spielBonusHeute = 0;     // schon vergebene Spiel-Blätter von heute
+	public String hartTag = "";         // Tag der aktuellen Herausforderungen
+	public String hartFertig = "";      // heute geschaffte Herausforderungen
+	public String hartStand = "";       // Zwischenstände, z. B. "kills5:2,sprint1000:640"
+	public String hartStufe = "";       // erreichte Stufe je Herausforderung, z. B. "combo5:3"
+	public boolean kosmetikUmgestellt = false; // Start-Set und Getragenes einmalig freigeschaltet
 
 	public String capeDesign = "bambus";
 	public String partikel = "aus";

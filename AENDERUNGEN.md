@@ -1,5 +1,11 @@
 ## Neu in dieser Version
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
+- Start-Set geschenkt: Bambus-Umhang, Engel-Classic-Flügel, Bandana, Funken-Partikel und Funken-Spur gehören dir von Anfang an
+- Alle weitere Kosmetik kostet Blätter – der Preis steht auf jeder Kachel; kaufen geht im Launcher unter KOSMETIK und im Spiel in der Garderobe (einmal klicken fragt nach, zweimal kauft)
+- Saison-Sets: vier passende Stücke je Jahreszeit (Umhang, Flügel, Hut, Partikel) im Paket – deutlich günstiger als einzeln
+- Serie: jeder Tag in Folge bringt mehr Bonus-Blätter; wer einen ganzen Tag auslässt, verliert die Serie und rutscht einen Rang zurück (freigeschaltete Kosmetik bleibt)
+- Blätter und Rang stehen immer oben rechts neben dem Konto – ein Klick führt direkt zu den Quests
+- Herausforderungen steigen in Stufen: Wer eine schafft, bekommt sie beim nächsten Mal größer (5er-Combo → 10er → 15er, bis Stufe 5) und verdient mehr Blätter
 - Drei Herausforderungen pro Tag im Spiel: Runde gewinnen, Leiter-MLG, Wasser-MLG, 5 Spieler besiegen, 5er-Combo, Sturz aus 20 Blöcken, Y −58, Nether, 1000 Blöcke sprinten, 500 Blöcke Elytra
 - QUESTS auch im Spiel: Rechts-Shift → QUESTS zeigt Blätter, Rang, Herausforderungen und den Shop
 - Ränge: Bronze, Silber, Gold, Platin, Diamant, Meister, Legende – im Launcher und im Spiel sichtbar
