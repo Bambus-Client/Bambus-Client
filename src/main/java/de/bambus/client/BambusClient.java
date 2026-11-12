@@ -198,9 +198,15 @@ public class BambusClient implements ClientModInitializer {
 				if (adresse.isEmpty() || liste.get(adresse) != null) continue;
 				liste.add(new net.minecraft.client.multiplayer.ServerData(name.isEmpty() ? adresse : name, adresse,
 						net.minecraft.client.multiplayer.ServerData.Type.OTHER), false);
+				// Launcher-Favoriten bekommen in der Bambus-Serverauswahl gleich einen Stern
+				String stern = adresse.toLowerCase(java.util.Locale.ROOT);
+				if (!config.serverSterne.contains(stern)) config.serverSterne.add(stern);
 				neu = true;
 			}
-			if (neu) liste.save();
+			if (neu) {
+				liste.save();
+				config.speichern();
+			}
 		} catch (Exception e) {
 			LOGGER.warn("Server-Favoriten konnten nicht eingetragen werden", e);
 		}

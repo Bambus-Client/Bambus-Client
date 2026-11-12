@@ -10,7 +10,9 @@
 		"EntityMixin",
 		"GuiMixin",
 		"ItemInHandRendererMixin",
+		"JoinMultiplayerScreenAccessor",
 		"LevelWetterAccessor",
+		"MinecraftMixin",
 		"MouseHandlerMixin",
 		"OptionInstanceAccessor",
 		"ScreenEffectRendererMixin"
