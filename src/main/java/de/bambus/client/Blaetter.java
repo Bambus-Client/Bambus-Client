@@ -244,7 +244,7 @@ public final class Blaetter {
 		letzteGesetzt = true;
 
 		// Sturz merken, solange er dauert; Leiter oder Wassereimer in der Hand zählt als Vorbereitung
-		float fall = p.fallDistance;
+		float fall = (float) p.fallDistance;   // seit 1.21.5 ein double
 		if (fall > hoechsterFall) hoechsterFall = fall;
 		if (fall > 1f) {
 			if (hatItem(p, Items.LADDER)) leiterDabei = true;
@@ -266,7 +266,7 @@ public final class Blaetter {
 
 		// Tiefe, Nether, Kills, Combo
 		if (p.getY() <= -58) schaffe("tief");
-		if (mc.level != null && mc.level.dimension().location().getPath().contains("nether")) schaffe("nether");
+		if (mc.level != null && mc.level.dimension().identifier().getPath().contains("nether")) schaffe("nether");
 		zaehle("kills5", Math.max(0, Kampf.killsSpieler - killsBeiWeltstart));
 		if (Kampf.combo >= 5) schaffe("combo5");
 	}

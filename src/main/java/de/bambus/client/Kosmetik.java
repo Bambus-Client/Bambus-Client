@@ -297,7 +297,7 @@ public final class Kosmetik {
 			new Partikel("flammen", "Flammen", 0xFFFF8A3D, ParticleTypes.FLAME, false),
 			// Nur im Quest-Shop freizuschalten
 			new Partikel("komet", "Kometen", 0xFFFFFFFF, ParticleTypes.FIREWORK, false),
-			new Partikel("zauber", "Drachenatem", 0xFFB06BFF, ParticleTypes.DRAGON_BREATH, false)
+			new Partikel("zauber", "Drachenatem", 0xFFB06BFF, ParticleTypes.REVERSE_PORTAL, false)   // DRAGON_BREATH braucht seit 1.21.11 eine Stärke
 	);
 
 	private static final Map<String, ClientAsset.Texture> TEXTUREN = new HashMap<>();
