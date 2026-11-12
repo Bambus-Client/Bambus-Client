@@ -96,6 +96,10 @@ final class SeiteStart extends JPanel {
 		repaint();
 	}
 
+	boolean istBeschaeftigt() {
+		return beschaeftigt;
+	}
+
 	void beschaeftigt(boolean ja) {
 		beschaeftigt = ja;
 		spielen.setEnabled(!ja);

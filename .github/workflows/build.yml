@@ -68,12 +68,17 @@ jobs:
             ausgabe/Bambus-Launcher-Setup.exe
             ausgabe/Bambus-Launcher-Windows.zip
             build/libs/BambusLauncher.jar
+            build/libs/bambus-client-*.jar
 
+      # Das Release ist zugleich die Update-Quelle des Launchers: Er lädt daraus die Client-Mod
+      # (bambus-client-….jar) und unter Windows das neue Installationsprogramm (…Setup.exe).
       - name: An das Release hängen
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          body_path: AENDERUNGEN.md
           files: |
             ausgabe/Bambus-Launcher-Setup.exe
             ausgabe/Bambus-Launcher-Windows.zip
             build/libs/BambusLauncher.jar
+            build/libs/bambus-client-*.jar

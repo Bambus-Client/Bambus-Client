@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Automatische Updates: Der Launcher sucht beim Start und alle 30 Minuten nach Updates, lädt den neuen Client und installiert unter Windows auch einen neuen Launcher selbst (startet danach neu)
 - Side Shield: Beim Blocken gleitet der Schild in die normale Block-Position und danach wieder zur Seite
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
 - Start-Set geschenkt: Bambus-Umhang, Engel-Classic-Flügel, Bandana, Funken-Partikel und Funken-Spur gehören dir von Anfang an

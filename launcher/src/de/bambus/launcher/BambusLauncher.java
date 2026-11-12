@@ -42,7 +42,18 @@ import java.util.Properties;
 /** Der Bambus Launcher im Neon-Look. */
 public final class BambusLauncher extends JFrame {
 
-	static final String VERSION = "3.3.0";
+	/** Version aus dem Build (gradle.properties → mod_version), damit Launcher, Mod und Release-Tag immer gleich sind. */
+	static final String VERSION = leseVersion();
+
+	private static String leseVersion() {
+		try (InputStream in = BambusLauncher.class.getResourceAsStream("/bambus-version.txt")) {
+			String v = in == null ? "" : new String(Installer.liesAlles(in), StandardCharsets.UTF_8).trim();
+			if (v.matches("[0-9]+(\\.[0-9]+)*.*")) return v;
+		} catch (Exception ignoriert) {
+			// dann die Notfall-Version
+		}
+		return "3.3.1";
+	}
 
 	static final int BREITE = 1000;
 	static final int HOEHE = 640;
@@ -228,6 +239,20 @@ public final class BambusLauncher extends JFrame {
 		if (autoUpdate && Updater.aktiv()) {
 			pruefeUpdates(false);
 		}
+		// Solange der Launcher offen ist, alle 30 Minuten wieder nachsehen
+		Timer updateTimer = new Timer(30 * 60 * 1000, e -> {
+			if (autoUpdate && Updater.aktiv() && !installiertUpdate) pruefeUpdates(false);
+		});
+		updateTimer.start();
+		// Ein wartendes Launcher-Update installieren, sobald du den Launcher nicht mehr benutzt
+		addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override public void windowDeactivated(java.awt.event.WindowEvent e) {
+				if (updateWartet) launcherUpdateWennMoeglich(false);
+			}
+			@Override public void windowIconified(java.awt.event.WindowEvent e) {
+				if (updateWartet) launcherUpdateWennMoeglich(false);
+			}
+		});
 	}
 
 	// ---------------------------------------------------------------- Animation
@@ -545,8 +570,49 @@ public final class BambusLauncher extends JFrame {
 
 	// ================================================================== Updates
 
+	/** Erste Suche nach dem Start: ein Launcher-Update wird dann sofort installiert. */
+	private boolean ersteSuche = true;
+	/** Ein Launcher-Update ist geladen und wartet, bis du den Launcher nicht mehr benutzt. */
+	private volatile boolean updateWartet;
+	private volatile boolean installiertUpdate;
+
+	/**
+	 * Neuen Launcher automatisch installieren (Windows): beim Start sofort, später erst, wenn das Fenster
+	 * nicht mehr benutzt wird – nie, während SPIELEN gerade etwas einrichtet. Das Installationsprogramm läuft
+	 * still durch und öffnet den Launcher danach wieder. Ein laufendes Minecraft bleibt dabei offen.
+	 */
+	private void launcherUpdateWennMoeglich(boolean sofort) {
+		Updater.Release r = update;
+		if (r == null || installiertUpdate || !autoUpdate || !Updater.automatischInstallierbar(r)) {
+			return;
+		}
+		if (start.istBeschaeftigt() || (!sofort && isActive())) {
+			updateWartet = true;   // später: sobald das Fenster in den Hintergrund geht
+			return;
+		}
+		updateWartet = false;
+		installiertUpdate = true;
+		updateStatus = "Launcher-Update " + r.version + " wird installiert – der Launcher startet gleich neu …";
+		start.fortschritt(updateStatus, 0);
+		Thread t = new Thread(() -> {
+			try {
+				if (Updater.starteLauncherUpdate(r, text -> { updateStatus = text; start.fortschritt(text, 0); })) {
+					System.exit(0);   // das Installationsprogramm ersetzt die Dateien und startet den Launcher neu
+				}
+			} catch (Exception ex) {
+				installiertUpdate = false;
+				updateStatus = "Launcher-Update fehlgeschlagen: " + ex.getMessage() + " – oben auf UPDATE klicken.";
+				SwingUtilities.invokeLater(() -> start.fortschritt(updateStatus, 0));
+			}
+		}, "Bambus-Launcher-Update");
+		t.setDaemon(true);
+		t.start();
+	}
+
 	/** Sucht im Hintergrund nach einem neuen Release und lädt das Client-Update gleich mit. */
 	void pruefeUpdates(boolean manuell) {
+		final boolean beimStart = ersteSuche;
+		ersteSuche = false;
 		updateStatus = "Suche nach Updates …";
 		if (einstellungen != null) einstellungen.repaint();
 		Thread t = new Thread(() -> {
@@ -562,7 +628,11 @@ public final class BambusLauncher extends JFrame {
 					updateStatus = (neu || Updater.neuereMod() != null)
 							? "Client-Update " + r.version + " ist geladen – kommt beim nächsten SPIELEN automatisch rein."
 							: "Version " + r.version + " ist da.";
-					if (manuell) SwingUtilities.invokeLater(() -> new UpdateDialog(this).setVisible(true));
+					if (manuell) {
+						SwingUtilities.invokeLater(() -> new UpdateDialog(this).setVisible(true));
+					} else if (autoUpdate && Updater.automatischInstallierbar(r)) {
+						SwingUtilities.invokeLater(() -> launcherUpdateWennMoeglich(beimStart));
+					}
 				}
 			} catch (Exception ex) {
 				updateStatus = "Update-Suche: " + (ex.getMessage() == null ? "keine Verbindung" : ex.getMessage());

@@ -23,11 +23,13 @@ import java.util.Map;
  *  2. Der Launcher fragt beim Start die öffentliche GitHub-Schnittstelle nach dem neuesten Release.
  *  3. Ist es neuer, lädt er die Client-Mod (bambus-client-….jar) leise herunter, prüft die
  *     SHA-256-Prüfsumme und spielt sie beim nächsten SPIELEN ein – ohne neue Installation.
- *  4. Hat sich auch der Launcher geändert, bietet er das neue Installationsprogramm an
- *     (Windows: läuft von selbst durch, Mac: die .dmg öffnet sich).
+ *  4. Hat sich auch der Launcher geändert, installiert er sich unter Windows selbst neu (still, danach
+ *     startet er wieder) – beim Start sofort, sonst sobald das Fenster nicht mehr benutzt wird.
+ *     Auf dem Mac öffnet sich die .dmg über den UPDATE-Knopf.
+ *  5. Solange der Launcher offen ist, sucht er alle 30 Minuten erneut (abschaltbar: AUTO-UPDATE).
  *
  * Es wird nur öffentlich lesbar bei GitHub nachgefragt – kein Konto, keine persönlichen Daten.
- * Das GitHub-Projekt trägt der Build automatisch ein (Datei update-quelle.txt im Launcher).
+ * Das GitHub-Projekt steht in launcher/resources/update-quelle.txt.
  */
 final class Updater {
 
@@ -119,6 +121,11 @@ final class Updater {
 	}
 
 	static boolean neuer(Release r) { return r != null && vergleiche(r.version, BambusLauncher.VERSION) > 0; }
+
+	/** Kann der neue Launcher ohne Nachfrage installiert werden? (Windows: Installationsprogramm läuft still durch) */
+	static boolean automatischInstallierbar(Release r) {
+		return neuer(r) && r.installerUrl != null && "windows".equals(Installer.betriebssystem());
+	}
 
 	/** Version der zuletzt geladenen Client-Mod (oder die eingebaute). */
 	static String modVersion() {

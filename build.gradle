@@ -46,6 +46,11 @@ sourceSets {
 
 // Die Cape-Bilder aus der Mod auch im Launcher anzeigen (Kosmetik-Vorschau)
 tasks.named('processLauncherResources', ProcessResources) {
+	// Launcher-Version = mod_version (für Updates: Release-Tag v<mod_version>)
+	inputs.property "version", project.version
+	filesMatching("bambus-version.txt") {
+		expand "version": project.version
+	}
 	from('src/main/resources/assets/bambus/textures/cape') {
 		into 'capes'
 	}
