@@ -38,6 +38,9 @@ public final class Ladebildschirm {
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> {
 			if (!istLadebildschirm(screen)) return;
 			seit = System.currentTimeMillis();
+			// Knöpfe (z. B. „Abbrechen“ beim Verbinden) unter den Ladebalken setzen – Minecraft legt sie sonst
+			// je nach Auflösung mitten auf Logo und Text. Läuft bei jeder Größenänderung erneut (init).
+			if (BambusClient.config.ladebildschirm) knoepfeAnordnen(screen);
 			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> {
 				if (!BambusClient.config.ladebildschirm) return;
 				zeichne(g, client, s);
@@ -47,6 +50,25 @@ public final class Ladebildschirm {
 				}
 			});
 		});
+	}
+
+	/** Mitte des Inhalts (Logo bis Ladebalken), so gewählt, dass darunter Knöpfe und Tipp Platz haben. */
+	private static int mitte(int h, int knoepfe) {
+		int unten = 104 + knoepfe * 24;               // vom Bezugspunkt bis unter den letzten Knopf
+		int cy = Math.min(h / 2 - 34, h - 40 - unten);  // Tipp und Hinweis brauchen unten 40
+		return Math.max(40, cy);                        // Logo nicht aus dem Bild schieben
+	}
+
+	private static void knoepfeAnordnen(Screen s) {
+		java.util.List<AbstractWidget> knoepfe = Screens.getButtons(s);
+		if (knoepfe.isEmpty()) return;
+		int y = mitte(s.height, knoepfe.size()) + 100;   // unter dem Ladebalken
+		for (AbstractWidget w : knoepfe) {
+			w.setWidth(Math.min(w.getWidth(), 160));
+			w.setX(s.width / 2 - w.getWidth() / 2);
+			w.setY(y);
+			y += w.getHeight() + 4;
+		}
 	}
 
 	private static boolean istLadebildschirm(Screen s) {
@@ -74,7 +96,8 @@ public final class Ladebildschirm {
 
 		// Logo mit sanftem Pulsieren
 		float puls = 0.5f + 0.5f * (float) Math.sin(sek * 3);
-		int cy = h / 2 - 34;
+		int anzahlKnoepfe = Screens.getButtons(s).size();
+		int cy = mitte(h, anzahlKnoepfe);
 		g.pose().pushMatrix();
 		g.pose().translate(b / 2f - 20, cy - 26);
 		g.pose().scale(2f, 2f);
@@ -90,7 +113,7 @@ public final class Ladebildschirm {
 
 		// Status (Titel der Minecraft-Seite, z. B. „Verbinden …“)
 		String status = s.getTitle().getString();
-		if (status.isEmpty()) status = "Welt wird geladen";
+		if (status.isEmpty()) status = s instanceof ConnectScreen ? "Verbinde mit dem Server" : "Welt wird geladen";
 		int punkte = (int) (sek * 3) % 4;
 		String st = status + ".".repeat(punkte);
 		Neon.text(g, font, st, b / 2 - (int) (font.width(status) * 0.85f / 2), cy + 72, 0.85f, Farben.NEON_CYAN, false);
@@ -112,7 +135,10 @@ public final class Ladebildschirm {
 		float k = Math.min(1f, (sek % 4) / 0.4f) * Math.min(1f, (4 - sek % 4) / 0.4f);
 		String tipp = "TIPP  ·  " + TIPPS[nr];
 		int tw = (int) (font.width(tipp) * 0.75f);
-		Neon.text(g, font, tipp, b / 2 - tw / 2, h - 34, 0.75f, Farben.alpha(Farben.WEISS, (int) (40 + 200 * k)), false);
+		int unterKnoepfen = cy + 100 + anzahlKnoepfe * 24;
+		if (h - 34 >= unterKnoepfen) {   // nur, wenn er nichts überdeckt
+			Neon.text(g, font, tipp, b / 2 - tw / 2, h - 34, 0.75f, Farben.alpha(Farben.WEISS, (int) (40 + 200 * k)), false);
+		}
 		String hinweis = "Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt.";
 		int hw = (int) (font.width(hinweis) * 0.6f);
 		Neon.text(g, font, hinweis, b / 2 - hw / 2, h - 14, 0.6f, 0xFF4A5A6E, false);
