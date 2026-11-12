@@ -221,21 +221,93 @@ final class NeonUI {
 		g.drawString(text, x + (b - fm.stringWidth(text)) / 2, y + (h - fm.getHeight()) / 2 + fm.getAscent());
 	}
 
-	/** Das Bambus-Zeichen. */
+	/**
+	 * Das Bambus-Zeichen als Pixel-Art: ein Halm mit drei Segmenten und Knoten, oben ein kräftiges Blatt,
+	 * das seitlich herauswächst, unten ein kleines. Raster 12 × 18 Pixel, vergrößert in ganzen Stufen
+	 * (groesse = Höhe in Bildschirmpixeln). Farben folgen dem Farbthema; dazu ein leichtes Pixel-Leuchten.
+	 */
 	static void logo(Graphics2D g, int x, int y, int groesse) {
-		int seg = groesse / 3;
-		int b = Math.max(6, groesse / 4);
-		for (int i = 0; i < 3; i++) {
-			RoundRectangle2D r = new RoundRectangle2D.Float(x, y + i * seg, b, seg - 2, 4, 4);
-			leuchten(g, r, NEON, 3);
-			g.setColor(alpha(NEON, 200));
-			g.fill(r);
-			g.setColor(new Color(0x1C7A45));
-			g.fillRect(x + b * 2 / 3, y + i * seg + 2, Math.max(1, b / 3), seg - 6);
+		int p = Math.max(1, Math.round(groesse / 18f));
+		Color hell = mische(NEON, Color.WHITE, 0.6f), dunkel = mische(NEON, Color.BLACK, 0.55f),
+				knoten = mische(NEON, Color.BLACK, 0.3f), rippe = mische(CYAN, Color.WHITE, 0.65f),
+				schatten = mische(CYAN, Color.BLACK, 0.45f);
+		// Leuchten: zwei Ringe um die Form, nach außen schwächer
+		boolean[][] form = new boolean[LOGO.length + 4][LOGO[0].length() + 4];
+		for (int r = 0; r < LOGO.length; r++) {
+			for (int c = 0; c < LOGO[r].length(); c++) {
+				form[r + 2][c + 2] = LOGO[r].charAt(c) != '.';
+			}
 		}
-		g.setColor(CYAN);
-		g.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		g.drawLine(x + b + 1, y + seg / 2 + 2, x + b + groesse / 3, y + seg / 2 - groesse / 10);
+		for (int ring = 2; ring >= 1; ring--) {
+			g.setColor(alpha(NEON, ring == 1 ? 30 : 10));
+			for (int r = 0; r < form.length; r++) {
+				for (int c = 0; c < form[r].length; c++) {
+					if (!form[r][c] && nahe(form, r, c, ring) && (ring == 2 ? !nahe(form, r, c, 1) : true)) {
+						g.fillRect(x + (c - 2) * p, y + (r - 2) * p, p, p);
+					}
+				}
+			}
+		}
+		for (int r = 0; r < LOGO.length; r++) {
+			for (int c = 0; c < LOGO[r].length(); c++) {
+				Color farbe;
+				switch (LOGO[r].charAt(c)) {
+					case 'H': farbe = hell; break;
+					case 'N': farbe = NEON; break;
+					case 'D': farbe = dunkel; break;
+					case 'K': farbe = knoten; break;
+					case 'L': farbe = CYAN; break;
+					case 'M': farbe = rippe; break;
+					case 'l': farbe = schatten; break;
+					default: continue;
+				}
+				g.setColor(farbe);
+				g.fillRect(x + c * p, y + r * p, p, p);
+			}
+		}
+	}
+
+	/** H hell, N Neon, D dunkle Seite, K Knoten · L Blatt, M Blattrippe, l Blattschatten */
+	private static final String[] LOGO = {
+			".HNND.....LL",
+			".HNND...LLLL",
+			".HNND..LLLMl",
+			".HNND.LLMMl.",
+			".HNNDLLMll..",
+			"KKKKKKMll...",
+			".HNND.l.....",
+			".HNND.......",
+			".HNND.......",
+			".HNND.......",
+			".HNND...LLl.",
+			"KKKKKKLLMl..",
+			".HNND.lll...",
+			".HNND.......",
+			".HNND.......",
+			".HNND.......",
+			".HNND.......",
+			".DDDD.......",
+	};
+
+	/** Breite des Logos in Bildschirmpixeln bei dieser Höhe. */
+	static int logoBreite(int groesse) {
+		return LOGO[0].length() * Math.max(1, Math.round(groesse / 18f));
+	}
+
+	private static boolean nahe(boolean[][] form, int r, int c, int abstand) {
+		for (int dr = -abstand; dr <= abstand; dr++) {
+			for (int dc = -abstand; dc <= abstand; dc++) {
+				int rr = r + dr, cc = c + dc;
+				if (rr >= 0 && cc >= 0 && rr < form.length && cc < form[rr].length && form[rr][cc]) return true;
+			}
+		}
+		return false;
+	}
+
+	private static Color mische(Color a, Color b, float t) {
+		return new Color(Math.round(a.getRed() + (b.getRed() - a.getRed()) * t),
+				Math.round(a.getGreen() + (b.getGreen() - a.getGreen()) * t),
+				Math.round(a.getBlue() + (b.getBlue() - a.getBlue()) * t));
 	}
 
 	// =================================================================== Bauteile

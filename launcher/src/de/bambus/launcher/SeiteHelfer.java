@@ -328,7 +328,7 @@ final class SeiteHelfer extends JPanel {
 				g.fillRoundRect(0, 0, AVATAR, AVATAR, 12, 12);
 				g.setColor(NeonUI.alpha(NeonUI.NEON, 120));
 				g.drawRoundRect(0, 0, AVATAR - 1, AVATAR - 1, 12, 12);
-				NeonUI.logo(g, 7, 6, 24);
+				NeonUI.logo(g, (AVATAR - NeonUI.logoBreite(AVATAR - 10)) / 2, 5, AVATAR - 10);
 			}
 			RoundRectangle2D form = new RoundRectangle2D.Float(lx + 0.5f, 0.5f, b - lx - 2, h - 2, 16, 16);
 			g.setColor(helfer ? new Color(0x101A24) : NeonUI.alpha(NeonUI.CYAN, 34));

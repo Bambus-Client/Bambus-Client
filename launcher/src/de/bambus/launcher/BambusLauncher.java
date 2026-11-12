@@ -564,7 +564,7 @@ public final class BambusLauncher extends JFrame {
 			g.fillRect(LEISTE - 1, 0, 1, h);
 
 			// Logo
-			NeonUI.logo(g, 26, 34, 54);
+			NeonUI.logo(g, 22, 34, 54);
 			g.setFont(NeonUI.titel(30));
 			NeonUI.leuchtText(g, "BAMBUS", 64, 66, NeonUI.NEON, 2);
 			g.setFont(NeonUI.mono(12));

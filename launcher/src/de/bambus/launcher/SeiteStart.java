@@ -281,6 +281,6 @@ final class SeiteStart extends JPanel {
 			g.setColor(NeonUI.alpha(NeonUI.CYAN, 120));
 			g.fillOval(x - 2, y - 2, 4, 4);
 		}
-		NeonUI.logo(g, cx - 12, cy - 30, 60);
+		NeonUI.logo(g, cx - NeonUI.logoBreite(72) / 2, cy - 36, 72);
 	}
 }
