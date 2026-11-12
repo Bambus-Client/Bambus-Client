@@ -89,17 +89,52 @@ public final class Neon {
 		text(g, font, text, x, y, groesse, farbe, false);
 	}
 
-	/** Das Bambus-Zeichen: drei leuchtende Segmente und ein Blatt. */
+	/**
+	 * Das Bambus-Zeichen als Pixel-Art (wie im Launcher): Halm mit Knoten, ein kräftiges Blatt seitlich
+	 * und ein kleines unten. Raster 12 × 18, hoehe = Höhe in GUI-Pixeln (wird auf ganze Stufen gerundet).
+	 */
 	public static void logo(GuiGraphics g, int x, int y, int hoehe) {
-		int seg = Math.max(4, hoehe / 3);
-		for (int i = 0; i < 3; i++) {
-			int sy = y + i * seg;
-			g.fill(x - 1, sy, x + 6, sy + seg - 1, Farben.alpha(Farben.NEON, 40));
-			g.fill(x, sy, x + 5, sy + seg - 2, Farben.NEON);
-			g.fill(x + 3, sy, x + 5, sy + seg - 2, Farben.GRUEN_DUNKEL);
+		int p = Math.max(1, Math.round(hoehe / 18f));
+		int hell = mische(Farben.NEON, 0xFFFFFFFF, 0.6f), dunkel = mische(Farben.NEON, 0xFF000000, 0.55f),
+				knoten = mische(Farben.NEON, 0xFF000000, 0.3f), rippe = mische(Farben.NEON_CYAN, 0xFFFFFFFF, 0.65f),
+				schatten = mische(Farben.NEON_CYAN, 0xFF000000, 0.45f);
+		for (int r = 0; r < LOGO.length; r++) {
+			for (int c = 0; c < LOGO[r].length(); c++) {
+				int farbe;
+				switch (LOGO[r].charAt(c)) {
+					case 'H' -> farbe = hell;
+					case 'N' -> farbe = Farben.NEON;
+					case 'D' -> farbe = dunkel;
+					case 'K' -> farbe = knoten;
+					case 'L' -> farbe = Farben.NEON_CYAN;
+					case 'M' -> farbe = rippe;
+					case 'l' -> farbe = schatten;
+					default -> { continue; }
+				}
+				// leichtes Leuchten rundherum, dann der Pixel
+				g.fill(x + c * p - 1, y + r * p - 1, x + c * p + p + 1, y + r * p + p + 1, Farben.alpha(farbe, 18));
+				g.fill(x + c * p, y + r * p, x + c * p + p, y + r * p + p, farbe);
+			}
 		}
-		g.fill(x + 6, y + seg / 2, x + 11, y + seg / 2 + 2, Farben.NEON_CYAN);
-		g.fill(x + 9, y + seg / 2 - 2, x + 13, y + seg / 2, Farben.NEON_CYAN);
+	}
+
+	/** Breite des Logos bei dieser Höhe. */
+	public static int logoBreite(int hoehe) {
+		return LOGO[0].length() * Math.max(1, Math.round(hoehe / 18f));
+	}
+
+	/** H hell, N Neon, D dunkle Seite, K Knoten · L Blatt, M Blattrippe, l Blattschatten (gleich wie im Launcher) */
+	private static final String[] LOGO = {
+			".HNND.....LL", ".HNND...LLLL", ".HNND..LLLMl", ".HNND.LLMMl.", ".HNNDLLMll..", "KKKKKKMll...",
+			".HNND.l.....", ".HNND.......", ".HNND.......", ".HNND.......", ".HNND...LLl.", "KKKKKKLLMl..",
+			".HNND.lll...", ".HNND.......", ".HNND.......", ".HNND.......", ".HNND.......", ".DDDD.......",
+	};
+
+	private static int mische(int a, int b, float t) {
+		int r = Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * t);
+		int gr = Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * t);
+		int bl = Math.round((a & 255) + ((b & 255) - (a & 255)) * t);
+		return 0xFF000000 | (r << 16) | (gr << 8) | bl;
 	}
 
 	public static boolean ueber(double mx, double my, int x, int y, int b, int h) {
