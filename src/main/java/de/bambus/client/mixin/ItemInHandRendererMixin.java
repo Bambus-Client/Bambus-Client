@@ -19,6 +19,6 @@ public class ItemInHandRendererMixin {
 	@Inject(method = "renderItem", at = @At("HEAD"))
 	private void bambus$hand(LivingEntity wesen, ItemStack stack, ItemDisplayContext kontext, PoseStack pose,
 							   SubmitNodeCollector sammler, int licht, CallbackInfo ci) {
-		Texturen.handAnpassen(stack, kontext, pose);
+		Texturen.handAnpassen(wesen, stack, kontext, pose);
 	}
 }

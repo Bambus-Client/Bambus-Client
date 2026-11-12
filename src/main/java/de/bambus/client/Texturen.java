@@ -4,6 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -136,16 +139,24 @@ public final class Texturen {
 		}
 	}
 
+	/** Side Shield je Hand (0 = rechts, 1 = links): 1 = ganz zur Seite, 0 = normale Block-Position. */
+	private static final float[] SEITE_ANTEIL = {1f, 1f};
+	private static final long[] SEITE_ZEIT = {0L, 0L};
+	/** So schnell gleitet der Schild beim Blocken in die Mitte und danach zurück (Anteil pro Sekunde). */
+	private static final float SEITE_TEMPO = 9f;
+
 	/** Gegenstand in der eigenen Hand anpassen (nur 1. Person): Low/Side Shield und Short Sword. */
-	public static void handAnpassen(ItemStack stack, ItemDisplayContext kontext, PoseStack pose) {
+	public static void handAnpassen(LivingEntity wesen, ItemStack stack, ItemDisplayContext kontext, PoseStack pose) {
 		if (!aktiv() || !kontext.firstPerson()) {
 			return;
 		}
 		if (stack.is(Items.SHIELD)) {
 			boolean links = kontext.leftHand();
 			float[] v = schildVersatz(links);
-			pose.translate(v[0], v[1], 0f);
-			float drehung = schildDrehung();
+			// Side Shield: beim Blocken wie ein normaler Schild (gerade vor dir), danach wieder zur Seite
+			float seite = seitenAnteil(links, blocktMit(wesen, links));
+			pose.translate(v[0] * seite, v[1], 0f);
+			float drehung = schildDrehung() * seite;
 			if (drehung > 0f) {   // wie im Texturpaket: Schild zur Seite gedreht, man sieht nur noch die Kante
 				pose.mulPose(Axis.YP.rotationDegrees(links ? -drehung : drehung));   // Fläche nach außen
 			}
@@ -156,6 +167,30 @@ public final class Texturen {
 				pose.scale(f, f, f);
 			}
 		}
+	}
+
+	/** Blockt der Spieler gerade mit dem Schild in der Hand auf dieser Bildschirmseite? */
+	private static boolean blocktMit(LivingEntity wesen, boolean linkeSeite) {
+		if (wesen == null || !wesen.isUsingItem() || !wesen.getUseItem().is(Items.SHIELD)) {
+			return false;
+		}
+		boolean hauptHandLinks = wesen.getMainArm() == HumanoidArm.LEFT;
+		InteractionHand hand = linkeSeite == hauptHandLinks ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+		return wesen.getUsedItemHand() == hand;
+	}
+
+	/** Weicher Übergang zwischen Seite (1) und Block-Position (0), damit der Schild nicht springt. */
+	private static float seitenAnteil(boolean links, boolean blockt) {
+		int i = links ? 1 : 0;
+		long jetzt = System.nanoTime();
+		float dt = SEITE_ZEIT[i] == 0L ? 1f : Math.min(0.1f, (jetzt - SEITE_ZEIT[i]) / 1e9f);
+		SEITE_ZEIT[i] = jetzt;
+		float ziel = blockt ? 0f : 1f;
+		float schritt = SEITE_TEMPO * dt;
+		float a = SEITE_ANTEIL[i];
+		a = a < ziel ? Math.min(ziel, a + schritt) : Math.max(ziel, a - schritt);
+		SEITE_ANTEIL[i] = a;
+		return a * a * (3f - 2f * a);   // weich ein- und ausblenden
 	}
 
 	/** Kein Kürbis-Overlay: true, wenn dieses Bildschirm-Overlay ausgeblendet werden soll. */

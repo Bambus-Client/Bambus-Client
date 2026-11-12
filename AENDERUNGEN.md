@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Side Shield: Beim Blocken gleitet der Schild in die normale Block-Position und danach wieder zur Seite
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
 - Start-Set geschenkt: Bambus-Umhang, Engel-Classic-Flügel, Bandana, Funken-Partikel und Funken-Spur gehören dir von Anfang an
 - Alle weitere Kosmetik kostet Blätter – der Preis steht auf jeder Kachel; kaufen geht im Launcher unter KOSMETIK und im Spiel in der Garderobe (einmal klicken fragt nach, zweimal kauft)
