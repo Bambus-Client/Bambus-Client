@@ -1,4 +1,6 @@
 ## Neu in dieser Version
+- Bambus-Helfer kennt jetzt alle 697 Crafting-Rezepte (mit Bild, im Spiel mit echten Icons), versteht Deutsch besser (Wortformen, zusammengesetzte Wörter, Tippfehler) und antwortet in der Sprache der Frage
+- Bambus-Helfer erklärt viele PvP-Taktiken: Krits, Abklingzeit, Strafen, Jump Reset, Schild und Axt, Angel, Bogen, Combos, Clutches, Bridgen, Crystal-PvP, Streitkolben und mehr
 - Side Shield: Beim Blocken gleitet der Schild in die normale Block-Position und danach wieder zur Seite
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
 - Start-Set geschenkt: Bambus-Umhang, Engel-Classic-Flügel, Bandana, Funken-Partikel und Funken-Spur gehören dir von Anfang an

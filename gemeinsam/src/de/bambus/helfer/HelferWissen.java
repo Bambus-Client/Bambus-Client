@@ -18,8 +18,11 @@ public final class HelferWissen {
 	public static final class Eintrag {
 		final String[] stichworte;
 		public final String de, en;
-		public String[] rezept;          // 9 Felder (Gegenstand oder "") für ein 3×3-Rezept
+		public String[] rezept;          // 9 Felder (Minecraft-Id oder "") für ein 3×3-Rezept, siehe Rezepte
 		public String rezeptDe, rezeptEn;
+		public String ergebnis;          // Minecraft-Id des Ergebnisses
+		public int anzahl = 1;           // so viele Stück entstehen
+		public Rezepte.Rezept quelle;
 		public final List<String[]> aktionen = new ArrayList<>();   // {Text de, Text en, Launcher-Seite}
 
 		Eintrag(String stichworte, String de, String en) {
@@ -29,10 +32,13 @@ public final class HelferWissen {
 			this.en = en;
 		}
 
-		Eintrag rezept(String nameDe, String nameEn, String... felder) {
-			this.rezeptDe = nameDe;
-			this.rezeptEn = nameEn;
-			this.rezept = felder;
+		Eintrag rezept(Rezepte.Rezept r) {
+			this.quelle = r;
+			this.rezeptDe = r.de;
+			this.rezeptEn = r.en;
+			this.rezept = r.felder;
+			this.ergebnis = r.id;
+			this.anzahl = r.anzahl;
 			return this;
 		}
 
@@ -56,10 +62,57 @@ public final class HelferWissen {
 				.replaceAll("[^a-z0-9 ]", " ").replaceAll("\\s+", " ").trim();
 	}
 
+	// ================================================================ Deutsch verstehen
+
+	/** Füllwörter, die nichts über das Thema sagen („wie baue ich eine …“). */
+	private static final java.util.Set<String> FUELLWOERTER = new java.util.HashSet<>(java.util.Arrays.asList(
+			"wie", "was", "wo", "wann", "warum", "wieso", "welche", "welcher", "welches", "wer", "ich", "du", "man", "mir", "mich",
+			"mein", "meine", "meinen", "dir", "dich", "ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den",
+			"dem", "des", "und", "oder", "mit", "ohne", "von", "vom", "aus", "zu", "zum", "zur", "im", "in", "an", "am", "auf",
+			"fur", "fuer", "ist", "sind", "bin", "bist", "kann", "kannst", "koennen", "konnen", "soll", "sollte", "muss", "musst",
+			"brauche", "brauch", "brauchst", "braucht", "gibt", "gibts", "es", "bitte", "mal", "so", "denn", "auch", "noch",
+			"nur", "mach", "mache", "machen", "macht", "bau", "baue", "bauen", "baut", "craft", "crafte", "craften", "crafted",
+			"herstellen", "stelle", "stellt", "her", "rezept", "rezepte", "anleitung", "erklaer", "erklaere", "erklaeren",
+			"sag", "sage", "zeig", "zeige", "zeigen", "kriege", "krieg", "bekomme", "bekommt", "bekommen", "hab", "habe", "hat",
+			"eigentlich", "genau", "gut", "richtig", "einfach", "am", "besten", "minecraft", "mc", "bitte", "danke",
+			"how", "do", "does", "i", "you", "a", "an", "the", "to", "of", "for", "make", "can", "what", "is", "are", "my",
+			"recipe", "recipes", "get", "please", "in", "with"));
+
+	/** Wörter, die nach einem Rezept fragen. */
+	private static final java.util.Set<String> REZEPT_WORTE = new java.util.HashSet<>(java.util.Arrays.asList(
+			"rezept", "rezepte", "craften", "crafte", "craft", "crafting", "bauen", "baue", "bau", "herstellen", "stelle",
+			"machen", "mache", "recipe", "make", "anleitung"));
+
+	/**
+	 * Wortstamm für die Suche: einfache deutsche (und englische) Endungen weg –
+	 * „Fackeln“ → „fackel“, „Truhen“ → „truh“, „Bretter“ → „brett“, „Spitzhacken“ → „spitzhack“, „torches“ → „torch“.
+	 */
+	static String stamm(String w) {
+		if (w.length() <= 4) return w;
+		String[] endungen = {"ern", "en", "er", "es", "e", "n", "s"};
+		for (String e : endungen) {
+			if (w.endsWith(e) && w.length() - e.length() >= 4) return w.substring(0, w.length() - e.length());
+		}
+		return w;
+	}
+
 	/** Beste Antwort zur Frage oder null. */
 	public static Eintrag finde(String frage) {
 		String n = " " + norm(frage) + " ";
-		String[] woerter = n.trim().split(" ");
+		String[] alle = n.trim().split(" ");
+		boolean rezeptFrage = false;
+		List<String> liste = new ArrayList<>();
+		for (String w : alle) {
+			if (REZEPT_WORTE.contains(w)) rezeptFrage = true;
+			if (!w.isEmpty() && !FUELLWOERTER.contains(w)) liste.add(w);
+		}
+		if (liste.isEmpty()) {   // nur Füllwörter („wie geht das?“) – dann doch alles werten
+			for (String w : alle) if (!w.isEmpty()) liste.add(w);
+		}
+		String[] woerter = liste.toArray(new String[0]);
+		String[] staemme = new String[woerter.length];
+		for (int i = 0; i < woerter.length; i++) staemme[i] = stamm(woerter[i]);
+
 		Eintrag beste = null;
 		double besteWertung = 0;
 		for (Eintrag e : WISSEN) {
@@ -68,25 +121,71 @@ public final class HelferWissen {
 			for (String k : e.stichworte) {
 				if (k.isEmpty()) continue;
 				if (k.contains(" ")) {
-					if (n.contains(" " + k + " ") || n.contains(" " + k)) w += 2.5 * k.split(" ").length;
+					// Mehrwort-Stichwort: alle Inhaltswörter (auch in anderer Form) müssen in der Frage stehen,
+					// Stichwörter nur aus Füllwörtern („wer bist du“) müssen wörtlich vorkommen
+					String[] teile = k.split(" ");
+					int inhalt = 0;
+					boolean alleDa = true;
+					for (String t : teile) {
+						if (FUELLWOERTER.contains(t)) continue;
+						inhalt++;
+						boolean da = false;
+						for (int i = 0; i < woerter.length && !da; i++) {
+							da = woerter[i].equals(t) || staemme[i].equals(stamm(t));
+						}
+						if (!da) { alleDa = false; break; }
+					}
+					if (inhalt == 0) {
+						if (n.contains(" " + k + " ")) w += 2.5 * teile.length;
+					} else if (alleDa) {
+						w += 2.5 * inhalt + (n.contains(" " + k + " ") ? 0.5 : 0);
+					}
 					continue;
 				}
+				String ks = stamm(k);
 				for (int i = 0; i < woerter.length; i++) {
 					String wort = woerter[i];
 					double p = 0;
 					if (wort.equals(k)) p = 2;
-					else if (k.length() >= 4 && wort.length() >= 4 && (wort.startsWith(k) || k.startsWith(wort))) p = 1.5;
-					else if (k.length() >= 5 && Math.abs(k.length() - wort.length()) <= 1 && abstand(k, wort) <= 1) p = 1.2;
+					else if (staemme[i].equals(ks)) p = 1.9;                                   // Fackeln ↔ Fackel
+					else {
+						if (k.length() >= 5 && wort.length() >= 4 && Math.abs(k.length() - wort.length()) <= 1 && abstand(k, wort) <= 1) p = 1.8;   // Tippfehler
+						if (k.length() >= 4 && wort.length() >= 4 && (wort.startsWith(k) || k.startsWith(wort))) p = Math.max(p, 1.5);
+						if (k.length() >= 5 && wort.length() >= 8 && wort.endsWith(ks)) p = Math.max(p, 1.1);   // Holztreppe → Treppe
+					}
 					proWort[i] = Math.max(proWort[i], p);
 				}
 			}
 			for (double p : proWort) w += p;
+			if (w > 0 && e.rezept != null && rezeptFrage) w += 0.6;   // „Rezept …“ / „wie baue ich …“
 			if (w > besteWertung) {
 				besteWertung = w;
 				beste = e;
 			}
 		}
-		return besteWertung >= 2 ? beste : null;
+		return besteWertung >= 1.8 ? beste : null;
+	}
+
+	/**
+	 * In welcher Sprache wurde gefragt? Eine deutsche Frage bekommt eine deutsche Antwort, auch wenn der
+	 * Launcher auf Englisch steht – und umgekehrt. Bei Unklarheit gilt die eingestellte Sprache.
+	 */
+	public static boolean englischGefragt(String frage, boolean standard) {
+		String roh = frage.toLowerCase(Locale.ROOT);
+		int de = 0, en = 0;
+		if (roh.matches(".*[äöüß].*")) de += 2;
+		String[] deutsch = {"ich", "wie", "was", "wo", "der", "die", "das", "und", "ist", "nicht", "ein", "eine", "einen", "mit",
+				"baue", "bauen", "mache", "machen", "rezept", "bekomme", "finde", "gibt", "fuer", "für", "man", "kann", "welche", "warum",
+				"brauche", "geht", "craften", "herstellen", "zeig", "erklär", "erklaer", "mein", "meine", "gegen", "beste", "besten"};
+		String[] englisch = {"how", "what", "where", "the", "is", "do", "does", "i", "make", "get", "find", "can", "recipe", "you",
+				"my", "why", "which", "best", "against", "craft", "show", "explain", "with"};
+		for (String w : norm(roh).split(" ")) {
+			for (String d : deutsch) if (w.equals(norm(d))) de++;
+			for (String e : englisch) if (w.equals(e)) en++;
+		}
+		if (de > en) return false;
+		if (en > de) return true;
+		return standard;
 	}
 
 	private static int abstand(String a, String b) {
@@ -303,58 +402,157 @@ public final class HelferWissen {
 				"Bedwars-Tipps: 1) Bett sofort schützen (Wolle, dann Endstein oder Holz). 2) Erst Ressourcen sammeln, dann Upgrades kaufen. 3) Immer Blöcke dabeihaben, um nicht runterzufallen. 4) Mit Freunden absprechen, wer verteidigt.",
 				"Bedwars tips: 1) Protect your bed right away (wool, then end stone or wood). 2) Collect resources first, then buy upgrades. 3) Always carry blocks so you don't fall. 4) Agree with friends who defends.");
 
-		// ====================================================== Minecraft – Rezepte
-		e("werkbank,crafting table,werktisch",
-				"Werkbank: 4 Holzbretter im 2×2-Feld deines Inventars.", "Crafting table: 4 wooden planks in the 2×2 grid of your inventory.")
-				.rezept("Werkbank", "Crafting Table", "Brett", "Brett", "", "Brett", "Brett", "", "", "", "");
-		e("fackel,torch,licht",
-				"Fackel: Kohle (oder Holzkohle) über einen Stock legen – ergibt 4 Fackeln.", "Torch: coal (or charcoal) above a stick – makes 4 torches.")
-				.rezept("Fackel", "Torch", "", "Kohle", "", "", "Stock", "", "", "", "");
-		e("truhe,kiste,chest",
-				"Truhe: 8 Holzbretter im Kreis, die Mitte bleibt frei.", "Chest: 8 wooden planks in a ring, the middle stays empty.")
-				.rezept("Truhe", "Chest", "Brett", "Brett", "Brett", "Brett", "", "Brett", "Brett", "Brett", "Brett");
-		e("ofen,furnace,schmelzen",
-				"Ofen: 8 Bruchstein im Kreis, die Mitte bleibt frei. Damit schmilzt du Erz und brätst Essen.", "Furnace: 8 cobblestone in a ring, middle empty. Use it to smelt ore and cook food.")
-				.rezept("Ofen", "Furnace", "Stein", "Stein", "Stein", "Stein", "", "Stein", "Stein", "Stein", "Stein");
-		e("spitzhacke,pickaxe,picke",
-				"Spitzhacke: oben 3 Material (Holz, Stein, Eisen oder Diamant), darunter 2 Stöcke in der Mitte.", "Pickaxe: 3 material on top (wood, stone, iron or diamond), 2 sticks below in the middle.")
-				.rezept("Spitzhacke", "Pickaxe", "Eisen", "Eisen", "Eisen", "", "Stock", "", "", "Stock", "");
-		e("schwert,sword",
-				"Schwert: 2 Material übereinander, darunter 1 Stock – alles in der mittleren Spalte.", "Sword: 2 material stacked, 1 stick below – all in the middle column.")
-				.rezept("Schwert", "Sword", "", "Diamant", "", "", "Diamant", "", "", "Stock", "");
-		e("axt,axe",
-				"Axt: 3 Material oben links in L-Form, 2 Stöcke in der Mitte.", "Axe: 3 material in an L shape at the top left, 2 sticks in the middle.")
-				.rezept("Axt", "Axe", "Eisen", "Eisen", "", "Eisen", "Stock", "", "", "Stock", "");
-		e("bett,bed,schlafen,schlafe,schlaf,sleep,nacht ueberspringen",
-				"Bett: oben 3 Wolle (gleiche Farbe), darunter 3 Holzbretter. Schlafen überspringt die Nacht und setzt deinen Spawnpunkt.", "Bed: 3 wool on top (same color), 3 wooden planks below. Sleeping skips the night and sets your spawn point.")
-				.rezept("Bett", "Bed", "Wolle", "Wolle", "Wolle", "Brett", "Brett", "Brett", "", "", "");
-		e("zaubertisch,verzauberungstisch,enchanting table,enchantment table",
-				"Zaubertisch: oben ein Buch, in der Mitte Diamant – Obsidian – Diamant, unten 3 Obsidian.", "Enchanting table: a book on top, diamond – obsidian – diamond in the middle, 3 obsidian at the bottom.")
-				.rezept("Zaubertisch", "Enchanting Table", "", "Buch", "", "Diamant", "Obsidian", "Diamant", "Obsidian", "Obsidian", "Obsidian");
-		e("amboss,anvil",
-				"Amboss: oben 3 Eisenblöcke, in der Mitte 1 Eisenbarren, unten 3 Eisenbarren. Damit reparierst und benennst du Sachen.", "Anvil: 3 iron blocks on top, 1 iron ingot in the middle, 3 iron ingots at the bottom. Use it to repair and rename items.")
-				.rezept("Amboss", "Anvil", "Eisenblock", "Eisenblock", "Eisenblock", "", "Eisen", "", "Eisen", "Eisen", "Eisen");
-		e("bogen,bow",
-				"Bogen: 3 Stöcke als Bogen links, 3 Fäden als Sehne rechts.", "Bow: 3 sticks as the bow on the left, 3 strings on the right.")
-				.rezept("Bogen", "Bow", "", "Stock", "Faden", "Stock", "", "Faden", "", "Stock", "Faden");
-		e("schild,shield",
-				"Schild: Brett – Eisen – Brett, darunter 3 Bretter, unten 1 Brett in der Mitte.", "Shield: plank – iron – plank, then 3 planks, then 1 plank in the middle.")
-				.rezept("Schild", "Shield", "Brett", "Eisen", "Brett", "Brett", "Brett", "Brett", "", "Brett", "");
-		e("eimer,bucket,wassereimer",
-				"Eimer: 3 Eisenbarren in V-Form.", "Bucket: 3 iron ingots in a V shape.")
-				.rezept("Eimer", "Bucket", "Eisen", "", "Eisen", "", "Eisen", "", "", "", "");
-		e("tnt,sprengstoff",
-				"TNT: 5 Schwarzpulver und 4 Sand im Schachbrettmuster.", "TNT: 5 gunpowder and 4 sand in a checkerboard pattern.")
-				.rezept("TNT", "TNT", "Pulver", "Sand", "Pulver", "Sand", "Pulver", "Sand", "Pulver", "Sand", "Pulver");
-		e("buecherregal,bookshelf,regal",
-				"Bücherregal: oben und unten je 3 Bretter, in der Mitte 3 Bücher. 15 Regale um den Zaubertisch geben die besten Verzauberungen.", "Bookshelf: 3 planks on top and bottom, 3 books in the middle. 15 shelves around the enchanting table give the best enchantments.")
-				.rezept("Bücherregal", "Bookshelf", "Brett", "Brett", "Brett", "Buch", "Buch", "Buch", "Brett", "Brett", "Brett");
-		e("leiter,ladder",
-				"Leiter: 7 Stöcke in H-Form – ergibt 3 Leitern.", "Ladder: 7 sticks in an H shape – makes 3 ladders.")
-				.rezept("Leiter", "Ladder", "Stock", "", "Stock", "Stock", "Stock", "Stock", "Stock", "", "Stock");
-		e("rezept,rezepte,craften,crafting,recipe,recipes,how to craft,herstellen",
-				"Ich kenne viele Rezepte: Werkbank, Fackel, Truhe, Ofen, Spitzhacke, Schwert, Axt, Bett, Zaubertisch, Amboss, Bogen, Schild, Eimer, TNT, Bücherregal und Leiter. Frag zum Beispiel: „Rezept Zaubertisch“. Im Spiel hilft dir auch das Rezeptbuch (grünes Buch im Inventar).",
-				"I know lots of recipes: crafting table, torch, chest, furnace, pickaxe, sword, axe, bed, enchanting table, anvil, bow, shield, bucket, TNT, bookshelf and ladder. Ask for example: “enchanting table recipe”. In game the recipe book (green book in your inventory) helps too.");
+		// ------------------------------------------------------ PvP-Taktiken
+		e("pvp,pvp tipps,pvp tips,besser in pvp,besser kaempfen,kaempfen,kampf,fight,fighting,get better at pvp,pvp lernen",
+				"Die wichtigsten PvP-Grundlagen: 1) Treffe erst, wenn der Abklingbalken voll ist. 2) Sprint-Reset (W-Tap) für mehr Rückstoß. 3) Kritische Treffer aus dem Fallen. "
+						+ "4) Seitlich laufen (Strafen), damit der Gegner dich schwer trifft. 5) Bleib knapp außerhalb seiner Reichweite und geh rein, wenn sein Schlag vorbei ist. "
+						+ "Frag mich zu jedem Punkt genauer, z. B. „kritischer Treffer“, „Strafen“, „Schild“, „Angel“, „Jump Reset“.",
+				"The most important PvP basics: 1) Only hit when the cooldown bar is full. 2) Sprint reset (W-tap) for more knockback. 3) Critical hits while falling. "
+						+ "4) Move sideways (strafing) so you're hard to hit. 5) Stay just outside their reach and go in when their swing is over. "
+						+ "Ask me about each point, e.g. “critical hit”, “strafing”, “shield”, “fishing rod”, “jump reset”.");
+		e("kritischer treffer,kritisch,krit,crit,critical hit,crits,critical",
+				"Kritischer Treffer: Spring und triff den Gegner, während du wieder nach unten fällst – das macht 50 % mehr Schaden (Sterne-Partikel). "
+						+ "Achtung: Beim Sprinten ist ein Krit nicht möglich, und der Abklingbalken muss fast voll sein. Trick: kurz Sprint loslassen, springen, im Fallen treffen.",
+				"Critical hit: jump and hit while you're falling back down – 50% more damage (star particles). "
+						+ "Note: you can't crit while sprinting, and the cooldown bar must be almost full. Trick: let go of sprint, jump, hit while falling.");
+		e("abklingzeit,cooldown,abklingbalken,angriffsabklingzeit,attack cooldown,1 9 pvp,1 9,timing,schlagtiming",
+				"Seit 1.9 hat jede Waffe eine Abklingzeit: Schwert ca. 0,6 s, Axt ca. 1 s. Schlägst du früher, macht der Treffer viel weniger Schaden. "
+						+ "Also nicht spammen, sondern im Rhythmus treffen – der Balken unter dem Fadenkreuz zeigt, wann du wieder voll zuschlagen kannst.",
+				"Since 1.9 every weapon has a cooldown: sword about 0.6 s, axe about 1 s. Hitting earlier does much less damage. "
+						+ "So don't spam – hit in rhythm. The bar under the crosshair shows when you can hit at full strength again.");
+		e("strafen,strafe,strafing,seitlich laufen,kreisen,im kreis laufen,ausweichen,dodge",
+				"Strafen heißt: Im Kampf mit A oder D seitlich laufen, während du den Gegner anschaust. So schwenkt sein Fadenkreuz ständig hinterher und er verfehlt öfter. "
+						+ "Wechsle die Richtung unregelmäßig und kombiniere es mit W-Taps.",
+				"Strafing means moving sideways with A or D while looking at your opponent. Their crosshair has to keep following you, so they miss more. "
+						+ "Change direction irregularly and combine it with W-taps.");
+		e("jump reset,rueckstoss verringern,weniger rueckstoss,knockback reduzieren,reduce knockback,springen beim treffer",
+				"Jump Reset: Spring genau in dem Moment, in dem du getroffen wirst. Dann fliegst du weniger weit zurück und kannst direkt zurückschlagen. "
+						+ "Braucht Übung beim Timing – achte auf den Schlag des Gegners.",
+				"Jump reset: jump exactly when you get hit. You get knocked back less and can hit back right away. "
+						+ "Needs practice – watch your opponent's swing.");
+		e("schild blocken,mit schild blocken,schild pvp,shield pvp,blocken,block,shield block,schild benutzen",
+				"Schild: Rechtsklick halten blockt alle Treffer von vorne, auch Pfeile. Aber: Eine Axt deaktiviert den Schild für 5 Sekunden. "
+						+ "Tipp: Blocke, wenn der Gegner zuschlägt, und lass los, um selbst zu treffen. Mit Side Shield im Textur-Modul siehst du dabei mehr.",
+				"Shield: holding right click blocks all hits from the front, even arrows. But an axe disables the shield for 5 seconds. "
+						+ "Tip: block when your opponent swings and release to hit back. The Side Shield texture option gives you a better view.");
+		e("axt oder schwert,axt vs schwert,axe vs sword,welche waffe,beste waffe,best weapon,axt pvp",
+				"Schwert: schneller (öfter treffen, Schwungangriff gegen mehrere). Axt: mehr Schaden pro Schlag, aber langsamer – und sie schaltet Schilde 5 Sekunden aus. "
+						+ "Profi-Trick: Gegner blockt → kurz zur Axt wechseln, Schild ausschalten, dann zurück zum Schwert.",
+				"Sword: faster (more hits, sweeping attack against groups). Axe: more damage per hit but slower – and it disables shields for 5 seconds. "
+						+ "Pro trick: opponent blocks → switch to the axe, disable the shield, then switch back to the sword.");
+		e("angel pvp,rod,rod pvp,angelrute pvp,fishing rod pvp,mit angel",
+				"Angel im PvP: Triff den Gegner mit dem Haken – er bekommt kurz Rückstoß und du unterbrichst seinen Sprint. Gut, um eine Combo zu starten oder Flüchtende zu stoppen. "
+						+ "Danach sofort zum Schwert wechseln.",
+				"Fishing rod in PvP: hit your opponent with the hook – a little knockback and their sprint is interrupted. Great for starting a combo or stopping runners. "
+						+ "Then switch to your sword right away.");
+		e("bogen pvp,bow pvp,mit bogen kaempfen,pfeile pvp,bogen tipps,bow tips,armbrust pvp",
+				"Bogen: Voll aufziehen (ca. 1 Sekunde) für den stärksten Schuss, auf Entfernung etwas über den Gegner zielen. Mit „Schlag“ (Punch) wirfst du ihn zurück. "
+						+ "Gegen Bogenschützen: im Zickzack laufen oder mit Schild blocken. Die Armbrust lädt langsam, trifft aber stark und kann Feuerwerk schießen.",
+				"Bow: draw fully (about 1 second) for the strongest shot, aim a bit above your target at range. Punch knocks them back. "
+						+ "Against archers: zigzag or block with a shield. The crossbow loads slowly but hits hard and can shoot fireworks.");
+		e("combo halten,combo machen,combos,lange combo,combo lock",
+				"Combo halten: Nach jedem Treffer W-Tap, damit der Gegner weit zurückfliegt und nicht zurückschlagen kann. Immer leicht nach oben zielen, "
+						+ "nicht zu nah ranlaufen und im Rhythmus des Abklingbalkens schlagen. Der Combo-Zähler im HUD zeigt dir, wie gut es klappt.",
+				"Keep a combo: W-tap after every hit so your opponent flies back and can't hit you. Aim slightly up, "
+						+ "don't run too close and hit in rhythm with the cooldown bar. The combo counter in the HUD shows how well it works.");
+		e("goldener apfel pvp,gapple,heilen pvp,leben auffuellen,heal in pvp,essen im kampf,regeneration",
+				"Heilen im Kampf: Goldener Apfel gibt Regeneration und 4 Extra-Herzen (Absorption) – iss ihn, wenn du kurz Abstand hast. "
+						+ "Schneller: Wurftrank der Heilung. Zum Sättigen zwischen Kämpfen sind goldene Karotten am besten.",
+				"Healing in a fight: a golden apple gives regeneration and 4 extra hearts (absorption) – eat it when you have some distance. "
+						+ "Faster: splash potion of healing. Golden carrots are best for filling hunger between fights.");
+		e("totem,totem der unsterblichkeit,totem of undying,totem pvp,nebenhand",
+				"Totem der Unsterblichkeit: In der Nebenhand (F-Taste) rettet es dich einmal vor dem Tod. Im PvP immer ein neues Totem bereit haben – "
+						+ "nach dem Auslösen sofort das nächste in die Nebenhand legen.",
+				"Totem of undying: in your offhand (F key) it saves you from death once. In PvP always keep a spare – "
+						+ "put the next one in your offhand right after it pops.");
+		e("enderperle pvp,perle,pearl,ender pearl pvp,abhauen,fliehen,flucht,escape",
+				"Enderperle: Werfen und dich dorthin teleportieren (kostet etwas Leben). Gut zum Fliehen, um auf eine Insel zu kommen oder um hinter den Gegner zu springen. "
+						+ "In Bedwars und Skywars rettet eine Perle dich auch nach einem Sturz ins Void – sofort nach unten-vorne werfen.",
+				"Ender pearl: throw it to teleport there (costs a little health). Great for escaping, reaching an island or getting behind your opponent. "
+						+ "In Bedwars and Skywars a pearl can even save you after falling into the void – throw it forward and down right away.");
+		e("clutch,mlg,wassereimer mlg,wasser mlg,fallschaden,sturz,fall damage,water bucket",
+				"MLG/Clutch: Kurz vor dem Aufprall einen Wassereimer unter dich setzen (Rechtsklick auf den Boden) – kein Fallschaden. Danach das Wasser wieder aufnehmen. "
+						+ "Gegen Rückstoß über dem Void: schnell Blöcke unter dich setzen (nach unten schauen, rechtsklicken, rückwärts laufen).",
+				"MLG/clutch: just before landing, place a water bucket under you (right click the ground) – no fall damage. Pick the water back up afterwards. "
+						+ "Knocked back over the void: quickly place blocks under you (look down, right click, walk backwards).");
+		e("bridgen,bruecke bauen,speedbridge,speed bridge,bridging,godbridge,ninja bridge",
+				"Bridgen (Brücke bauen): Schleichen (Shift), rückwärts zur Kante laufen und unter dich Blöcke setzen. Schneller: ohne Shift, nur kurz vor der Kante antippen. "
+						+ "Übe zuerst langsam – ein Sturz kostet mehr Zeit als langsames Bauen.",
+				"Bridging: sneak (shift), walk backwards to the edge and place blocks under you. Faster: no shift, just tap it right before the edge. "
+						+ "Practice slowly first – falling costs more time than building slowly.");
+		e("skywars,sky wars,skywars tipps,skywars tips",
+				"Skywars-Tipps: 1) Sofort die Truhen deiner Insel plündern und Rüstung anziehen. 2) Zur Mitte bauen – dort ist die beste Ausrüstung. "
+						+ "3) Schneebälle/Eier und Angel werfen Gegner ins Void. 4) Immer Blöcke und eine Enderperle dabeihaben.",
+				"Skywars tips: 1) Loot your island's chests right away and put on armor. 2) Bridge to the middle – that's where the best gear is. "
+						+ "3) Snowballs/eggs and the fishing rod knock opponents into the void. 4) Always carry blocks and an ender pearl.");
+		e("kristall pvp,crystal pvp,endkristall pvp,crystal,anker pvp,anchor pvp,seelenanker pvp",
+				"Crystal-PvP: Endkristalle auf Obsidian setzen und sofort zerschlagen – die Explosion macht riesigen Schaden. Seelenanker (geladen mit Glowstone) explodieren in der Oberwelt genauso. "
+						+ "Schutz: Rüstung mit Explosionsschutz, Totem in der Nebenhand. Auf vielen Servern ist das nur in eigenen Modi erlaubt.",
+				"Crystal PvP: place end crystals on obsidian and break them right away – the explosion deals huge damage. Respawn anchors (charged with glowstone) explode in the overworld too. "
+						+ "Protection: blast protection armor, totem in your offhand. Many servers only allow it in special modes.");
+		e("streitkolben pvp,mace pvp,windkugel pvp,wind charge pvp,mace,smash",
+				"Streitkolben (Mace): Je tiefer du vor dem Treffer fällst, desto mehr Schaden – und dein Fallschaden fällt weg. Mit Windkugeln (vor die Füße werfen) "
+						+ "schießt du dich hoch und landest von oben einen Riesentreffer. Verzauberungen: Dichte (mehr Fall-Schaden), Bresche (durch Rüstung), Windstoß.",
+				"Mace: the further you fall before hitting, the more damage – and your fall damage is cancelled. Wind charges (thrown at your feet) "
+						+ "launch you up for a huge hit from above. Enchantments: Density (more fall damage), Breach (through armor), Wind Burst.");
+		e("pvp verzauberungen,beste verzauberungen pvp,pvp enchantments,best enchantments,schaerfe,schutz,sharpness,protection",
+				"Gute PvP-Verzauberungen: Schwert – Schärfe V, Verbrennung II, Plünderung ist egal. Rüstung – Schutz IV, Haltbarkeit III. Bogen – Stärke V, Schlag II, Flamme. "
+						+ "Axt – Schärfe V. Für alles: Reparatur, damit die Ausrüstung mit Erfahrung heil bleibt.",
+				"Good PvP enchantments: sword – Sharpness V, Fire Aspect II. Armor – Protection IV, Unbreaking III. Bow – Power V, Punch II, Flame. "
+						+ "Axe – Sharpness V. For everything: Mending, so XP keeps your gear repaired.");
+		e("pvp traenke,staerketrank,strength potion,speed potion,schnelligkeit,traenke im kampf,splash potion,wurftrank",
+				"Tränke im PvP: Stärke (mehr Schaden), Schnelligkeit (schneller), Feuerresistenz (gegen Lava und Verbrennung), Wurftrank der Heilung (sofort Leben). "
+						+ "Wurftränke wirfst du am besten direkt vor deine Füße.",
+				"Potions in PvP: Strength (more damage), Speed, Fire Resistance (against lava and fire aspect), splash potion of healing (instant health). "
+						+ "Throw splash potions right at your feet.");
+		e("zielen,aim,besser zielen,aim verbessern,improve aim,sensitivitaet,maus empfindlichkeit,sensitivity",
+				"Besser zielen: Fadenkreuz immer auf Kopfhöhe halten, nicht nach unten schauen. Nimm eine Mausempfindlichkeit, mit der du dich mit einer Armbewegung einmal umdrehen kannst. "
+						+ "Ein gut sichtbares Fadenkreuz hilft – stell es im Mod-Menü unter FADENKREUZ ein.",
+				"Better aim: keep your crosshair at head height, don't look down. Use a mouse sensitivity where one arm movement turns you around once. "
+						+ "A clearly visible crosshair helps – set it in the mod menu under CROSSHAIR.");
+		e("hit select,hitselect,erster treffer,first hit,gegner zuerst treffen",
+				"Hit Select: Nicht blind schlagen, sondern warten, bis der Gegner in deine Reichweite läuft, und genau dann treffen – so bekommst du den ersten Treffer und Rückstoß gegen ihn. "
+						+ "Wer zuerst trifft, gewinnt meist den Schlagabtausch.",
+				"Hit select: don't swing blindly – wait until your opponent walks into your reach and hit exactly then, so you get the first hit and the knockback. "
+						+ "Whoever hits first usually wins the trade.");
+		e("rueckzug,zurueckziehen,wenig leben,low health,retreat,wann fliehen",
+				"Wenig Leben? Nicht weiterkämpfen: Rückwärts-seitlich weglaufen, Blöcke oder Spinnweben hinter dich setzen, Perle werfen und erst heilen. "
+						+ "Komm zurück, wenn der Gegner selbst geschwächt ist oder seine Abklingzeit läuft.",
+				"Low health? Don't keep fighting: back off sideways, place blocks or cobwebs behind you, throw a pearl and heal first. "
+						+ "Come back when your opponent is weakened or their cooldown is running.");
+		e("spinnweben,cobweb,spinnennetz,lava eimer pvp,lava pvp",
+				"Spinnweben bremsen Gegner fast komplett – setz sie unter einen Gegner und triff ihn, wenn er festhängt. Ein Lava-Eimer verbrennt ihn, "
+						+ "aber pass auf, dass du nicht selbst hineinläufst, und hab Wasser zum Löschen dabei.",
+				"Cobwebs almost stop opponents – place one under them and hit while they're stuck. A lava bucket sets them on fire, "
+						+ "but don't walk into it yourself and carry water to put it out.");
+
+		// ====================================================== Minecraft – Rezepte (alle, aus Rezepte.java)
+		e("rezept,rezepte,craften,crafting,recipe,recipes,how to craft,herstellen,alle rezepte,welche rezepte,rezeptbuch,wie viele rezepte,rezepte kennst,how many recipes",
+				"Ich kenne alle " + Rezepte.anzahl() + " Crafting-Rezepte von Minecraft 1.21 – von Werkbank und Fackel über Rüstung, Redstone und Essen "
+						+ "bis zu jeder Holz-, Stein- und Farbvariante. Frag einfach: „Rezept Kolben“, „wie baue ich eine Eichentreppe“, "
+						+ "„rotes Bett“ oder „Diamanthelm“. Ich zeige dir dann das Bild mit allen Zutaten.",
+				"I know all " + Rezepte.anzahl() + " crafting recipes of Minecraft 1.21 – from crafting table and torch to armor, redstone, food "
+						+ "and every wood, stone and color variant. Just ask: “piston recipe”, “how do I make oak stairs”, “red bed” "
+						+ "or “diamond helmet”. I'll show you a picture with all ingredients.");
+		e("gruener farbstoff,gruene farbe,green dye,farbstoff gruen,kaktus farbstoff",
+				"Grünen Farbstoff kann man nicht craften: Lege Kaktus in den Ofen und schmelze ihn. Grün + Weiß ergibt dann Hellgrün, Grün + Blau ergibt Türkis.",
+				"Green dye can't be crafted: put cactus in a furnace and smelt it. Green + white gives lime, green + blue gives cyan.");
+		e("schmelzen,ofen rezepte,was kann man schmelzen,erz schmelzen,smelting,smelt,glas machen,glas herstellen,holzkohle",
+				"Im Ofen (oder schneller im Schmelzofen/Räucherofen) wird geschmolzen: Roheisen → Eisenbarren, Rohgold → Goldbarren, Rohkupfer → Kupferbarren, "
+						+ "Sand → Glas, Bruchstein → Stein, Stein → Glatter Stein, Ton → Ziegel, Netherrack → Netherziegel, Stamm → Holzkohle, Kaktus → grüner Farbstoff, "
+						+ "rohes Fleisch → gebratenes Fleisch. Als Brennstoff gehen Kohle, Holzkohle, Holz, Lohenruten und Lava-Eimer.",
+				"A furnace (or the faster blast furnace/smoker) smelts: raw iron → iron ingot, raw gold → gold ingot, raw copper → copper ingot, sand → glass, "
+						+ "cobblestone → stone, stone → smooth stone, clay → brick, netherrack → nether brick, log → charcoal, cactus → green dye, raw meat → cooked meat. "
+						+ "Fuel: coal, charcoal, wood, blaze rods and lava buckets.");
+		e("netherit,netherite,netheritschwert,netheritruestung,netherite sword,netherite armor,netherit aufwertung,smithing template",
+				"Netherit-Sachen craftet man nicht direkt: Am Schmiedetisch legst du die Netherit-Aufwertung (Schmiedevorlage aus Bastionen), "
+						+ "das Diamant-Teil und einen Netheritbarren zusammen. Netheritbarren = 4 Netheritplatten + 4 Goldbarren; die Platten schmilzt du aus Antikem Schutt "
+						+ "(tief im Nether, Y 8–22, am besten mit Betten oder TNT sprengen).",
+				"Netherite gear isn't crafted directly: at the smithing table you combine the netherite upgrade (smithing template from bastions), the diamond item "
+						+ "and a netherite ingot. Netherite ingot = 4 netherite scrap + 4 gold ingots; smelt the scrap from ancient debris (deep in the Nether, Y 8–22, best blown up with beds or TNT).");
+		for (Rezepte.Rezept r : Rezepte.ALLE) {
+			e(Rezepte.stichworte(r), Rezepte.text(r, false), Rezepte.text(r, true)).rezept(r);
+		}
 
 		// ====================================================== Minecraft – Wissen
 		e("diamant,diamanten,diamond,diamonds,wo finde ich diamanten,find diamonds",
