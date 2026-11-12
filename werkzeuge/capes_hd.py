@@ -370,9 +370,126 @@ def matrix():
 
 # ---------------- in Minecraft-Cape-Layout packen ----------------
 SC = 20
+
+# ---------------- Goldhalm (Shop) ----------------
+def gold():
+    x, y = grid()
+    rgb = mix(hexc("#1c1407"), hexc("#07050a"), (y / H) ** 0.9)
+    glow = np.exp(-(((x - W * 0.5) / 150) ** 2 + ((y - H * 0.33) / 300) ** 2))
+    rgb = rgb + glow[..., None] * hexc("#ffb43d") * 0.38
+    for sx, sw, depth in ((56, 22, 0.4), (252, 26, 0.55), (158, 42, 1.0)):
+        u = (x - sx) / (sw / 2)
+        m = np.abs(u) < 1
+        hell = mix(hexc("#6a4a12"), hexc("#ffe79a"), 0.3 + 0.7 * depth)
+        dunkel = hell * 0.3
+        col = mix(hell, dunkel, (u + 1) / 2 * 0.95)
+        col = col + 0.5 * np.exp(-((u + 0.5) / 0.16) ** 2)[..., None] * hexc("#fff3c0")
+        seg = 70 + 26 * depth
+        ph = (y + sx * 3) % seg
+        col = np.where((ph < 5)[..., None], dunkel * 0.9, col)
+        col = col + (np.abs(ph - 6) < 1.4)[..., None] * hexc("#ffd46a") * 0.5
+        rgb[m] = col[m]
+        for k in range(int(H / seg) + 1):
+            ny = k * seg - (sx * 3) % seg
+            if ny < 30 or ny > H - 40 or (k + int(sx)) % 2:
+                continue
+            side = 1 if (k + int(sx / 10)) % 3 else -1
+            for ang, L in ((-22, 74), (8, 84), (38, 64)):
+                a = ang if side > 0 else 180 - ang
+                leaf(rgb, x, y, (sx + side * sw * 0.42, ny), a + 16 * side, L * (0.6 + 0.5 * depth), 7 + 5 * depth,
+                     mix(hexc("#5a3c08"), hexc("#c89a2a"), depth), mix(hexc("#c89a2a"), hexc("#fff0b0"), depth))
+    band = np.exp(-((x * 0.6 + y * 0.8 - 330) / 70) ** 2)
+    rgb = rgb + band[..., None] * hexc("#fff6cf") * 0.2
+    vign = 1 - 0.5 * (((x - W / 2) / (W * 0.7)) ** 2 + ((y - H / 2) / (H * 0.75)) ** 2)
+    rgb = rgb * vign[..., None]
+    rgb = border(rgb, x, y, hexc("#fff0a8"), hexc("#9a6a12"))
+    save(down(rgb), "gold")
+    n = periodic_noise(H, W, 6, 6, 17)
+    sp = np.clip((n - 0.74) / 0.18, 0, 1) ** 2
+    save(np.zeros((H, W, 3)) + hexc("#ffe9a8"), "gold_anim", alpha=sp * 0.95)
+
+# ---------------- Eiskristall (Shop) ----------------
+def eis():
+    x, y = grid()
+    rgb = mix(hexc("#07203a"), hexc("#02060f"), (y / H) ** 0.8)
+    glow = np.exp(-(((x - W * 0.5) / 160) ** 2 + ((y - H * 0.3) / 280) ** 2))
+    rgb = rgb + glow[..., None] * hexc("#4fd8ff") * 0.34
+    r = np.random.default_rng(23)
+    for i in range(10):
+        bx = 14 + i * 31 + int(r.integers(-9, 9))
+        by = H - int(r.integers(10, 150))
+        hgt = int(r.integers(160, 340))
+        wdt = int(r.integers(13, 32))
+        spitze = bx + int(r.integers(-22, 22))
+        t = np.clip((by - y) / hgt, 0, 1)
+        halb = wdt * np.sin(np.pi * t) ** 0.55
+        achse = bx + (spitze - bx) * t
+        m = (y < by) & (y > by - hgt) & (np.abs(x - achse) < halb)
+        u = (x - achse) / np.maximum(halb, 1e-6)
+        hell = mix(hexc("#2b7fb8"), hexc("#dff8ff"), 0.2 + 0.7 * (i % 3) / 2)
+        col = mix(hell, hell * 0.26, (u + 1) / 2)
+        col = col + 0.55 * np.exp(-((u + 0.35) / 0.18) ** 2)[..., None] * hexc("#ffffff")
+        col = col + 0.25 * np.exp(-((u - 0.78) / 0.12) ** 2)[..., None] * hexc("#9fe8ff")
+        rgb[m] = col[m]
+    n = periodic_noise(H, W, 5, 5, 31)
+    frost = np.kron(np.clip((n - 0.7) / 0.3, 0, 1), np.ones((S, S)))
+    rgb = rgb + frost[..., None] * hexc("#cfeeff") * 0.2
+    vign = 1 - 0.45 * (((x - W / 2) / (W * 0.7)) ** 2 + ((y - H / 2) / (H * 0.75)) ** 2)
+    rgb = rgb * vign[..., None]
+    rgb = border(rgb, x, y, hexc("#e6fbff"), hexc("#2a6f9a"))
+    save(down(rgb), "eis")
+    n2 = periodic_noise(H, W, 9, 9, 41)
+    sp = np.clip((n2 - 0.8) / 0.14, 0, 1) ** 2
+    save(np.zeros((H, W, 3)) + hexc("#ffffff"), "eis_anim", alpha=sp)
+
+# ---------------- Regenbogenfall (Shop) ----------------
+def prisma():
+    """Leuchtender Kristall oben, aus dem ein symmetrischer Regenbogen nach unten faechert."""
+    x, y = grid()
+    rgb = mix(hexc("#160b2a"), hexc("#03010c"), (y / H) ** 0.75)
+    cx, cy = W / 2, H * 0.30
+    # Regenbogenfaecher nach unten (symmetrisch, breit auslaufend)
+    farben = ("#ff2b4d", "#ff8a3d", "#ffd54a", "#3dff8a", "#00e5ff", "#4f6bff", "#b06bff")
+    for i, hc in enumerate(farben):
+        for seite in (-1, 1):
+            a = np.radians(14 + i * 9.5) * seite
+            dx, dy = np.sin(a), np.cos(a)
+            proj = (x - cx) * dx + (y - cy) * dy
+            quer = np.abs((x - cx) * dy - (y - cy) * dx)
+            breit = 5.5 + proj / 26
+            f = np.exp(-(quer / np.maximum(breit, 1e-6)) ** 2) * (proj > 0) * np.clip(1 - proj / (H * 1.1), 0, 1)
+            rgb = rgb + f[..., None] * hexc(hc) * 1.15
+    # Kristall: schmale Raute mit Glanzkanten
+    kh, kb = 86, 30
+    t = np.clip((y - (cy - kh)) / (2.0 * kh), 0, 1)
+    halb = kb * np.sin(np.pi * t) ** 0.7
+    drin = (y > cy - kh) & (y < cy + kh) & (np.abs(x - cx) < halb)
+    u = (x - cx) / np.maximum(halb, 1e-6)
+    glas = mix(hexc("#eaf4ff"), hexc("#5f7cc8"), (u + 1) / 2)
+    glas = glas + 0.6 * np.exp(-((u + 0.4) / 0.22) ** 2)[..., None] * hexc("#ffffff")
+    rgb[drin] = glas[drin]
+    kante = drin & (np.abs(np.abs(u) - 1) < 0.14)
+    rgb[kante] = hexc("#ffffff")
+    # Lichtschein um den Kristall
+    rgb = rgb + (np.exp(-(((x - cx) / 86) ** 2 + ((y - cy) / 110) ** 2)) * 0.45)[..., None] * hexc("#cfe0ff")
+    st = np.zeros((H, W))
+    idx = rng.integers(0, H * W, 200)
+    st.flat[idx] = rng.random(200) ** 3
+    rgb = rgb + np.kron(st, np.ones((S, S)))[..., None] * 0.85
+    vign = 1 - 0.4 * (((x - W / 2) / (W * 0.75)) ** 2 + ((y - H / 2) / (H * 0.8)) ** 2)
+    rgb = rgb * vign[..., None]
+    rgb = border(rgb, x, y, hexc("#ffffff"), hexc("#5a3fa0"))
+    save(down(rgb), "prisma")
+    n = periodic_noise(H, W, 4, 4, 53)
+    sp = np.clip((n - 0.72) / 0.2, 0, 1) ** 2
+    ys = np.arange(H)[:, None] / H
+    regen = np.dstack([np.clip(1.4 - np.abs(ys * 6 - k), 0, 1) * np.ones((1, W)) for k in (1.2, 2.6, 4.0)])
+    save(np.clip(regen, 0, 1), "prisma_anim", alpha=sp * 0.9)
+
 DESIGNS = dict(bambus=(bambus, "#0e2a16", "#7fc243"), neon=(neon, "#04120a", "#3dff8a"), cyber=(cyber, "#06101e", "#00e5ff"),
                galaxie=(galaxie, "#0c0620", "#b48cff"), sunset=(sunset, "#1a0630", "#ff5ad8"), matrix=(matrix, "#010a03", "#39ff14"),
-               polarlicht=(polarlicht, "#0a0a24", "#c8d4ff"), glut=(glut, "#2a0604", "#ffb040"))
+               polarlicht=(polarlicht, "#0a0a24", "#c8d4ff"), glut=(glut, "#2a0604", "#ffb040"),
+               gold=(gold, "#2a1e06", "#ffd46a"), eis=(eis, "#07203a", "#9fe8ff"), prisma=(prisma, "#0b0714", "#cfd8ff"))
 
 def pack(name, innen, kante):
     front = ERGEBNIS[name].convert("RGB")

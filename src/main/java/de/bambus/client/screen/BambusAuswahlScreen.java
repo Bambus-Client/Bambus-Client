@@ -46,6 +46,8 @@ public class BambusAuswahlScreen extends Screen {
 			karten.add(new NeonKarte(0, 0, KARTE_B, h, "HUD", "BEARBEITEN", symbol("hud"),
 					() -> minecraft.setScreen(new HudEditorScreen(this))));
 		}
+		karten.add(new NeonKarte(0, 0, KARTE_B, h, "QUESTS", "BLÄTTER & SHOP", symbol("stern"),
+				() -> minecraft.setScreen(new QuestScreen(this))));
 		if (BambusClient.config.helferAn) {
 			karten.add(new NeonKarte(0, 0, KARTE_B, h, "HELFER", "FRAGEN & TIPPS", symbol("helfer"),
 					() -> minecraft.setScreen(new HelferScreen(this))));

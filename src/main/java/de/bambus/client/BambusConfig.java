@@ -99,6 +99,22 @@ public class BambusConfig {
 	public int[] lowEndAlt = null; // gemerkte Grafikwerte vor dem Low-End-Modus
 
 	// Kosmetik ("aus" = nichts ausgewählt)
+	// ===== Quests und Blätter (der Launcher rechnet damit, siehe Fortschritt.java) =====
+	public int punkte = 0;              // Guthaben
+	public int punkteGesamt = 0;        // insgesamt gesammelt – daraus kommt der Rang
+	public int streak = 0;              // Tage in Folge
+	public String letzterTag = "";
+	public int letzterBonus = 0;
+	public String questTag = "";
+	public String questFertig = "";
+	public String erfolge = "";
+	public String shop = "";            // freigeschaltete Shop-Kosmetik, mit Komma getrennt
+	public String farbenGesehen = "";
+	public int helferFragen = 0;
+	public int spielminuten = 0;        // zählt die Mod hoch
+	public String spielTag = "";
+	public int spielBonusHeute = 0;     // schon vergebene Spiel-Blätter von heute
+
 	public String capeDesign = "bambus";
 	public String partikel = "aus";
 	public String fluegel = "aus";

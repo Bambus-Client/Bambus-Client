@@ -75,10 +75,14 @@ final class SeiteEinstellungen extends JPanel {
 		for (int i = 0; i < Hintergruende.ARTEN.length; i++) {
 			final String id = Hintergruende.ARTEN[i][0];
 			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(Hintergruende.ARTEN[i][1], id.equals(l.hintergrund) ? NeonUI.NEON : NeonUI.GRAU);
-			k.setBounds(X + i * 137, 388, 129, 34);
+			k.setBounds(X + i * 117, 388, 109, 34);
+			if (id.equals("bild")) k.setToolTipText("Eigenes Bild als Hintergrund – gilt auch im Bambus-Hauptmenü im Spiel");
 			k.addActionListener(e -> {
+				if (id.equals("bild") && (!Hintergruende.hatBild() || id.equals(l.hintergrund)) && !waehleBild()) return;
 				l.hintergrund = id;
-				l.client.setze("menueHintergrund", id);   // gleicher Hintergrund im Bambus-Hauptmenü
+				l.client.setze("menueHintergrund", id);
+				l.belohne("hintergrund");
+				if (id.equals("bild")) l.fortschritt.erfolg("bild");   // gleicher Hintergrund im Bambus-Hauptmenü
 				l.speichereLauncherEinstellungen();
 				for (NeonUI.UmrissKnopf o : hgKnoepfe) o.setzeFarbe(NeonUI.GRAU);
 				((NeonUI.UmrissKnopf) e.getSource()).setzeFarbe(NeonUI.NEON);
@@ -183,6 +187,48 @@ final class SeiteEinstellungen extends JPanel {
 		g.dispose();
 	}
 
+	/**
+	 * Eigenes Hintergrundbild aussuchen: wird als PNG in den config-Ordner kopiert
+	 * (höchstens 2560 Pixel breit), damit auch die Mod es im Bambus-Hauptmenü zeigen kann.
+	 */
+	private boolean waehleBild() {
+		javax.swing.JFileChooser w = new javax.swing.JFileChooser();
+		w.setDialogTitle(Sprache.t("Hintergrundbild aussuchen"));
+		w.setAcceptAllFileFilterUsed(false);
+		w.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(Sprache.t("Bilder (PNG, JPG)"), "png", "jpg", "jpeg"));
+		if (w.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) return false;
+		try {
+			java.awt.image.BufferedImage bild = javax.imageio.ImageIO.read(w.getSelectedFile());
+			if (bild == null) throw new java.io.IOException("Kein Bild");
+			int max = 2560;
+			if (bild.getWidth() > max) {
+				int h = Math.max(1, bild.getHeight() * max / bild.getWidth());
+				java.awt.image.BufferedImage klein = new java.awt.image.BufferedImage(max, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+				Graphics2D bg = klein.createGraphics();
+				bg.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				bg.drawImage(bild, 0, 0, max, h, null);
+				bg.dispose();
+				bild = klein;
+			} else if (bild.getType() != java.awt.image.BufferedImage.TYPE_INT_RGB) {
+				java.awt.image.BufferedImage fest = new java.awt.image.BufferedImage(bild.getWidth(), bild.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
+				Graphics2D bg = fest.createGraphics();
+				bg.drawImage(bild, 0, 0, null);
+				bg.dispose();
+				bild = fest;
+			}
+			java.nio.file.Path ziel = l.installer.spielOrdner.resolve("config").resolve(Hintergruende.BILD_DATEI);
+			java.nio.file.Files.createDirectories(ziel.getParent());
+			javax.imageio.ImageIO.write(bild, "png", ziel.toFile());
+			Hintergruende.setzeBild(bild);
+			return true;
+		} catch (Exception ex) {
+			javax.swing.JOptionPane.showMessageDialog(this,
+					Sprache.t("Das Bild konnte nicht gelesen werden. Probier ein anderes PNG oder JPG."),
+					Sprache.t("Hintergrundbild"), javax.swing.JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+	}
+
 	/** Sieben Farbfelder: Neon, Ozean, Sakura, Gold, Lila, Eis, RGB. */
 	private final class Farbwahl extends javax.swing.JComponent {
 		private static final int FB = 92, ABSTAND = 8;
@@ -198,6 +244,8 @@ final class SeiteEinstellungen extends JPanel {
 					if (i < 0) return;
 					l.client.setze("thema", i);
 					NeonUI.themaAnwenden(i);
+					l.fortschritt.farbeGesehen(i);
+					l.belohne("thema");
 					l.repaint();
 				}
 			};

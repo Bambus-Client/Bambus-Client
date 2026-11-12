@@ -513,9 +513,16 @@ final class NeonUI {
 	/** Kleiner Schalter ohne Karte (z. B. neben einer Überschrift). */
 	static final class MiniSchalter extends JComponent {
 		private boolean an;
+		private final String beschriftung;
 
 		MiniSchalter(boolean an, SchalterKarte.Aenderung aenderung) {
+			this(an, "HUD", aenderung);
+		}
+
+		/** beschriftung: Wort vor dem Schalter, z. B. „HUD“ → „HUD AN“ / „HUD AUS“. */
+		MiniSchalter(boolean an, String beschriftung, SchalterKarte.Aenderung aenderung) {
 			this.an = an;
+			this.beschriftung = beschriftung;
 			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			addMouseListener(new MouseAdapter() {
 				@Override public void mouseClicked(MouseEvent e) {
@@ -535,7 +542,7 @@ final class NeonUI {
 			int y = (getHeight() - h) / 2;
 			g.setFont(mono(10));
 			g.setColor(an ? NEON : GRAU);
-			String t = an ? "HUD AN" : "HUD AUS";
+			String t = beschriftung + (an ? " AN" : " AUS");
 			g.drawString(t, x - g.getFontMetrics().stringWidth(t) - 10, y + 14);
 			RoundRectangle2D bahn = new RoundRectangle2D.Float(x, y, b, h, h, h);
 			g.setColor(an ? alpha(NEON, 70) : new Color(0x1E2A3C));

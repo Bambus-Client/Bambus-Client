@@ -144,6 +144,7 @@ final class SeiteKosmetik extends JPanel {
 		stil.addActionListener(e -> {
 			boolean block = !l.client.wert("fluegelBlock", false);
 			l.client.setze("fluegelBlock", block);
+			l.belohne("fluegel");
 			stil.setText(block ? "STIL: BLOCKBENCH" : "STIL: HD");
 			aktualisiereModell();
 			repaint();
@@ -320,10 +321,19 @@ final class SeiteKosmetik extends JPanel {
 	}
 
 	private void waehle(String id) {
+		if (l.fortschritt.gesperrt(id)) {   // Shop-Kosmetik erst freischalten
+			javax.swing.JOptionPane.showMessageDialog(this,
+					Sprache.t("Das gibt es im Quest-Shop für") + " " + l.fortschritt.preis(id) + " " + Sprache.t("Blätter."),
+					Sprache.t("Noch gesperrt"), javax.swing.JOptionPane.INFORMATION_MESSAGE);
+			l.zeige("quests");
+			return;
+		}
 		if (art == CAPES) {
 			l.client.setzeCape(id);
+			l.belohne("cape");
 		} else if (art == FLUEGEL) {
 			l.client.setzeFluegel(id);
+			l.belohne("fluegel");
 		} else if (art == HUETE) {
 			l.client.setzeHut(id);
 		} else if (art == KILL) {
@@ -340,6 +350,12 @@ final class SeiteKosmetik extends JPanel {
 		} else if (art == HUETE && !ClientEinstellungen.AUS.equals(id)) {
 			vorschau.drehZu(Math.PI * 0.15);
 		}
+		repaint();
+	}
+
+	/** Kacheln neu aufbauen – z. B. nachdem im Shop etwas freigeschaltet wurde. */
+	void ladeKacheln() {
+		baueKacheln();
 		repaint();
 	}
 
@@ -456,6 +472,14 @@ final class SeiteKosmetik extends JPanel {
 			g.drawString(i % 2 == 0 ? "♪" : "♫", x - 5, y + 6);
 		} else if ("kirsche".equals(id)) {
 			g.fillOval(x - 4, y - 2, 8, 5);
+		} else if ("komet".equals(id)) {
+			g.setStroke(new BasicStroke(2f));
+			g.drawLine(x - 6, y + 4, x + 3, y - 3);
+			g.fillOval(x + 2, y - 5, 5, 5);
+		} else if ("zauber".equals(id)) {
+			g.fillOval(x - 5, y - 3, 10, 7);
+			g.setColor(NeonUI.alpha(farbe, a / 2));
+			g.fillOval(x - 8, y - 6, 16, 12);
 		} else if ("funken".equals(id)) {
 			g.setStroke(new BasicStroke(1.5f));
 			g.drawLine(x - 4, y, x + 4, y);
@@ -751,9 +775,20 @@ final class SeiteKosmetik extends JPanel {
 				kurz = kurz.substring(0, kurz.length() - 2) + "…";
 			}
 			NeonUI.zentriert(g, kurz, 0, h - 36, b, 14);
+			boolean gesperrt = l.fortschritt.gesperrt(id);
+			if (gesperrt) {   // Shop-Kosmetik: abgedunkelt mit Schloss und Preis
+				g.setColor(new Color(11, 19, 34, 190));
+				g.fill(form);
+				g.setColor(NeonUI.alpha(NeonUI.CYAN, ueber ? 220 : 150));
+				g.setStroke(new BasicStroke(1.6f));
+				g.drawRect(mx - 9, 30, 18, 14);                 // Schloss
+				g.drawArc(mx - 6, 20, 12, 16, 0, 180);
+				g.fillRect(mx - 1, 35, 3, 4);
+			}
 			g.setFont(NeonUI.mono(9));
-			g.setColor(aktiv ? rahmen : ueber ? NeonUI.TEXT : NeonUI.GRAU);
-			String status = NEU.equals(id) ? "STUDIO" : aktiv ? "● AKTIV"
+			g.setColor(gesperrt ? NeonUI.CYAN : aktiv ? rahmen : ueber ? NeonUI.TEXT : NeonUI.GRAU);
+			String status = gesperrt ? l.fortschritt.preis(id) + " BLÄTTER"
+					: NEU.equals(id) ? "STUDIO" : aktiv ? "● AKTIV"
 					: ueber && EigeneKosmetik.istEigen(id) ? "RECHTSKLICK: ✕" : "WÄHLEN";
 			NeonUI.zentriert(g, status, 0, h - 21, b, 12);
 			g.dispose();

@@ -258,12 +258,25 @@ public class GarderobeScreen extends Screen {
 		String n = font.plainSubstrByWidth(name, (int) ((KACHEL_B - 4) / 0.75f));
 		int nb = (int) (font.width(n) * 0.75f);
 		Neon.text(g, font, n, tx + (KACHEL_B - nb) / 2, ty + KACHEL_H - 22, 0.75f, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
-		String status = aktiv ? "AKTIV" : "WÄHLEN";
-		int sb = (int) (font.width(status) * 0.6f);
-		Neon.text(g, font, status, tx + (KACHEL_B - sb) / 2, ty + KACHEL_H - 11, 0.6f, aktiv ? Farben.NEON : Farben.GRAU, false);
-
 		String id = e != null ? e.id() : Kosmetik.AUS;
+		boolean gesperrt = de.bambus.client.Blaetter.gesperrt(id);
+		if (gesperrt) {   // Shop-Kosmetik: abgedunkelt mit Schloss
+			g.fill(tx + 1, ty + 1, tx + KACHEL_B - 1, ty + KACHEL_H - 1, 0xC00B1322);
+			int sx = tx + KACHEL_B / 2, sy = ty + 24;
+			g.fill(sx - 5, sy, sx + 5, sy + 8, Farben.NEON_CYAN);
+			g.fill(sx - 3, sy - 4, sx + 3, sy, Farben.NEON_CYAN);
+			g.fill(sx - 2, sy - 3, sx + 2, sy, 0xFF0B1322);
+		}
+		String status = gesperrt ? "IM QUEST-SHOP" : aktiv ? "AKTIV" : "WÄHLEN";
+		int sb = (int) (font.width(status) * 0.6f);
+		Neon.text(g, font, status, tx + (KACHEL_B - sb) / 2, ty + KACHEL_H - 11, 0.6f,
+				gesperrt ? Farben.NEON_CYAN : aktiv ? Farben.NEON : Farben.GRAU, false);
+
 		klick(tx, ty, KACHEL_B, KACHEL_H, () -> {
+			if (gesperrt) {
+				de.bambus.client.Hinweise.zeige("stern", "Noch gesperrt", "Im Launcher unter QUESTS freischalten", Farben.NEON_CYAN);
+				return;
+			}
 			art.waehle(id);
 			BambusClient.config.speichern();
 		}, true);

@@ -118,6 +118,8 @@ final class SeiteHelfer extends JPanel {
 	private void senden(String text) {
 		text = text.trim();
 		if (text.isEmpty() || tippt) return;
+		l.fortschritt.helferGefragt();
+		l.belohne("helfer");
 		feld.setText("");
 		blasen.add(new Blase(text, false, null));
 		Blase punkte = new Blase("", true, null);

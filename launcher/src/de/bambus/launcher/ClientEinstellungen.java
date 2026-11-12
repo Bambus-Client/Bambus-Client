@@ -55,6 +55,22 @@ final class ClientEinstellungen {
 			{"gegnerLebenZahl", "Gegner-Leben als Zahl", "Genaue ❤ im Target-HUD", "false", "Nicht auf jedem Server erlaubt"},
 			{"autoScreenshot", "Auto-Screenshot", "Screenshot bei jedem Spieler-Kill", "false", ""},
 			{"verlauf", "Farbverlauf", "HUD-Kästen mit Farbverlauf", "true", ""},
+			{"helferAn", "Bambus-Helfer", "Fragen & Tipps bei Rechts-Shift", "true", ""},
+			{"bambusHauptmenue", "Bambus-Hauptmenü", "Eigener Startbildschirm im Spiel", "true", ""},
+			{"ladebildschirm", "Bambus-Ladebildschirm", "Mit Tipps beim Betreten einer Welt", "true", ""},
+			{"hinweise", "Benachrichtigungen", "Neon-Hinweise im Spiel", "true", ""},
+			{"menueAnimation", "Weiche Animationen", "Menüs und Schalter gleiten", "true", ""},
+			{"capeAn", "Umhang anzeigen", "Deinen Umhang im Spiel zeigen", "true", ""},
+	};
+
+	/** Textur-Modul: PvP-Anpassungen wie in Texturpaketen (nur für dich sichtbar). */
+	static final String[][] TEXTUREN = {   // {id, Name, Beschreibung, Standard an}
+			{"lowFire", "Low Fire", "Flammen tiefer – du siehst mehr", "false"},
+			{"lowShield", "Low Shield", "Schild tiefer – freiere Sicht", "false"},
+			{"sideShield", "Side Shield", "Schild seitlich gedreht", "false"},
+			{"shortSword", "Short Sword", "Kürzeres Schwert in der Hand", "false"},
+			{"keinKuerbisOverlay", "Kein Kürbis-Overlay", "Kürbis auf dem Kopf stört nicht", "false"},
+			{"klaresWasser", "Klare Sicht im Wasser", "Unter Wasser klar sehen", "false"},
 	};
 
 	/** {id, Name, Farbe} – wie Kosmetik.CAPES in der Mod */
@@ -67,6 +83,10 @@ final class ClientEinstellungen {
 			{"matrix", "Matrix", "39FF14"},
 			{"polarlicht", "Polarlicht", "5AFFC0"},
 			{"glut", "Glut", "FF8A3D"},
+			// Nur im Quest-Shop (siehe Fortschritt.SHOP)
+			{"gold", "Goldhalm", "FFC846"},
+			{"eis", "Eiskristall", "AEEBFF"},
+			{"prisma", "Lichtkristall", "B06BFF"},
 	};
 
 	/** {id, Name, Farbe} – wie Kosmetik.FLUEGEL in der Mod */
@@ -108,6 +128,9 @@ final class ClientEinstellungen {
 			{"kirsche", "Kirschblüten", "FF9BD6"},
 			{"magie", "Magie", "B06BFF"},
 			{"flammen", "Flammen", "FF8A3D"},
+			// Nur im Quest-Shop
+			{"komet", "Kometen", "FFFFFF"},
+			{"zauber", "Drachenatem", "B06BFF"},
 	};
 
 	static final String AUS = "aus";

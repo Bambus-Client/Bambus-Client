@@ -238,7 +238,11 @@ public final class Kosmetik {
 			new Cape("sunset", "Synthwave", 0xFFFF2BD6),
 			new Cape("matrix", "Matrix", 0xFF39FF14),
 			new Cape("polarlicht", "Polarlicht", 0xFF5AFFC0),
-			new Cape("glut", "Glut", 0xFFFF8A3D)
+			new Cape("glut", "Glut", 0xFFFF8A3D),
+			// Nur im Quest-Shop freizuschalten (siehe BambusConfig.shop)
+			new Cape("gold", "Goldhalm", 0xFFFFC846),
+			new Cape("eis", "Eiskristall", 0xFFAEEBFF),
+			new Cape("prisma", "Lichtkristall", 0xFFB06BFF)
 	);
 
 	public static final List<Fluegel> FLUEGEL = List.of(
@@ -290,7 +294,10 @@ public final class Kosmetik {
 			new Partikel("seelen", "Seelenfeuer", 0xFF00E5FF, ParticleTypes.SOUL_FIRE_FLAME, false),
 			new Partikel("kirsche", "Kirschblüten", 0xFFFF9BD6, ParticleTypes.CHERRY_LEAVES, true),
 			new Partikel("magie", "Magie", 0xFFB06BFF, ParticleTypes.ENCHANT, false),
-			new Partikel("flammen", "Flammen", 0xFFFF8A3D, ParticleTypes.FLAME, false)
+			new Partikel("flammen", "Flammen", 0xFFFF8A3D, ParticleTypes.FLAME, false),
+			// Nur im Quest-Shop freizuschalten
+			new Partikel("komet", "Kometen", 0xFFFFFFFF, ParticleTypes.FIREWORK, false),
+			new Partikel("zauber", "Drachenatem", 0xFFB06BFF, ParticleTypes.DRAGON_BREATH, false)
 	);
 
 	private static final Map<String, ClientAsset.Texture> TEXTUREN = new HashMap<>();

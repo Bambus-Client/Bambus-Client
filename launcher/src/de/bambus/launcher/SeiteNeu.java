@@ -22,6 +22,12 @@ final class SeiteNeu extends JPanel {
 	/** {Version, Untertitel, Farbe(hex), Symbol, Punkte …} – neueste zuerst. */
 	private static final String[][] VERSIONEN = {
 			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
+					"Quests, Blätter und Ränge (Bronze bis Legende): Punkte sammeln und Kosmetik freischalten – kostenlos",
+					"Drei Herausforderungen am Tag im Spiel: Runde gewinnen, Leiter-MLG, Combo, Sprint und mehr",
+					"QUESTS auch im Spiel: Rechts-Shift → QUESTS",
+					"Drei neue Umhänge und zwei neue Partikel im Quest-Shop",
+					"Eigenes Hintergrundbild für Launcher und Bambus-Hauptmenü",
+					"Launcher: Texturen, Helfer und Hauptmenü lassen sich jetzt auch hier einstellen",
 					"Launcher im Pixel-Look wie im Spiel – mit Farbthemen, die auch im Spiel gelten",
 					"Flügel in zwei Stilen: HD oder Blockbench (eckig) – in der Garderobe umschaltbar",
 					"3D-Flügel: biegen sich ohne Lücken, mit Knochen, Deckfedern und Glanz – neu: Bambus",

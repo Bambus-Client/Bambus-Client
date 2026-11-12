@@ -76,7 +76,43 @@ final class Sprache {
 
 	static {
 		// ---------------------------------------------------------------- Navigation & Rahmen
-		g("START", "HOME"); g("MODULE", "MODULES"); g("KOSMETIK", "COSMETICS"); g("MOD-MENÜ", "MOD MENU"); g("Launcher im Pixel-Look wie im Spiel – mit Farbthemen, die auch im Spiel gelten", "Launcher in pixel style like in game – with color themes that also apply in game"); g("Flügel in zwei Stilen: HD oder Blockbench (eckig) – in der Garderobe umschaltbar", "Wings in two styles: HD or Blockbench (blocky) – switch it in the wardrobe"); g("STIL: HD", "STYLE: HD"); g("STIL: BLOCKBENCH", "STYLE: BLOCKBENCH"); g("HD = weich und biegsam · Blockbench = eckig mit groben Pixeln", "HD = smooth and bendy · Blockbench = blocky with chunky pixels"); g("FARBE  –  GILT AUCH IM SPIEL", "COLOR  –  ALSO USED IN GAME"); g("OZEAN", "OCEAN"); g("LILA", "PURPLE"); g("EIS", "ICE"); g("GARDEROBE", "WARDROBE"); g("MODS", "MODS");
+		g("START", "HOME"); g("MODULE", "MODULES"); g("KOSMETIK", "COSMETICS"); g("MOD-MENÜ", "MOD MENU"); g("Goldhalm", "Golden Stalk"); g("Eiskristall", "Ice Crystal"); g("Lichtkristall", "Light Crystal");
+		g("Kometen", "Comets"); g("Drachenatem", "Dragon Breath"); g("Bronze", "Bronze"); g("Silber", "Silver"); g("Platin", "Platinum"); g("Diamant", "Diamond"); g("Meister", "Master"); g("Legende", "Legend");
+		g("HERAUSFORDERUNGEN  –  IM SPIEL", "CHALLENGES  –  IN GAME");
+		g("Sieger", "Winner"); g("Gewinne eine Runde, z. B. Bedwars", "Win a round, e.g. Bedwars");
+		g("Leiter-MLG", "Ladder MLG"); g("Fang einen Sturz ab 8 Blöcken mit einer Leiter ab", "Catch a fall of 8+ blocks with a ladder");
+		g("Wasser-MLG", "Water MLG"); g("Fang einen Sturz ab 8 Blöcken mit Wasser ab", "Catch a fall of 8+ blocks with water");
+		g("Jäger", "Hunter"); g("Besiege 5 Spieler", "Defeat 5 players");
+		g("Combo-Meister", "Combo master"); g("Lande eine 5er-Combo", "Land a 5 hit combo");
+		g("Harter Aufprall", "Hard landing"); g("Überlebe einen Sturz aus 20 Blöcken", "Survive a 20 block fall");
+		g("Tiefgräber", "Deep digger"); g("Grab hinunter bis Höhe Y −58", "Dig down to Y −58");
+		g("Höllentor", "Hell gate"); g("Betritt den Nether", "Enter the Nether");
+		g("Dauerläufer", "Long runner"); g("Sprinte 1000 Blöcke weit", "Sprint 1000 blocks");
+		g("Himmelsstürmer", "Sky diver"); g("Flieg 500 Blöcke mit der Elytra", "Fly 500 blocks with elytra");
+		g("Drachentöter", "Dragon slayer"); g("Den Enderdrachen besiegt", "Defeated the Ender Dragon");
+		g("Quests, Blätter und Ränge (Bronze bis Legende): Punkte sammeln und Kosmetik freischalten – kostenlos", "Quests, leaves and ranks (Bronze to Legend): collect points and unlock cosmetics – free");
+		g("Drei Herausforderungen am Tag im Spiel: Runde gewinnen, Leiter-MLG, Combo, Sprint und mehr", "Three in-game challenges a day: win a round, ladder MLG, combo, sprint and more");
+		g("QUESTS auch im Spiel: Rechts-Shift → QUESTS", "QUESTS in game too: right Shift → QUESTS");
+		g("Drei neue Umhänge und zwei neue Partikel im Quest-Shop", "Three new capes and two new particles in the quest shop"); g("QUESTS", "QUESTS"); g("Blätter", "Leaves"); g("BLÄTTER", "LEAVES");
+		g("Sammle Blätter und schalte Kosmetik frei. Kostet nie Geld.", "Collect leaves and unlock cosmetics. Never costs money.");
+		g("TÄGLICHER BONUS", "DAILY BONUS"); g("Heute abgeholt:", "Collected today:"); g("HEUTE", "TODAY"); g("ERFOLGE", "ACHIEVEMENTS");
+		g("SHOP  –  NUR MIT BLÄTTERN", "SHOP  –  LEAVES ONLY"); g("✓ GESCHAFFT", "✓ DONE"); g("✓ FREIGESCHALTET", "✓ UNLOCKED"); g("HOLEN →", "GET →");
+		g("Shop", "Shop"); g("für", "for"); g("Blätter freischalten?", "leaves – unlock it?"); g("Dafür fehlen dir noch", "You still need");
+		g("Blätter.", "leaves."); g("ist freigeschaltet – du findest es in der GARDEROBE.", "is unlocked – you'll find it in the WARDROBE.");
+		g("Das gibt es im Quest-Shop für", "You can get this in the quest shop for"); g("Noch gesperrt", "Still locked");
+		g("höchster Rang erreicht", "highest rank reached"); g("Umhang", "Cape"); g("Partikel", "Particles"); g("Eigenes Hintergrundbild für Launcher und Bambus-Hauptmenü", "Your own background image for the launcher and the Bambus main menu");
+		g("Launcher: Texturen, Helfer und Hauptmenü lassen sich jetzt auch hier einstellen", "Launcher: textures, helper and main menu can now be set here too"); g("TEXTUREN AN", "TEXTURES ON"); g("TEXTUREN AUS", "TEXTURES OFF"); g("TEXTUREN  –  WIE EIN PVP-TEXTURPAKET", "TEXTURES  –  LIKE A PVP TEXTURE PACK");
+		g("Bambus-Helfer", "Bambus Helper"); g("Fragen & Tipps bei Rechts-Shift", "Questions & tips on right Shift");
+		g("Bambus-Hauptmenü", "Bambus main menu"); g("Eigener Startbildschirm im Spiel", "Your own title screen in game");
+		g("Bambus-Ladebildschirm", "Bambus loading screen"); g("Mit Tipps beim Betreten einer Welt", "With tips when you enter a world");
+		g("Benachrichtigungen", "Notifications"); g("Neon-Hinweise im Spiel", "Neon notices in game");
+		g("Weiche Animationen", "Smooth animations"); g("Menüs und Schalter gleiten", "Menus and switches glide");
+		g("Umhang anzeigen", "Show cape"); g("Deinen Umhang im Spiel zeigen", "Show your cape in game");
+		g("Flammen tiefer – du siehst mehr", "Flames lower – you see more"); g("Schild tiefer – freiere Sicht", "Shield lower – clearer view");
+		g("Schild seitlich gedreht", "Shield turned sideways"); g("Kürzeres Schwert in der Hand", "Shorter sword in hand");
+		g("Kürbis auf dem Kopf stört nicht", "Pumpkin on your head doesn't block the view"); g("Unter Wasser klar sehen", "See clearly under water"); g("EIGENES BILD", "OWN IMAGE"); g("Hintergrundbild aussuchen", "Choose a background image"); g("Bilder (PNG, JPG)", "Images (PNG, JPG)"); g("Hintergrundbild", "Background image");
+		g("Das Bild konnte nicht gelesen werden. Probier ein anderes PNG oder JPG.", "The image could not be read. Try another PNG or JPG.");
+		g("Eigenes Bild als Hintergrund – gilt auch im Bambus-Hauptmenü im Spiel", "Your own image as the background – also used in the Bambus main menu in game"); g("Launcher im Pixel-Look wie im Spiel – mit Farbthemen, die auch im Spiel gelten", "Launcher in pixel style like in game – with color themes that also apply in game"); g("Flügel in zwei Stilen: HD oder Blockbench (eckig) – in der Garderobe umschaltbar", "Wings in two styles: HD or Blockbench (blocky) – switch it in the wardrobe"); g("STIL: HD", "STYLE: HD"); g("STIL: BLOCKBENCH", "STYLE: BLOCKBENCH"); g("HD = weich und biegsam · Blockbench = eckig mit groben Pixeln", "HD = smooth and bendy · Blockbench = blocky with chunky pixels"); g("FARBE  –  GILT AUCH IM SPIEL", "COLOR  –  ALSO USED IN GAME"); g("OZEAN", "OCEAN"); g("LILA", "PURPLE"); g("EIS", "ICE"); g("GARDEROBE", "WARDROBE"); g("MODS", "MODS");
 		g("SERVER", "SERVERS"); g("NEUIGKEITEN", "NEWS"); g("HELFER", "HELPER");
 		g("SENDEN  ➤", "SEND  ➤"); g("Schreib deine Frage, z. B. „Wie baue ich ein Netherportal?“", "Type your question, e.g. “How do I build a Nether portal?”");
 		g("Frag mich alles zum Bambus Client und zu Minecraft – ganz ohne Internet.", "Ask me anything about the Bambus Client and Minecraft – no internet needed.");

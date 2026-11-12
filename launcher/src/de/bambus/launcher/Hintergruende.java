@@ -19,7 +19,30 @@ final class Hintergruende {
 			{"synthwave", "SYNTHWAVE"},
 			{"aurora", "AURORA"},
 			{"datenregen", "DATENREGEN"},
+			{"bild", "EIGENES BILD"},
 	};
+
+	/** Name der Bilddatei im config-Ordner – Launcher und Mod nutzen dieselbe. */
+	static final String BILD_DATEI = "bambus-hintergrund.png";
+
+	private static BufferedImage eigenes;
+
+	static boolean hatBild() { return eigenes != null; }
+
+	/** Eigenes Hintergrundbild setzen (null = keins). */
+	static void setzeBild(BufferedImage bild) {
+		eigenes = bild;
+	}
+
+	/** Lädt das eigene Hintergrundbild aus dem config-Ordner, falls vorhanden. */
+	static void ladeBild(java.nio.file.Path spielOrdner) {
+		try {
+			java.nio.file.Path p = spielOrdner.resolve("config").resolve(BILD_DATEI);
+			eigenes = java.nio.file.Files.exists(p) ? javax.imageio.ImageIO.read(p.toFile()) : null;
+		} catch (Exception e) {
+			eigenes = null;
+		}
+	}
 
 	private static final int ANZAHL = 46;
 	private static final float[][] PUNKTE = new float[ANZAHL][4];   // x, y (0..1), Tempo, Größe
@@ -43,8 +66,32 @@ final class Hintergruende {
 			case "synthwave": synthwave(g, x, y, b, h, t); break;
 			case "aurora": aurora(g, x, y, b, h, t); break;
 			case "datenregen": datenregen(g, x, y, b, h, t); break;
+			case "bild": if (bild(g, x, y, b, h)) break; NeonUI.gitter(g, x, y, b, h, 28, new Color(255, 255, 255, 6)); break;
 			default: NeonUI.gitter(g, x, y, b, h, 28, new Color(255, 255, 255, 6));
 		}
+	}
+
+	/**
+	 * Eigenes Bild: füllt die Fläche ganz aus (Seitenverhältnis bleibt, Überstand wird abgeschnitten)
+	 * und wird abgedunkelt, damit die Schrift darüber gut lesbar bleibt.
+	 */
+	private static boolean bild(Graphics2D g, int x, int y, int b, int h) {
+		BufferedImage i = eigenes;
+		if (i == null || i.getWidth() <= 0 || i.getHeight() <= 0) return false;
+		double s = Math.max(b / (double) i.getWidth(), h / (double) i.getHeight());
+		int zb = (int) Math.ceil(i.getWidth() * s), zh = (int) Math.ceil(i.getHeight() * s);
+		java.awt.Shape alt = g.getClip();
+		g.clipRect(x, y, b, h);
+		Object vorher = g.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(i, x + (b - zb) / 2, y + (h - zh) / 2, zb, zh, null);
+		if (vorher != null) g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, vorher);
+		g.setColor(new Color(5, 7, 13, 105));        // abdunkeln, damit die Schrift lesbar bleibt
+		g.fillRect(x, y, b, h);
+		g.setPaint(new GradientPaint(x, y, new Color(5, 7, 13, 40), x, y + h, new Color(5, 7, 13, 135)));
+		g.fillRect(x, y, b, h);
+		g.setClip(alt);
+		return true;
 	}
 
 	/** Leuchtende Punkte steigen langsam auf; nahe Punkte verbinden sich mit Linien. */

@@ -43,6 +43,7 @@ final class SeiteModule extends JPanel {
 	private static final int Y_HUD = 132;
 
 	private final int yFunktionen;
+	private final int yTexturen;
 
 	Inhalt(BambusLauncher l) {
 		setOpaque(false);
@@ -59,7 +60,7 @@ final class SeiteModule extends JPanel {
 		for (int i = 0; i < ClientEinstellungen.MODULE.length; i++) {
 			final String[] m = ClientEinstellungen.MODULE[i];
 			NeonUI.SchalterKarte k = new NeonUI.SchalterKarte(m[1], m[2], "", c.modulAn(m[0]),
-					an -> c.setzeModul(m[0], an)).mitSymbol(Symbole.fuer(m[0]));
+					an -> { c.setzeModul(m[0], an); l.belohne("modul"); }).mitSymbol(Symbole.fuer(m[0]));
 			k.setBounds(X + (i % SPALTEN) * (kb + ABSTAND), Y_HUD + (i / SPALTEN) * (KARTE_H + ABSTAND), kb, KARTE_H);
 			add(k);
 		}
@@ -75,7 +76,22 @@ final class SeiteModule extends JPanel {
 			add(k);
 		}
 		int fz = (ClientEinstellungen.FUNKTIONEN.length + SPALTEN - 1) / SPALTEN;
-		setPreferredSize(new Dimension(BambusLauncher.BREITE - BambusLauncher.LEISTE - 10, yFunktionen + fz * (KARTE_H + ABSTAND) + 30));
+		yTexturen = yFunktionen + fz * (KARTE_H + ABSTAND) + 44;
+
+		// Textur-Modul: Hauptschalter + einzelne Anpassungen (Feineinstellungen im Spiel unter MODULE)
+		NeonUI.MiniSchalter tex = new NeonUI.MiniSchalter(c.wert("texturenAn", true), "TEXTUREN", an -> c.setze("texturenAn", an));
+		tex.setBounds(X + breite - 160, yTexturen - 36, 160, 28);
+		add(tex);
+
+		for (int i = 0; i < ClientEinstellungen.TEXTUREN.length; i++) {
+			final String[] t = ClientEinstellungen.TEXTUREN[i];
+			NeonUI.SchalterKarte k = new NeonUI.SchalterKarte(t[1], t[2], "",
+					c.wert(t[0], Boolean.parseBoolean(t[3])), an -> c.setze(t[0], an)).mitSymbol("textur");
+			k.setBounds(X + (i % SPALTEN) * (kb + ABSTAND), yTexturen + (i / SPALTEN) * (KARTE_H + ABSTAND), kb, KARTE_H);
+			add(k);
+		}
+		int tz = (ClientEinstellungen.TEXTUREN.length + SPALTEN - 1) / SPALTEN;
+		setPreferredSize(new Dimension(BambusLauncher.BREITE - BambusLauncher.LEISTE - 10, yTexturen + tz * (KARTE_H + ABSTAND) + 30));
 	}
 
 	@Override
@@ -89,6 +105,7 @@ final class SeiteModule extends JPanel {
 
 		ueberschrift(g, "HUD-ANZEIGEN", Y_HUD - 16);
 		ueberschrift(g, "FUNKTIONEN", yFunktionen - 16);
+		ueberschrift(g, "TEXTUREN  –  WIE EIN PVP-TEXTURPAKET", yTexturen - 16);
 		g.dispose();
 	}
 

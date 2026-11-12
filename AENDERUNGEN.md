@@ -1,4 +1,11 @@
 ## Neu in dieser Version
+- Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
+- Drei Herausforderungen pro Tag im Spiel: Runde gewinnen, Leiter-MLG, Wasser-MLG, 5 Spieler besiegen, 5er-Combo, Sturz aus 20 Blöcken, Y −58, Nether, 1000 Blöcke sprinten, 500 Blöcke Elytra
+- QUESTS auch im Spiel: Rechts-Shift → QUESTS zeigt Blätter, Rang, Herausforderungen und den Shop
+- Ränge: Bronze, Silber, Gold, Platin, Diamant, Meister, Legende – im Launcher und im Spiel sichtbar
+- Neu im Shop: Umhänge Goldhalm, Eiskristall, Lichtkristall sowie Partikel Kometen und Drachenatem
+- Eigenes Hintergrundbild: Bild aussuchen unter Einstellungen → Hintergrund → EIGENES BILD – gilt im Launcher und im Bambus-Hauptmenü im Spiel
+- Launcher zeigt jetzt auch die neuen Client-Funktionen: Texturen (Low Fire, Low Shield, Side Shield, Short Sword, kein Kürbis-Overlay, klare Sicht im Wasser), Bambus-Helfer, Hauptmenü, Ladebildschirm, Benachrichtigungen, Animationen, Umhang
 - Neue MODS-Seite im Launcher: Profil-Liste (sortierbar, als Liste oder Kacheln) – ein Profil öffnen, dann seine Mods einstellen; aktives Profil zum Spielen wählen; anlegen, kopieren, umbenennen, löschen; zwei Hälften INSTALLIERT und ENTDECKEN mit Mod-Icons, Suche bei Modrinth und CurseForge (CurseForge braucht einen eigenen kostenlosen API-Schlüssel)
 - Launcher im Pixel-Look wie im Spiel: Pixelschrift, eckige Karten, gleiche Symbole und Namen (MOD-MENÜ, GARDEROBE)
 - Farbthemen im Launcher (Neon, Ozean, Sakura, Gold, Lila, Eis, RGB) – eine Einstellung für Launcher und Spiel

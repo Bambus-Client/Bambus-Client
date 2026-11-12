@@ -211,7 +211,7 @@ public class BambusTitelScreen extends Screen {
 		int cx = width - cb - 14;
 		int cy = 14;
 		if (cx > lx + kb + 20) {
-			int ch = 106;
+			int ch = 120;
 			g.fill(cx, cy, cx + cb, cy + ch, 0xC0080D16);
 			Neon.ecken(g, cx - 3, cy - 3, cb + 6, ch + 6, 8, Farben.NEON_CYAN);
 			Neon.text(g, font, "TASTEN", cx + 8, cy + 7, 0.75f, Farben.NEON_CYAN, false);
@@ -227,6 +227,10 @@ public class BambusTitelScreen extends Screen {
 			boolean hover = Neon.ueber(mx, my, cx + 8, cy + 91, 90, 9);
 			Neon.text(g, font, "› Ordner öffnen", cx + 8, cy + 92, 0.75f, hover ? Farben.WEISS : Farben.GRAU, false);
 			flaechen.add(new int[]{cx + 8, cy + 91, 90, 9, 100});
+			Neon.text(g, font, de.bambus.client.Blaetter.rangName(), cx + 8, cy + 106, 0.75f,
+					de.bambus.client.Blaetter.rangFarbe(), false);
+			String bl = de.bambus.client.Blaetter.blaetter() + " Blätter";
+			Neon.text(g, font, bl, cx + cb - 8 - (int) (font.width(bl) * 0.75f), cy + 106, 0.75f, Farben.GRAU, false);
 		}
 
 		// unten: Minecraft-Menü + Hinweis

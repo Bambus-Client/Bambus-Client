@@ -1,18 +1,38 @@
 package de.bambus.client.screen;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Die animierten Hintergründe aus dem Launcher auch im Bambus-Hauptmenü
- * (Partikel, Aurora, Datenregen, Gitter). „synthwave“ zeichnet BambusTitelScreen selbst.
+ * (Partikel, Aurora, Datenregen, Gitter) sowie ein eigenes Bild aus dem config-Ordner.
+ * „synthwave“ zeichnet BambusTitelScreen selbst.
  */
 public final class MenueHintergrund {
 
-	public static final String[] ARTEN = {"synthwave", "partikel", "aurora", "datenregen", "gitter"};
-	public static final String[] NAMEN = {"Synthwave", "Partikel", "Aurora", "Datenregen", "Gitter"};
+	public static final String[] ARTEN = {"synthwave", "partikel", "aurora", "datenregen", "gitter", "bild"};
+	public static final String[] NAMEN = {"Synthwave", "Partikel", "Aurora", "Datenregen", "Gitter", "Eigenes Bild"};
+
+	/** Eigenes Hintergrundbild – dieselbe Datei, die der Launcher schreibt. */
+	public static final String BILD_DATEI = "bambus-hintergrund.png";
+	private static final Identifier BILD_ID = Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "hintergrund/eigen");
+	private static boolean bildGeladen;
+	private static boolean bildDa;
+	private static long bildStand;
+	private static int bildB, bildH;
 
 	private static final int ANZAHL = 46;
 	private static final float[][] PUNKTE = new float[ANZAHL][4];
@@ -30,8 +50,43 @@ public final class MenueHintergrund {
 	private MenueHintergrund() {}
 
 	public static String naechste(String art) {
-		for (int i = 0; i < ARTEN.length; i++) if (ARTEN[i].equals(art)) return ARTEN[(i + 1) % ARTEN.length];
+		for (int i = 0; i < ARTEN.length; i++) {
+			if (!ARTEN[i].equals(art)) continue;
+			String n = ARTEN[(i + 1) % ARTEN.length];
+			if (n.equals("bild") && !ladeBild()) n = ARTEN[(i + 2) % ARTEN.length];   // ohne Bilddatei überspringen
+			return n;
+		}
 		return ARTEN[0];
+	}
+
+	public static Path bildDatei() {
+		return FabricLoader.getInstance().getConfigDir().resolve(BILD_DATEI);
+	}
+
+	/** Lädt das eigene Bild beim ersten Mal (und neu, wenn der Launcher es ausgetauscht hat). */
+	private static boolean ladeBild() {
+		Path p = bildDatei();
+		long stand;
+		try {
+			stand = Files.exists(p) ? Files.getLastModifiedTime(p).toMillis() : 0L;
+		} catch (Exception e) {
+			stand = 0L;
+		}
+		if (bildGeladen && stand == bildStand) return bildDa;
+		bildGeladen = true;
+		bildStand = stand;
+		bildDa = false;
+		if (stand == 0L) return false;
+		try (InputStream in = Files.newInputStream(p)) {
+			NativeImage bild = NativeImage.read(in);
+			bildB = bild.getWidth();
+			bildH = bild.getHeight();
+			Minecraft.getInstance().getTextureManager().register(BILD_ID, new DynamicTexture(() -> "bambus hintergrund", bild));
+			bildDa = bildB > 0 && bildH > 0;
+		} catch (Exception e) {
+			BambusClient.LOGGER.warn("Hintergrundbild {} konnte nicht gelesen werden", p, e);
+		}
+		return bildDa;
 	}
 
 	public static String name(String art) {
@@ -47,8 +102,22 @@ public final class MenueHintergrund {
 			case "partikel" -> partikel(g, b, h, t);
 			case "aurora" -> aurora(g, b, h, t);
 			case "datenregen" -> datenregen(g, font, b, h, t);
+			case "bild" -> {
+				if (!bild(g, b, h)) Neon.gitter(g, 0, 0, b, h, 20, Farben.alpha(Farben.NEON, 14));
+			}
 			default -> Neon.gitter(g, 0, 0, b, h, 20, Farben.alpha(Farben.NEON, 14));
 		}
+		return true;
+	}
+
+	/** Eigenes Bild bildschirmfüllend (Überstand wird abgeschnitten) und abgedunkelt. */
+	private static boolean bild(GuiGraphics g, int b, int h) {
+		if (!ladeBild()) return false;
+		float s = Math.max(b / (float) bildB, h / (float) bildH);
+		int zb = Mth.ceil(bildB * s), zh = Mth.ceil(bildH * s);
+		g.blit(RenderPipelines.GUI_TEXTURED, BILD_ID, (b - zb) / 2, (h - zh) / 2, 0f, 0f, zb, zh, bildB, bildH, bildB, bildH);
+		g.fill(0, 0, b, h, 0x69050711);                       // abdunkeln, damit Schrift lesbar bleibt
+		g.fillGradient(0, 0, b, h, 0x28050711, 0x87050711);
 		return true;
 	}
 

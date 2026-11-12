@@ -56,6 +56,7 @@ public final class BambusLauncher extends JFrame {
 			{"mods", "MODS", "blitz"},
 			{"server", "SERVER", "server"},
 			{"neu", "NEUIGKEITEN", "update"},
+			{"quests", "QUESTS", "stern"},
 			{"helfer", "HELFER", "helfer"},
 			{"einstellungen", "EINSTELLUNGEN", "zahnrad"},
 	};
@@ -87,6 +88,8 @@ public final class BambusLauncher extends JFrame {
 	final SeiteMods modsSeite;
 	final SeiteServer serverSeite;
 	final SeiteHelfer helferSeite;
+	SeiteQuests questsSeite;
+	final Fortschritt fortschritt = new Fortschritt(client);
 
 	public static void main(String[] args) {
 		// Linux: Der XRender-Weg von Java zeichnet gedrehte, teils durchsichtige Bilder fehlerhaft
@@ -110,6 +113,13 @@ public final class BambusLauncher extends JFrame {
 			if (!l.eingerichtet && args.length == 0) {
 				new Willkommen(l).setVisible(true);   // erster Start: Sprache, Name, Look, Leistung
 			}
+			l.fortschritt.tagesBonus();               // Blätter fürs Einloggen
+			l.fortschritt.pruefeErfolge(l);
+			if (l.fortschritt.begruessungBlaetter > 0) {
+				javax.swing.Timer t = new javax.swing.Timer(900, e -> l.tagesBonusMeldung());
+				t.setRepeats(false);
+				t.start();
+			}
 		});
 	}
 
@@ -121,6 +131,7 @@ public final class BambusLauncher extends JFrame {
 		setIconImages(symbole());
 		dockSymbol();
 		ladeLauncherEinstellungen();
+		Hintergruende.ladeBild(installer.spielOrdner);   // eigenes Hintergrundbild, falls vorhanden
 		NeonUI.themaAnwenden(client.zahl("thema", 0));   // gleiche Farben wie im Spiel
 
 		Hintergrund wurzel = new Hintergrund();
@@ -131,7 +142,7 @@ public final class BambusLauncher extends JFrame {
 		// Seitenleiste
 		for (int i = 0; i < SEITEN.length; i++) {
 			NavPunkt p = new NavPunkt(SEITEN[i][0], SEITEN[i][1], SEITEN[i][2]);
-			p.setBounds(14, 148 + i * 44, LEISTE - 28, 40);
+			p.setBounds(14, 140 + i * 40, LEISTE - 28, 36);
 			nav.add(p);
 			wurzel.add(p);
 		}
@@ -165,6 +176,8 @@ public final class BambusLauncher extends JFrame {
 		serverSeite = new SeiteServer(this);
 		inhalt.add(serverSeite, "server");
 		inhalt.add(new SeiteNeu(this), "neu");
+		questsSeite = new SeiteQuests(this);
+		inhalt.add(questsSeite, "quests");
 		helferSeite = new SeiteHelfer(this);
 		inhalt.add(helferSeite, "helfer");
 		inhalt.add(start, "start");
@@ -249,6 +262,50 @@ public final class BambusLauncher extends JFrame {
 		}
 	}
 
+	/**
+	 * Meldet eine Tat an das Quest-System und zeigt eine kurze Meldung, wenn es Blätter gab.
+	 * Darf von überall aufgerufen werden – wenn heute keine passende Quest dran ist, passiert nichts.
+	 */
+	void belohne(String was) {
+		if (fortschritt == null) return;
+		int p = fortschritt.tat(was);
+		if (p > 0) blaetterMeldung(p);
+		if (questsSeite != null) questsSeite.repaint();
+	}
+
+	/** Begrüßung beim ersten Start am Tag: Serie und Blätter. */
+	void tagesBonusMeldung() {
+		blaetterMeldung(fortschritt.begruessungBlaetter);
+		if (questsSeite != null) questsSeite.repaint();
+		for (NavPunkt p : nav) p.repaint();
+	}
+
+	/** Kurzer Hinweis unten rechts: „+15 Blätter“. */
+	void blaetterMeldung(int blaetter) {
+		javax.swing.JWindow w = new javax.swing.JWindow(this);
+		javax.swing.JComponent c = new javax.swing.JComponent() {
+			@Override protected void paintComponent(java.awt.Graphics graphics) {
+				Graphics2D g = NeonUI.glatt(graphics);
+				g.setColor(NeonUI.KARTE);
+				g.fillRect(0, 0, getWidth(), getHeight());
+				g.setStroke(new java.awt.BasicStroke(1.6f));
+				g.setColor(NeonUI.NEON);
+				g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+				SeiteQuests.blatt(g, 24, getHeight() / 2 - 3, 16, NeonUI.NEON);
+				g.setFont(NeonUI.titel(16));
+				NeonUI.schattenText(g, "+" + blaetter + " " + Sprache.t("Blätter"), 44, getHeight() / 2 + 6, NeonUI.TEXT);
+				g.dispose();
+			}
+		};
+		w.setContentPane(c);
+		w.setSize(200, 44);
+		w.setLocation(getX() + getWidth() - 232, getY() + getHeight() - 84);
+		w.setVisible(true);
+		javax.swing.Timer t = new javax.swing.Timer(2200, e -> w.dispose());
+		t.setRepeats(false);
+		t.start();
+	}
+
 	void zeige(String id) {
 		seite = id;
 		karten.show(inhalt, id);
@@ -264,6 +321,10 @@ public final class BambusLauncher extends JFrame {
 		if ("helfer".equals(id)) {
 			helferSeite.fokus();
 		}
+		if ("quests".equals(id)) {
+			questsSeite.aktualisiere();
+		}
+		belohne(id.equals("kosmetik") ? "garderobe" : id);
 		for (NavPunkt p : nav) {
 			p.repaint();
 		}

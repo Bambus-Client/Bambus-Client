@@ -72,7 +72,7 @@ final class SeiteServer extends JPanel {
 		add(neu);
 		NeonUI.UmrissKnopf auf = new NeonUI.UmrissKnopf("⟳ AKTUALISIEREN", NeonUI.CYAN);
 		auf.setBounds(X + 550, 104, 146, 36);
-		auf.addActionListener(e -> abfragen());
+		auf.addActionListener(e -> { abfragen(); l.belohne("server"); });
 		add(auf);
 
 		liste.setOpaque(false);

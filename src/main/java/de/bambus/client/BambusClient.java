@@ -16,6 +16,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRe
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.world.InteractionResult;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -108,6 +110,12 @@ public class BambusClient implements ClientModInitializer {
 		koordinatenTaste = taste("koordinaten", InputConstants.UNKNOWN.getValue(), kategorie);   // frei belegbar
 
 		ClientTickEvents.END_CLIENT_TICK.register(BambusClient::tick);
+
+		// Quests: Welt betreten und Nachrichten mitlesen (Siege erkennen)
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> Blaetter.weltBetreten());
+		ClientReceiveMessageEvents.GAME.register((nachricht, ueberlagerung) -> Blaetter.nachricht(nachricht.getString()));
+		ClientReceiveMessageEvents.CHAT.register((nachricht, unterschrieben, absender, art, zeit) ->
+				Blaetter.nachricht(nachricht.getString()));
 		Statistik.laden();
 		Kampf.killHoerer = (opfer, spieler) -> {
 			Kosmetik.killEffekt(opfer);
@@ -207,6 +215,9 @@ public class BambusClient implements ClientModInitializer {
 
 	private static void tick(Minecraft mc) {
 		mc.getWindow().setTitle(FENSTERTITEL);
+		if (mc.level != null && mc.player != null) {
+			Blaetter.tick(mc);   // Spielzeit, Blätter und die Herausforderungen des Tages
+		}
 
 		// Eigenes Bambus-Hauptmenü statt des Minecraft-Titelbildschirms
 		if (mc.screen instanceof TitleScreen && config.bambusHauptmenue && !BambusTitelScreen.vanillaGewuenscht) {
