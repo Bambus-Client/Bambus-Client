@@ -1,3 +1,5 @@
 # Gradle-Build-Ausgaben
 .gradle/
 build/
+# Testlauf von Minecraft (gradlew runClient)
+run/

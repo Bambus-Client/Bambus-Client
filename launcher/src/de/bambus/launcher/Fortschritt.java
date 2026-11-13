@@ -220,7 +220,10 @@ final class Fortschritt {
 
 	// ============================================================ Shop
 
-	boolean gekauft(String id) { return menge("shop").contains(id); }
+	/** Entwickler-Konto: alle Kosmetik frei (siehe Quests.ENTWICKLER). */
+	volatile boolean entwickler;
+
+	boolean gekauft(String id) { return entwickler || menge("shop").contains(id); }
 
 	/**
 	 * Einmalige Umstellung: Wer vorher schon Kosmetik getragen hat, behält sie.

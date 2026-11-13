@@ -1,6 +1,7 @@
 package de.bambus.launcher;
 
 import de.bambus.helfer.HelferWissen;
+import de.bambus.helfer.Rezepte;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -143,13 +144,20 @@ final class SeiteHelfer extends JPanel {
 			helfer(rechnung, null);
 			return;
 		}
+		boolean en = HelferWissen.englischGefragt(frage, Sprache.englisch());   // Antwort in der Sprache der Frage
 		HelferWissen.Eintrag e = HelferWissen.finde(frage);
-		if (e == null) helfer(HelferWissen.unbekannt(Sprache.englisch()), null);
-		else helfer(e.text(Sprache.englisch()), e);
+		antwortEnglisch = en;
+		if (e == null) helfer(HelferWissen.unbekannt(en), null);
+		else helfer(e.text(en), e);
 	}
 
+	/** Sprache der letzten Antwort (für das Rezeptbild). */
+	private boolean antwortEnglisch;
+
 	private void helfer(String text, HelferWissen.Eintrag e) {
-		blasen.add(new Blase(text, true, e));
+		Blase b = new Blase(text, true, e);
+		b.englisch = e == null ? Sprache.englisch() : antwortEnglisch;
+		blasen.add(b);
 		neuAnordnen();
 	}
 
@@ -238,28 +246,12 @@ final class SeiteHelfer extends JPanel {
 
 	// ============================================================ Sprechblase
 
-	private static final Map<String, Color> FARBEN = new HashMap<>();
-	private static final Map<String, String> ENGLISCH = new HashMap<>();
-
-	static {
-		Object[] d = {
-				"Brett", 0xB8894F, "Plank", "Stock", 0x8A6A3E, "Stick", "Kohle", 0x3A3F47, "Coal",
-				"Stein", 0x8C939C, "Cobble", "Eisen", 0xD8DEE6, "Iron", "Diamant", 0x4FE3E0, "Diamond",
-				"Wolle", 0xF2F2F2, "Wool", "Buch", 0xA0522D, "Book", "Obsidian", 0x3B2A5C, "Obsidian",
-				"Eisenblock", 0xC4CBD4, "Iron blk", "Faden", 0xE8E8E8, "String", "Pulver", 0x5A5A5A, "Powder",
-				"Sand", 0xE3D49A, "Sand",
-		};
-		for (int i = 0; i < d.length; i += 3) {
-			FARBEN.put((String) d[i], new Color((Integer) d[i + 1]));
-			ENGLISCH.put((String) d[i], (String) d[i + 2]);
-		}
-	}
-
 	private final class Blase extends JComponent {
 		final String text;
 		final boolean helfer;
 		final HelferWissen.Eintrag eintrag;
 		boolean tippen;
+		boolean englisch = Sprache.englisch();
 		private final List<Rectangle> knopfFlaechen = new ArrayList<>();
 		private int ueberKnopf = -1;
 
@@ -388,7 +380,7 @@ final class SeiteHelfer extends JPanel {
 		}
 
 		private int zeichneRezept(Graphics2D g, int x, int y) {
-			boolean en = Sprache.englisch();
+			boolean en = englisch;
 			y += 4;
 			Font klein = NeonUI.normal(9);
 			for (int i = 0; i < 9; i++) {
@@ -399,14 +391,14 @@ final class SeiteHelfer extends JPanel {
 				g.drawRoundRect(fx, fy, FELD - 1, FELD - 1, 8, 8);
 				String ding = eintrag.rezept[i];
 				if (ding.isEmpty()) continue;
-				Color c = FARBEN.getOrDefault(ding, NeonUI.GRAU);
+				Color c = new Color(Rezepte.farbe(ding));
 				g.setColor(c);
 				g.fillRoundRect(fx + 11, fy + 6, FELD - 22, FELD - 26, 5, 5);
 				g.setColor(NeonUI.alpha(Color.WHITE, 60));
 				g.fillRect(fx + 13, fy + 8, FELD - 26, 3);
 				g.setFont(klein);
 				FontMetrics fm = g.getFontMetrics();
-				String name = en ? ENGLISCH.getOrDefault(ding, ding) : ding;
+				String name = Rezepte.kurz(ding, en);
 				g.setColor(new Color(0xC8D2DE));
 				g.drawString(name, fx + (FELD - fm.stringWidth(name)) / 2, fy + FELD - 7);
 			}
@@ -432,7 +424,7 @@ final class SeiteHelfer extends JPanel {
 				int a = anzahl.merge(z, 1, Integer::sum);
 				if (haupt.isEmpty() || a > anzahl.get(haupt)) haupt = z;
 			}
-			Color hc = FARBEN.getOrDefault(haupt, NeonUI.NEON);
+			Color hc = haupt.isEmpty() ? NeonUI.NEON : new Color(Rezepte.farbe(eintrag.ergebnis != null ? eintrag.ergebnis : haupt));
 			int wx = ex + eb / 2 - 18, wy = mitte - FELD + 12;
 			g.setColor(hc);
 			g.fillRoundRect(wx, wy, 36, 36, 8, 8);
@@ -444,7 +436,7 @@ final class SeiteHelfer extends JPanel {
 			g.drawRoundRect(wx - 1, wy - 1, 37, 37, 9, 9);
 			g.setFont(NeonUI.normal(11));
 			FontMetrics fm = g.getFontMetrics();
-			String name = en ? eintrag.rezeptEn : eintrag.rezeptDe;
+			String name = (en ? eintrag.rezeptEn : eintrag.rezeptDe) + (eintrag.anzahl > 1 ? "  ×" + eintrag.anzahl : "");
 			List<String> teile = umbrechen(fm, name, eb - 8);
 			int ty = teile.size() > 1 ? mitte + 24 : mitte + 30;
 			g.setColor(NeonUI.TEXT);

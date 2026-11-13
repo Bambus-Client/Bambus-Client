@@ -88,6 +88,8 @@ final class SeiteStart extends JPanel {
 		}
 		if (!Files.isDirectory(l.installer.mcOrdner)) {
 			status = "Minecraft nicht gefunden – installiere zuerst Minecraft.";
+		} else if (!l.installer.bambusPasst()) {
+			status = "Profil für Minecraft " + l.installer.version() + " – startet ohne Bambus-Mod.";
 		} else if (l.installer.modSchonInstalliert()) {
 			status = "System bereit. Klicke auf SPIELEN.";
 		} else {
@@ -116,7 +118,7 @@ final class SeiteStart extends JPanel {
 		// --- Titel
 		g.setFont(NeonUI.mono(12));
 		g.setColor(NeonUI.CYAN);
-		g.drawString("MINECRAFT " + Installer.MC_VERSION + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72);
+		g.drawString("MINECRAFT " + l.installer.version() + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72);
 		g.setFont(NeonUI.titel(56));
 		NeonUI.leuchtText(g, "BAMBUS", 38, 136, NeonUI.NEON, 3);
 		int tb = g.getFontMetrics().stringWidth("BAMBUS ");

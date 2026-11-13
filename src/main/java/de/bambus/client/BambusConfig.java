@@ -66,6 +66,10 @@ public class BambusConfig {
 	/** Server-Favoriten aus dem Launcher, je „Name|Adresse“ – landen beim Start in der Mehrspieler-Liste. */
 	public java.util.List<String> serverFavoriten = new java.util.ArrayList<>();
 	public java.util.List<String> favoriten = new java.util.ArrayList<>();
+	/** Bambus-Serverauswahl statt der Minecraft-Liste. */
+	public boolean serverMenue = true;
+	/** Mit ★ markierte Server (Adressen, klein geschrieben) – stehen in der Serverauswahl oben. */
+	public java.util.List<String> serverSterne = new java.util.ArrayList<>();
 
 	// Extras
 	public java.util.List<String> freunde = new java.util.ArrayList<>();

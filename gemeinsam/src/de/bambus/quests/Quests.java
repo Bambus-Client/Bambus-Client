@@ -152,6 +152,16 @@ public final class Quests {
 	public static boolean imShop(String id) { return finde(SHOP, id) != null; }
 
 	/** Gehört das Stück zum Start-Set? Dann ist es immer frei. */
+	/** Minecraft-Namen der Entwickler: Sie haben alle Kosmetik frei (ohne Blätter). */
+	public static final String[] ENTWICKLER = {"bamboocrafter7"};
+
+	/** Ist das ein Entwickler-Konto? Groß-/Kleinschreibung egal. */
+	public static boolean istEntwickler(String minecraftName) {
+		if (minecraftName == null) return false;
+		for (String e : ENTWICKLER) if (e.equalsIgnoreCase(minecraftName.trim())) return true;
+		return false;
+	}
+
 	public static boolean imStartset(String id) {
 		for (String[] e : STARTSET) if (e[1].equals(id)) return true;
 		return false;

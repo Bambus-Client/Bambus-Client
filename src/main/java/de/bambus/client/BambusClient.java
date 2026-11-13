@@ -55,7 +55,7 @@ import java.util.List;
 public class BambusClient implements ClientModInitializer {
 
 	public static final String MOD_ID = "bambus";
-	public static final String VERSION = "3.3.0";
+	public static final String VERSION = "3.4.0";
 	private static final String FENSTERTITEL = "Bambus Client " + VERSION + " – Minecraft 1.21.11";
 
 	public static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("Bambus");
@@ -67,7 +67,8 @@ public class BambusClient implements ClientModInitializer {
 			new InfoModul(),
 			new TastenModul(),
 			new ServerModul(),
-			new StatusModul(),
+			new PingModul(),
+			new ToggleSprintModul(),
 			new RuestungModul(),
 			new EffekteModul(),
 			new ZielModul(),
@@ -85,8 +86,7 @@ public class BambusClient implements ClientModInitializer {
 			new TntModul(),
 			new KompassModul(),
 			new KoordinatenModul(),
-			new SpielzeitModul(),
-			new PingModul()
+			new SpielzeitModul()
 	);
 
 	private static KeyMapping menuTaste;
@@ -198,12 +198,36 @@ public class BambusClient implements ClientModInitializer {
 				if (adresse.isEmpty() || liste.get(adresse) != null) continue;
 				liste.add(new net.minecraft.client.multiplayer.ServerData(name.isEmpty() ? adresse : name, adresse,
 						net.minecraft.client.multiplayer.ServerData.Type.OTHER), false);
+				// Launcher-Favoriten bekommen in der Bambus-Serverauswahl gleich einen Stern
+				String stern = adresse.toLowerCase(java.util.Locale.ROOT);
+				if (!config.serverSterne.contains(stern)) config.serverSterne.add(stern);
 				neu = true;
 			}
-			if (neu) liste.save();
+			if (neu) {
+				liste.save();
+				config.speichern();
+			}
 		} catch (Exception e) {
 			LOGGER.warn("Server-Favoriten konnten nicht eingetragen werden", e);
 		}
+	}
+
+	public static ToggleSprintModul toggleSprint() {
+		for (HudModul m : MODULE) if (m instanceof ToggleSprintModul t) return t;
+		throw new IllegalStateException("Toggle-Sprint-Modul fehlt");
+	}
+
+	/** Das frühere Modul „Ping-Verlauf“ ist jetzt das Modul „Ping“ (mit Verlauf) – Position und Größe mitnehmen. */
+	private static void pingVerlaufUebernehmen() {
+		BambusConfig.ModulPos alt = config.module.remove(PingModul.ALTE_ID);
+		if (alt == null || !alt.an || config.module.containsKey(PingModul.ID)) return;
+		BambusConfig.ModulPos neu = new BambusConfig.ModulPos(alt.x, alt.y);
+		neu.an = true;
+		neu.groesse = alt.groesse;
+		neu.optionen.putAll(alt.optionen == null ? java.util.Map.of() : alt.optionen);
+		neu.optionen.put("verlauf", true);
+		config.module.put(PingModul.ID, neu);
+		config.speichern();
 	}
 
 	private static KeyMapping taste(String name, int taste, KeyMapping.Category kategorie) {
@@ -229,11 +253,15 @@ public class BambusClient implements ClientModInitializer {
 			if (config.toggleSprint || config.toggleSneak) {
 				Funktionen.sprintUndSchleichenAnwenden(mc);
 			}
+			toggleSprint().ausConfigUebernehmen(config);
+			pingVerlaufUebernehmen();
 			// Low-End-Modus kann auch im Launcher geschaltet werden
 			if (config.lowEnd != (config.lowEndAlt != null)) {
 				Visuals.lowEnd(mc, config.lowEnd);
 			}
 		}
+
+		toggleSprint().anwenden(mc);
 
 		while (menuTaste.consumeClick()) {
 			if (mc.screen == null) {

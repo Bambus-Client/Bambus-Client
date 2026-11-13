@@ -42,7 +42,7 @@ import java.util.Properties;
 /** Der Bambus Launcher im Neon-Look. */
 public final class BambusLauncher extends JFrame {
 
-	static final String VERSION = "3.3.0";
+	static final String VERSION = "3.4.0";
 
 	static final int BREITE = 1000;
 	static final int HOEHE = 640;
@@ -224,9 +224,28 @@ public final class BambusLauncher extends JFrame {
 		animation = new Timer(BILD_MS, e -> animationsSchritt());
 		animation.start();
 
+		pruefeEntwickler();
+
 		zeige("start");
 		if (autoUpdate && Updater.aktiv()) {
 			pruefeUpdates(false);
+		}
+	}
+
+	/**
+	 * Entwickler-Konto? Dann ist alle Kosmetik frei. Zählt nur ein echtes Konto: die eigene Microsoft-Anmeldung
+	 * oder das angemeldete Konto im offiziellen Minecraft Launcher – nicht ein eingetippter Skin-Name.
+	 */
+	void pruefeEntwickler() {
+		String name = konto.angemeldet() ? konto.name() : null;
+		if (!de.bambus.quests.Quests.istEntwickler(name)) {
+			String[] offiziell = new SkinLader(installer.mcOrdner, installer.spielOrdner).kontoAusLauncher();
+			name = offiziell == null ? null : offiziell[1];
+		}
+		boolean war = fortschritt.entwickler;
+		fortschritt.entwickler = de.bambus.quests.Quests.istEntwickler(name);
+		if (war != fortschritt.entwickler) {
+			kosmetik.repaint();
 		}
 	}
 
@@ -663,7 +682,7 @@ public final class BambusLauncher extends JFrame {
 			g.drawString("LOADER", 24, h - 70);
 			g.setColor(NeonUI.TEXT);
 			g.drawString(VERSION, 110, h - 106);
-			g.drawString(Installer.MC_VERSION, 110, h - 88);
+			g.drawString(installer.version(), 110, h - 88);
 			g.drawString("Fabric " + Installer.LOADER_VERSION, 110, h - 70);
 			// Pflichthinweis nach den Minecraft-Markenrichtlinien von Mojang
 			g.setFont(new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.PLAIN, 9));   // Pflichthinweis gut lesbar in normaler Schrift
@@ -742,6 +761,7 @@ public final class BambusLauncher extends JFrame {
 				@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
 				@Override public void mouseClicked(MouseEvent e) {
 					new MicrosoftDialog(BambusLauncher.this, konto, KontoChip.this::repaint).setVisible(true);
+					pruefeEntwickler();   // nach An-/Abmelden
 					repaint();
 				}
 			});

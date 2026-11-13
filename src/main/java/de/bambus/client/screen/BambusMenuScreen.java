@@ -80,8 +80,8 @@ public class BambusMenuScreen extends Screen {
 	private static final Map<String, String> MODUL_TEXT = Map.of(
 			"info", "FPS, Koordinaten und CPS",
 			"tasten", "W A S D, Maus und Leertaste",
-			"server", "Serveradresse und Ping",
-			"status", "Zeigt Toggle Sprint / Sneak",
+			"server", "Adresse des Servers",
+			"ping", "Ping mit Signalbalken",
 			"ruestung", "Rüstung mit Haltbarkeit",
 			"effekte", "Aktive Tränke mit Restzeit"
 	);
@@ -390,16 +390,6 @@ public class BambusMenuScreen extends Screen {
 	private List<Karte> funktionsKarten() {
 		BambusConfig c = cfg();
 		List<Karte> k = new ArrayList<>();
-		k.add(new Karte("Toggle Sprint", "Sprint-Taste 1× drücken = dauerhaft",
-				() -> c.toggleSprint, () -> {
-			c.toggleSprint = !c.toggleSprint;
-			Funktionen.sprintUndSchleichenAnwenden(minecraft);
-		}, Farben.NEON));
-		k.add(new Karte("Toggle Sneak", "Schleich-Taste 1× drücken = dauerhaft",
-				() -> c.toggleSneak, () -> {
-			c.toggleSneak = !c.toggleSneak;
-			Funktionen.sprintUndSchleichenAnwenden(minecraft);
-		}, Farben.NEON));
 		k.add(new Karte("Zoom mit Mausrad", "C halten · Mausrad = näher/weiter",
 				() -> c.scrollZoom, () -> c.scrollZoom = !c.scrollZoom, Farben.NEON));
 		k.add(new Karte("Freelook", "Linke Alt halten · ⚠ nicht überall erlaubt",
@@ -808,7 +798,8 @@ public class BambusMenuScreen extends Screen {
 				new Karte("Benachrichtigungen", "Neon-Karten für Updates, Freunde, Screenshots", () -> c.hinweise, () -> c.hinweise = !c.hinweise, Farben.NEON_CYAN),
 				new Karte("Menü-Hintergrund: " + MenueHintergrund.name(c.menueHintergrund), "Klicken zum Wechseln (wie im Launcher)", () -> true,
 						() -> c.menueHintergrund = MenueHintergrund.naechste(c.menueHintergrund), Farben.NEON_CYAN),
-				new Karte("Bambus-Ladebildschirm", "Eigener Ladebildschirm beim Betreten einer Welt", () -> c.ladebildschirm, () -> c.ladebildschirm = !c.ladebildschirm, Farben.NEON_PINK)),
+				new Karte("Bambus-Ladebildschirm", "Eigener Ladebildschirm beim Betreten einer Welt", () -> c.ladebildschirm, () -> c.ladebildschirm = !c.ladebildschirm, Farben.NEON_PINK),
+				new Karte("Bambus-Serverauswahl", "Serverliste mit Favoriten ★, Suche und Ping", () -> c.serverMenue, () -> c.serverMenue = !c.serverMenue, Farben.GELB)),
 				x, zy, b, 2);
 
 		Neon.text(g, font, "PROFILE", x, zy + 2, 0.75f, Farben.NEON, false);
@@ -826,12 +817,7 @@ public class BambusMenuScreen extends Screen {
 
 		Neon.text(g, font, "TEILEN & STEUERUNG", x, zy, 0.75f, Farben.NEON, false);
 		zy += 12;
-		kleinKnopf(g, mx, my, "EXPORT", x, zy, 60, () -> {
-			minecraft.keyboardHandler.setClipboard(c.alsJson());
-			melde("Einstellungen in die Zwischenablage kopiert");
-		});
-		kleinKnopf(g, mx, my, "IMPORT", x + 64, zy, 60, () ->
-				melde(Profile.uebernehmen(minecraft.keyboardHandler.getClipboard()) ? "Einstellungen übernommen" : "In der Zwischenablage sind keine Bambus-Einstellungen"));
+		kleinKnopf(g, mx, my, "EINSTELLUNGS-CODE", x, zy, 124, () -> minecraft.setScreen(new EinstellungsCodeScreen(this)));
 		kleinKnopf(g, mx, my, "TASTENBELEGUNG", x + 128, zy, 84, () ->
 				minecraft.setScreen(new KeyBindsScreen(this, minecraft.options)));
 		zy += 22;

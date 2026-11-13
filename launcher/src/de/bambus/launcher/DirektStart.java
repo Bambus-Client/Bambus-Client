@@ -95,11 +95,11 @@ final class DirektStart {
 		f.melde("Minecraft-Version wird geprüft …", 5);
 		Map<String, Object> vanilla = vanillaVersion();
 		Map<String, Object> fabric = Json.objekt(Json.parse(new String(Files.readAllBytes(
-				mc.resolve("versions").resolve(Installer.VERSION_ID).resolve(Installer.VERSION_ID + ".json")), StandardCharsets.UTF_8)));
+				mc.resolve("versions").resolve(installer.versionId()).resolve(installer.versionId() + ".json")), StandardCharsets.UTF_8)));
 		if (fabric == null) throw new IOException("Fabric-Profil fehlt.");
 
 		f.melde("Minecraft wird geladen …", 10);
-		Path clientJar = mc.resolve("versions").resolve(Installer.MC_VERSION).resolve(Installer.MC_VERSION + ".jar");
+		Path clientJar = mc.resolve("versions").resolve(installer.version()).resolve(installer.version() + ".jar");
 		Map<String, Object> client = Json.objekt(Json.objekt(vanilla.get("downloads")).get("client"));
 		sichere(str(client.get("url")), clientJar, str(client.get("sha1")));
 
@@ -113,15 +113,15 @@ final class DirektStart {
 		f.melde("Java für Minecraft wird geprüft …", 80);
 		Path java = java(vanilla, f);
 
-		Path natives = mc.resolve("bin").resolve("bambus-" + Installer.MC_VERSION);
+		Path natives = mc.resolve("bin").resolve("bambus-" + installer.version());
 		Files.createDirectories(natives);
-		Files.createDirectories(installer.spielOrdner);
+		Files.createDirectories(installer.startOrdner);
 
 		// Platzhalter wie im offiziellen Launcher
 		Map<String, String> w = new LinkedHashMap<>();
 		w.put("auth_player_name", s.name);
-		w.put("version_name", Installer.VERSION_ID);
-		w.put("game_directory", installer.spielOrdner.toString());
+		w.put("version_name", installer.versionId());
+		w.put("game_directory", installer.startOrdner.toString());
 		w.put("assets_root", mc.resolve("assets").toString());
 		w.put("assets_index_name", assetIndex);
 		w.put("auth_uuid", s.uuid);
@@ -163,10 +163,10 @@ final class DirektStart {
 		argumente(fabric, "game", w, befehl);
 
 		f.melde("Minecraft startet …", 98);
-		Path logDatei = installer.spielOrdner.resolve("logs").resolve("bambus-start.log");
+		Path logDatei = installer.startOrdner.resolve("logs").resolve("bambus-start.log");
 		Files.createDirectories(logDatei.getParent());
 		ProcessBuilder pb = new ProcessBuilder(befehl);
-		pb.directory(installer.spielOrdner.toFile());
+		pb.directory(installer.startOrdner.toFile());
 		pb.redirectErrorStream(true);
 		pb.redirectOutput(logDatei.toFile());
 		return pb.start();
@@ -175,16 +175,16 @@ final class DirektStart {
 	// ============================================================ Teile
 
 	private Map<String, Object> vanillaVersion() throws IOException {
-		Path json = mc.resolve("versions").resolve(Installer.MC_VERSION).resolve(Installer.MC_VERSION + ".json");
+		Path json = mc.resolve("versions").resolve(installer.version()).resolve(installer.version() + ".json");
 		Map<String, Object> m = Json.objekt(Json.parse(new String(Installer.lade(MANIFEST), StandardCharsets.UTF_8)));
 		for (Object o : Json.liste(m.get("versions"))) {
 			Map<String, Object> v = Json.objekt(o);
-			if (Installer.MC_VERSION.equals(v.get("id"))) {
+			if (installer.version().equals(v.get("id"))) {
 				sichere(str(v.get("url")), json, str(v.get("sha1")));
 				return Json.objekt(Json.parse(new String(Files.readAllBytes(json), StandardCharsets.UTF_8)));
 			}
 		}
-		throw new IOException("Minecraft " + Installer.MC_VERSION + " nicht bei Mojang gefunden.");
+		throw new IOException("Minecraft " + installer.version() + " nicht bei Mojang gefunden.");
 	}
 
 	private List<Path> bibliotheken(Map<String, Object> fabric, Map<String, Object> vanilla, Installer.Fortschritt f) throws IOException {

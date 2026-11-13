@@ -4,6 +4,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import de.bambus.helfer.HelferWissen;
+import de.bambus.helfer.Rezepte;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,22 +35,12 @@ public class HelferScreen extends Screen {
 
 	private record Bereich(int x, int y, int b, int h, Runnable aktion) {}
 
-	/** Zutaten der Helfer-Rezepte als echte Gegenstände. */
-	private static final Map<String, Item> ZUTATEN = Map.ofEntries(
-			Map.entry("Brett", Items.OAK_PLANKS), Map.entry("Stock", Items.STICK), Map.entry("Kohle", Items.COAL),
-			Map.entry("Stein", Items.COBBLESTONE), Map.entry("Eisen", Items.IRON_INGOT), Map.entry("Diamant", Items.DIAMOND),
-			Map.entry("Wolle", Items.WHITE_WOOL), Map.entry("Buch", Items.BOOK), Map.entry("Obsidian", Items.OBSIDIAN),
-			Map.entry("Eisenblock", Items.IRON_BLOCK), Map.entry("Faden", Items.STRING), Map.entry("Pulver", Items.GUNPOWDER),
-			Map.entry("Sand", Items.SAND));
-
-	/** Ergebnisse der Helfer-Rezepte (englischer Name aus dem Wissen → Gegenstand). */
-	private static final Map<String, Item> ERGEBNISSE = Map.ofEntries(
-			Map.entry("Crafting Table", Items.CRAFTING_TABLE), Map.entry("Torch", Items.TORCH), Map.entry("Chest", Items.CHEST),
-			Map.entry("Furnace", Items.FURNACE), Map.entry("Pickaxe", Items.IRON_PICKAXE), Map.entry("Sword", Items.DIAMOND_SWORD),
-			Map.entry("Axe", Items.IRON_AXE), Map.entry("Bed", Items.WHITE_BED), Map.entry("Enchanting Table", Items.ENCHANTING_TABLE),
-			Map.entry("Anvil", Items.ANVIL), Map.entry("Bow", Items.BOW), Map.entry("Shield", Items.SHIELD),
-			Map.entry("Bucket", Items.BUCKET), Map.entry("TNT", Items.TNT), Map.entry("Bookshelf", Items.BOOKSHELF),
-			Map.entry("Ladder", Items.LADDER));
+	/** Gegenstand zu einer Minecraft-Id aus den Helfer-Rezepten (Gruppen wie „#planks“ → Beispiel). */
+	private static Item ding(String id) {
+		if (id == null || id.isEmpty()) return null;
+		Item i = BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(Rezepte.anzeige(id)));
+		return i == Items.AIR ? null : i;
+	}
 
 	private static final int FELD = 18;          // Rezept-Feld
 	private static final int PAD = 6;            // Innenabstand der Sprechblasen
@@ -118,7 +111,7 @@ public class HelferScreen extends Screen {
 	}
 
 	private Nachricht antwort(String frage) {
-		boolean en = englisch();
+		boolean en = HelferWissen.englischGefragt(frage, englisch());   // Antwort in der Sprache der Frage
 		String rechnung = HelferWissen.netherRechner(frage, en);
 		if (rechnung != null) {
 			return new Nachricht(rechnung, true, null);
@@ -292,7 +285,7 @@ public class HelferScreen extends Screen {
 			int fx = x + (i % 3) * FELD, fy = y + (i / 3) * FELD;
 			g.fill(fx, fy, fx + FELD - 1, fy + FELD - 1, 0xFF1C2633);
 			g.renderOutline(fx, fy, FELD - 1, FELD - 1, 0xFF2C3A4C);
-			Item ding = ZUTATEN.get(e.rezept[i]);
+			Item ding = ding(e.rezept[i]);
 			if (ding != null) {
 				g.renderItem(new ItemStack(ding), fx, fy);
 			}
@@ -303,9 +296,11 @@ public class HelferScreen extends Screen {
 		int ex = gx + 14, ey = mitte - FELD / 2 - 1;
 		g.fill(ex, ey, ex + FELD + 2, ey + FELD + 2, Farben.alpha(Farben.NEON, 30));
 		g.renderOutline(ex, ey, FELD + 2, FELD + 2, Farben.NEON);
-		Item ergebnis = ERGEBNISSE.get(e.rezeptEn);
+		Item ergebnis = ding(e.ergebnis);
 		if (ergebnis != null) {
-			g.renderItem(new ItemStack(ergebnis), ex + 2, ey + 2);
+			ItemStack stapel = new ItemStack(ergebnis, Math.max(1, Math.min(64, e.anzahl)));
+			g.renderItem(stapel, ex + 2, ey + 2);
+			g.renderItemDecorations(font, stapel, ex + 2, ey + 2);   // Anzahl unten rechts
 		}
 	}
 

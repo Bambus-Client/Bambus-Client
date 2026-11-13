@@ -137,8 +137,8 @@ Der Launcher sucht beim Start selbst nach einer neuen Version (abschaltbar unter
 
 **So veröffentlichst du ein Update (alles auf github.com):**
 1. Änderungen hochladen und in `AENDERUNGEN.md` kurz aufschreiben, was neu ist – das sehen alle als „Was ist neu“.
-2. Auf der Projektseite rechts **Releases → Draft a new release** → bei „Choose a tag“ eine höhere Nummer eintippen, z. B. `v3.3.0` → **Publish release**.
-   (Oder einen Tag `v3.3.0` hochladen.)
+2. Auf der Projektseite rechts **Releases → Draft a new release** → bei „Choose a tag“ eine höhere Nummer eintippen, z. B. `v3.4.0` → **Publish release**.
+   (Oder einen Tag `v3.4.0` hochladen.)
 3. GitHub baut alles (ca. 10–15 Minuten) und hängt die Dateien an das Release. Ab dann bekommen alle Launcher das Update.
 
 Die Versionsnummer überall im Code übernimmt der Build automatisch aus dem Tag. Der Launcher fragt nur die öffentliche GitHub-Seite – ohne Konto und ohne persönliche Daten.
@@ -156,7 +156,7 @@ Alles Weitere – EULA, Code-Signierung, fremde Lizenzen – steht in [`RECHTLIC
 1. Neues Repository auf github.com anlegen und den Inhalt dieses Ordners hochladen.
 2. Unter **Actions** startet „Bambus Client bauen“ automatisch.
 3. Nach ein paar Minuten liegen unten bei *Artifacts* die Downloads (Setup.exe, Zip, Dmg, Jar).
-4. Für eine richtige Download-Seite: unter *Releases* → *Draft a new release* → Tag `v3.3.0` → veröffentlichen.
+4. Für eine richtige Download-Seite: unter *Releases* → *Draft a new release* → Tag `v3.4.0` → veröffentlichen.
    Dann landen alle Dateien automatisch im Release.
 
 ### Am eigenen Computer

@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.PlayerInfo;
 
-/** Ping als farbige Signalbalken mit kleinem Verlauf der letzten Minute. */
+/** Eigenes Ping-Modul: Ping in ms mit farbigen Signalbalken, auf Wunsch mit Verlauf der letzten Minute. */
 public class PingModul extends HudModul {
 
 	private static final int BREITE = 112;
@@ -14,11 +14,15 @@ public class PingModul extends HudModul {
 	private static int pos = 0;
 	private static int takt = 0;
 
+	public static final String ID = "ping";
+	/** Früherer Name des Moduls – Position und „an“ werden beim Start übernommen. */
+	public static final String ALTE_ID = "pingverlauf";
+
 	private final Option signal = option("signal", "Signalbalken", true);
-	private final Option verlauf = option("verlauf", "Verlauf der letzten Minute", true);
+	final Option verlauf = option("verlauf", "Verlauf der letzten Minute", false);
 
 	public PingModul() {
-		super("pingverlauf", "Ping-Verlauf", 10000, 243, false, "Signalbalken und Ping der letzten Minute", "INFO");
+		super(ID, "Ping", 4, 172, true, "Ping mit Signalbalken", "INFO");
 	}
 
 	private static int ping(Minecraft mc) {
@@ -40,7 +44,18 @@ public class PingModul extends HudModul {
 
 	@Override
 	public int breite(Minecraft mc, boolean editor) {
+		if (!verlauf.an()) {   // ohne Verlauf so breit wie der Text
+			return (signal.an() ? 26 : 6) + mc.font.width(text(mc, wert(mc, editor))) + 6;
+		}
 		return BREITE;
+	}
+
+	private static int wert(Minecraft mc, boolean editor) {
+		return editor && mc.player == null ? 46 : ping(mc);
+	}
+
+	private static String text(Minecraft mc, int ms) {
+		return ms < 0 ? (mc.hasSingleplayerServer() ? "Einzelspieler" : "– ms") : ms + " ms";
 	}
 
 	@Override
@@ -50,8 +65,8 @@ public class PingModul extends HudModul {
 
 	@Override
 	public void zeichne(GuiGraphics g, Minecraft mc, int x, int y, boolean editor) {
-		panel(g, x, y, BREITE, hoehe(mc, editor));
-		int ms = editor && mc.player == null ? 46 : ping(mc);
+		panel(g, x, y, breite(mc, editor), hoehe(mc, editor));
+		int ms = wert(mc, editor);
 		int f = farbe(ms);
 		// 4 Signalbalken: je besser der Ping, desto mehr leuchten
 		int stufe = ms < 0 ? 0 : ms < 50 ? 4 : ms < 100 ? 3 : ms < 180 ? 2 : 1;
@@ -59,7 +74,7 @@ public class PingModul extends HudModul {
 			int h = 3 + i * 3;
 			g.fill(x + 6 + i * 4, y + 17 - h, x + 9 + i * 4, y + 17, i < stufe ? f : 0xFF2A3445);
 		}
-		String text = ms < 0 ? (mc.hasSingleplayerServer() ? "Einzelspieler" : "–") : ms + " ms";
+		String text = text(mc, ms);
 		g.drawString(mc.font, text, x + (signal.an() ? 26 : 6), y + 5, f, true);
 		if (!verlauf.an()) {
 			return;

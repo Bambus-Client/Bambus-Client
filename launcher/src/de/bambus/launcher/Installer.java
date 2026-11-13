@@ -27,17 +27,21 @@ import java.util.Map;
  */
 final class Installer {
 
+	/** Version, für die die Bambus-Mod gebaut ist – nur hier gibt es den Client selbst. */
 	static final String MC_VERSION = "1.21.11";
+	/** Minecraft-Versionen, die man im Launcher wählen kann (älteste zuerst). */
+	static final String[] VERSIONEN = {"1.21.11", "26.1", "26.1.1", "26.1.2", "26.2", "26.3"};
+	/** Fabric-Loader, der verwendet wird, wenn Fabric gerade nichts Neueres meldet. */
 	static final String LOADER_VERSION = "0.18.1";
-	static final String VERSION_ID = "fabric-loader-" + LOADER_VERSION + "-" + MC_VERSION;
 	static final String PROFIL_ID = "bambus-client";
 	static final String PROFIL_NAME = "Bambus Client";
 	static final String MOD_DATEI = "bambus-client.jar";
 
-	private static final String FABRIC_META = "https://meta.fabricmc.net/v2/versions/loader/"
-			+ MC_VERSION + "/" + LOADER_VERSION + "/profile/json";
-	private static final String MODRINTH_FABRIC_API = "https://api.modrinth.com/v2/project/fabric-api/version"
-			+ "?game_versions=%5B%22" + MC_VERSION + "%22%5D&loaders=%5B%22fabric%22%5D";
+	/** Gibt es diese Minecraft-Version im Launcher? */
+	static boolean kenntVersion(String v) {
+		for (String k : VERSIONEN) if (k.equals(v)) return true;
+		return false;
+	}
 	static final String USER_AGENT = "BambusLauncher/" + BambusLauncher.VERSION;
 
 	interface Fortschritt {
@@ -45,8 +49,14 @@ final class Installer {
 	}
 
 	final Path mcOrdner;
+	/** Bambus-Zuhause: Einstellungen, Kosmetik, Zwischenspeicher – für alle Versionen dasselbe. */
 	final Path spielOrdner;
-	final Path modsOrdner;
+	/** Spielordner der gewählten Version (bei 1.21.11 ist das der Bambus-Ordner selbst). */
+	Path startOrdner;
+	/** Mods-Ordner der gewählten Version. */
+	Path modsOrdner;
+	private String version = MC_VERSION;
+	private String loader = LOADER_VERSION;
 	/** Mods-Verwaltung (FPS-Boost, Mod Menu, Modrinth-Mods) – wird vom Launcher gesetzt. */
 	ModVerwaltung mods;
 	/** Hinweise vom letzten Einrichten (z. B. Mod gibt es noch nicht für diese Version). */
@@ -55,7 +65,66 @@ final class Installer {
 	Installer(Path mcOrdner) {
 		this.mcOrdner = mcOrdner;
 		this.spielOrdner = mcOrdner.resolve("bambus-client");
-		this.modsOrdner = spielOrdner.resolve("mods");
+		nutzeVersion(MC_VERSION);
+	}
+
+	// ------------------------------------------------------- gewählte Version
+
+	/**
+	 * Stellt den Installer auf eine Minecraft-Version ein. Jede Version bekommt einen eigenen
+	 * Spielordner mit eigenen Mods und eigenen Welten – sonst würde eine neuere Version alte
+	 * Welten umbauen, und sie wären in der alten Version nicht mehr zu öffnen.
+	 */
+	void nutzeVersion(String v) {
+		version = kenntVersion(v) ? v : MC_VERSION;
+		loader = LOADER_VERSION;
+		startOrdner = MC_VERSION.equals(version) ? spielOrdner : spielOrdner.resolve("versionen").resolve(version);
+		modsOrdner = startOrdner.resolve("mods");
+	}
+
+	String version() {
+		return version;
+	}
+
+	/** Läuft die Bambus-Mod auf der gewählten Version? */
+	boolean bambusPasst() {
+		return MC_VERSION.equals(version);
+	}
+
+	String versionId() {
+		return "fabric-loader-" + loader + "-" + version;
+	}
+
+	String profilId() {
+		return bambusPasst() ? PROFIL_ID : PROFIL_ID + "-" + version;
+	}
+
+	String profilName() {
+		return bambusPasst() ? PROFIL_NAME : PROFIL_NAME + " " + version;
+	}
+
+	/**
+	 * Neuester stabiler Fabric-Loader für diese Minecraft-Version. Klappt die Abfrage nicht,
+	 * bleibt es bei {@link #LOADER_VERSION}.
+	 */
+	private void sucheLoader() {
+		try {
+			List<Object> liste = Json.liste(Json.parse(new String(
+					lade("https://meta.fabricmc.net/v2/versions/loader/" + version), StandardCharsets.UTF_8)));
+			if (liste == null) return;
+			for (Object o : liste) {
+				Map<String, Object> eintrag = Json.objekt(o);
+				Map<String, Object> l = eintrag == null ? null : Json.objekt(eintrag.get("loader"));
+				if (l == null) continue;
+				String nr = l.get("version") instanceof String ? (String) l.get("version") : null;
+				if (nr != null && Boolean.TRUE.equals(l.get("stable"))) {
+					loader = nr;
+					return;
+				}
+			}
+		} catch (Exception ignoriert) {
+			// kein Netz oder unerwartete Antwort – dann die eingebaute Loader-Version nehmen
+		}
 	}
 
 	// ------------------------------------------------------------ Ordner finden
@@ -124,15 +193,24 @@ final class Installer {
 
 	/** Braucht der Launcher noch eine Mod-Datei vom Nutzer? */
 	boolean brauchtModDatei() {
+		if (mods != null && !MC_VERSION.equals(mods.versionDesProfils(mods.aktivesProfil()))) {
+			return false;   // dieses Profil spielt eine andere Minecraft-Version, ganz ohne Bambus-Mod
+		}
 		return Updater.neuereMod() == null && !modEingebaut() && modNebenLauncher() == null && !modSchonInstalliert();
 	}
 
 	// ---------------------------------------------------------- Installation
 
 	void installiere(int ramGb, Path modVomNutzer, Fortschritt f) throws IOException {
+		if (mods != null) {
+			nutzeVersion(mods.versionDesProfils(mods.aktivesProfil()));
+		}
 		Files.createDirectories(modsOrdner);
 
-		f.melde("Fabric " + LOADER_VERSION + " wird eingerichtet …", 10);
+		f.melde("Minecraft " + version + " wird vorbereitet …", 5);
+		sucheLoader();
+
+		f.melde("Fabric " + loader + " wird eingerichtet …", 10);
 		fabricProfil();
 
 		f.melde("Fabric API wird geprüft …", 35);
@@ -143,25 +221,33 @@ final class Installer {
 			letzteHinweise = mods.installiere(f, 50, 72);
 		}
 
-		f.melde("Bambus Client wird kopiert …", 75);
-		bambusMod(modVomNutzer);
+		if (bambusPasst()) {
+			f.melde("Bambus Client wird kopiert …", 75);
+			bambusMod(modVomNutzer);
+		} else {
+			f.melde("Minecraft " + version + " ohne Bambus-Mod …", 75);
+			letzteHinweise.add("Den Bambus Client selbst gibt es nur für Minecraft " + MC_VERSION
+					+ ". Dieses Profil startet " + version + " mit Fabric und deinen Mods.");
+		}
 
-		f.melde("Profil „" + PROFIL_NAME + "“ wird angelegt …", 90);
+		f.melde("Profil „" + profilName() + "“ wird angelegt …", 90);
 		launcherProfil(ramGb);
 
 		f.melde("Fertig! Viel Spaß mit dem Bambus Client.", 100);
 	}
 
 	void fabricProfil() throws IOException {
-		Path ordner = mcOrdner.resolve("versions").resolve(VERSION_ID);
-		Path json = ordner.resolve(VERSION_ID + ".json");
+		String id = versionId();
+		Path ordner = mcOrdner.resolve("versions").resolve(id);
+		Path json = ordner.resolve(id + ".json");
 		Files.createDirectories(ordner);
 		if (!Files.isRegularFile(json) || Files.size(json) == 0) {
-			String text = new String(lade(FABRIC_META), StandardCharsets.UTF_8);
+			String text = new String(lade("https://meta.fabricmc.net/v2/versions/loader/"
+					+ version + "/" + loader + "/profile/json"), StandardCharsets.UTF_8);
 			Json.parse(text); // prüfen, dass es gültiges JSON ist
 			Files.write(json, text.getBytes(StandardCharsets.UTF_8));
 		}
-		Path jar = ordner.resolve(VERSION_ID + ".jar");
+		Path jar = ordner.resolve(id + ".jar");
 		if (!Files.exists(jar)) {
 			Files.createFile(jar); // leere Datei, genau wie beim offiziellen Fabric-Installer
 		}
@@ -171,7 +257,7 @@ final class Installer {
 		List<Path> alte = new ArrayList<>();
 		try (DirectoryStream<Path> dateien = Files.newDirectoryStream(modsOrdner, "fabric-api-*.jar")) {
 			for (Path p : dateien) {
-				if (p.getFileName().toString().contains("+" + MC_VERSION + ".jar")) {
+				if (p.getFileName().toString().contains("+" + version + ".jar")) {
 					return; // passende Version ist schon da
 				}
 				alte.add(p);
@@ -179,10 +265,11 @@ final class Installer {
 		}
 
 		f.melde("Fabric API wird heruntergeladen …", 45);
-		Object antwort = Json.parse(new String(lade(MODRINTH_FABRIC_API), StandardCharsets.UTF_8));
+		Object antwort = Json.parse(new String(lade("https://api.modrinth.com/v2/project/fabric-api/version"
+				+ "?game_versions=%5B%22" + version + "%22%5D&loaders=%5B%22fabric%22%5D"), StandardCharsets.UTF_8));
 		List<Object> versionen = Json.liste(antwort);
 		if (versionen == null || versionen.isEmpty()) {
-			throw new IOException("Keine Fabric API für Minecraft " + MC_VERSION + " gefunden.");
+			throw new IOException("Keine Fabric API für Minecraft " + version + " gefunden.");
 		}
 		List<Object> dateien = Json.liste(Json.objekt(versionen.get(0)).get("files"));
 		Map<String, Object> datei = Json.objekt(dateien.get(0));
@@ -278,12 +365,12 @@ final class Installer {
 			wurzel.put("profiles", profile);
 		}
 
-		Map<String, Object> alt = Json.objekt(profile.get(PROFIL_ID));
+		Map<String, Object> alt = Json.objekt(profile.get(profilId()));
 		String jetzt = Instant.now().toString();
 
 		Map<String, Object> profil = new LinkedHashMap<>();
 		profil.put("created", alt != null && alt.get("created") != null ? alt.get("created") : jetzt);
-		profil.put("gameDir", spielOrdner.toAbsolutePath().toString());
+		profil.put("gameDir", startOrdner.toAbsolutePath().toString());
 		String icon = iconDataUrl();
 		if (icon != null) {
 			profil.put("icon", icon);
@@ -291,10 +378,10 @@ final class Installer {
 		profil.put("javaArgs", "-Xmx" + ramGb + "G -Xms1G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions"
 				+ " -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M");
 		profil.put("lastUsed", jetzt);
-		profil.put("lastVersionId", VERSION_ID);
-		profil.put("name", PROFIL_NAME);
+		profil.put("lastVersionId", versionId());
+		profil.put("name", profilName());
 		profil.put("type", "custom");
-		profile.put(PROFIL_ID, profil);
+		profile.put(profilId(), profil);
 
 		Files.createDirectories(datei.getParent());
 		Path tmp = datei.resolveSibling(datei.getFileName() + ".tmp");
