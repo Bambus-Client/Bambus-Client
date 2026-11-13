@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * MODS: Zuerst die Liste aller Profile (sortierbar, als Liste oder Kacheln). Ein Klick öffnet ein Profil –
- * erst dann lassen sich seine Mods einstellen: links die installierten Mods, rechts die Suche bei
- * Modrinth und CurseForge, mit Mod-Icons. Gespielt wird mit dem aktiven Profil.
+ * PROFILE: Zuerst die Liste aller Profile (sortierbar, als Liste oder Kacheln) – jedes lässt sich direkt
+ * spielen. Ein Klick öffnet ein Profil mit seinen installierten Mods; „+ MODS HINZUFÜGEN“ führt zu einer
+ * eigenen Seite mit Suche bei Modrinth und CurseForge, mit Mod-Icons. Gespielt wird mit dem aktiven Profil.
  */
 final class SeiteMods extends JPanel {
 
@@ -38,12 +38,27 @@ final class SeiteMods extends JPanel {
 	private static final int RX = 396;                  // rechte Hälfte: entdecken (gleich breit)
 	private static final int VB = HB * 2 + 16;          // volle Breite
 	private static final int ZEILE = 44;
+	/** Suchtreffer: zwei Spalten, Kartenbreite und Zeilenhöhe. */
+	private static final int TB = (VB - 10 - 10) / 2, TZ = 66;
 
 	private final BambusLauncher l;
 	private final ModVerwaltung mods;
 	private final ModIcons icons;
 	private final BoostKarte boost;
-	private final JTextField suchFeld = new JTextField();
+	/** Suchleiste mit Lupe und Platzhalter, solange nichts eingetippt ist. */
+	private final JTextField suchFeld = new JTextField() {
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			super.paintComponent(graphics);
+			Graphics2D g = NeonUI.glatt(graphics);
+			if (getText().isEmpty()) {
+				g.setFont(NeonUI.normal(14));
+				g.setColor(NeonUI.alpha(NeonUI.GRAU, 150));
+				g.drawString(Sprache.t("Mods suchen – z. B. Sodium, Iris, Zoom …"), getInsets().left, getHeight() / 2 + 5);
+			}
+			g.dispose();
+		}
+	};
 	private final JPanel profilListe = liste();
 	private final JPanel installiert = liste();
 	private final JPanel treffer = liste();
@@ -59,7 +74,11 @@ final class SeiteMods extends JPanel {
 	/** Bauteile der Profil-Liste bzw. des geöffneten Profils – je nach Ansicht sichtbar. */
 	private final List<JComponent> listeTeile = new ArrayList<>();
 	private final List<JComponent> profilTeile = new ArrayList<>();
+	private final List<JComponent> entdeckenTeile = new ArrayList<>();
 	private List<JComponent> sammeln;
+	/** Ansicht: Profil-Liste, geöffnetes Profil oder „Mods hinzufügen“. */
+	private static final int LISTE = 0, PROFIL = 1, ENTDECKEN = 2;
+	private int ansicht = LISTE;
 	private final Map<String, NeonUI.UmrissKnopf> sortKnoepfe = new HashMap<>();
 	private NeonUI.UmrissKnopf ansichtKnopf, aktivierenKnopf;
 	private boolean profilOffen;
@@ -108,13 +127,16 @@ final class SeiteMods extends JPanel {
 		knopf("KOPIE", NeonUI.GRAU, kx + 252, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
 		knopf("LÖSCHEN", NeonUI.PINK, kx + 336, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
 
-		// ---- linke Hälfte: installiert
+		// ---- installierte Mods (volle Breite), darüber FPS-Boost und MODS HINZUFÜGEN
 		boost = new BoostKarte();
 		boost.setBounds(X, 194, HB, 56);
 		teil(boost);
-		teil(scroll(installiert, X, 256, HB, 278));
-		knopf("+ MOD-DATEI", NeonUI.PINK, X, 542, HB / 2 - 4, 30, this::dateiHinzufuegen);
-		knopf("ORDNER ÖFFNEN", NeonUI.GRAU, X + HB / 2 + 4, 542, HB / 2 - 4, 30, () -> {
+		NeonUI.UmrissKnopf hinzu = knopf("+  MODS HINZUFÜGEN", NeonUI.NEON, RX, 198, HB, 48, this::zeigeEntdecken);
+		hinzu.setFont(NeonUI.titel(16));
+		hinzu.setToolTipText("Mods bei Modrinth oder CurseForge suchen – mit Icons");
+		teil(scroll(installiert, X, 256, VB, 270));
+		knopf("+ MOD-DATEI", NeonUI.PINK, X, 540, 150, 32, this::dateiHinzufuegen);
+		knopf("ORDNER ÖFFNEN", NeonUI.GRAU, X + 158, 540, 150, 32, () -> {
 			try {
 				java.nio.file.Files.createDirectories(l.installer.modsOrdner);
 				java.awt.Desktop.getDesktop().open(l.installer.modsOrdner.toFile());
@@ -123,25 +145,35 @@ final class SeiteMods extends JPanel {
 			}
 		});
 
-		// ---- rechte Hälfte: entdecken
-		quelleModrinth = knopf("MODRINTH", NeonUI.NEON, RX, 194, 110, 28, () -> waehleQuelle(ModVerwaltung.MODRINTH));
-		quelleCurseforge = knopf("CURSEFORGE", NeonUI.GRAU, RX + 114, 194, 110, 28, () -> waehleQuelle(ModVerwaltung.CURSEFORGE));
-		schluesselKnopf = knopf("SCHLÜSSEL", NeonUI.GRAU, RX + HB - 108, 194, 108, 28, () -> {
+		NeonUI.SpielKnopf profilSpielen = new NeonUI.SpielKnopf("SPIELEN");
+		profilSpielen.setFont(NeonUI.titel(18));
+		profilSpielen.setBounds(X + VB - 214, 528, 222, 56);
+		profilSpielen.setToolTipText("Dieses Profil aktivieren und Minecraft starten");
+		profilSpielen.addActionListener(e -> spielenMit(mods.offenesProfil()));
+		teil(profilSpielen);
+
+		// ---- Ansicht 3: Mods hinzufügen (Modrinth / CurseForge mit Icons und Suche)
+		sammeln = entdeckenTeile;
+		knopf("← ZUM PROFIL", NeonUI.CYAN, X, 104, 128, 30, () -> zeigeAnsicht(PROFIL)).setToolTipText("Zurück zum Profil");
+		quelleModrinth = knopf("MODRINTH", NeonUI.NEON, X + 140, 104, 110, 30, () -> waehleQuelle(ModVerwaltung.MODRINTH));
+		quelleCurseforge = knopf("CURSEFORGE", NeonUI.GRAU, X + 254, 104, 110, 30, () -> waehleQuelle(ModVerwaltung.CURSEFORGE));
+		schluesselKnopf = knopf("SCHLÜSSEL", NeonUI.GRAU, X + 368, 104, 108, 30, () -> {
 			if (frageSchluessel()) suche();
 		});
 		schluesselKnopf.setToolTipText("CurseForge-API-Schlüssel eintragen oder ändern");
 		schluesselKnopf.setVisible(false);
-		suchFeld.setBounds(RX, 228, HB - 92, 32);
+		suchFeld.setBounds(X, 144, VB - 100, 36);
 		suchFeld.setBackground(NeonUI.KARTE);
 		suchFeld.setForeground(NeonUI.TEXT);
 		suchFeld.setCaretColor(NeonUI.NEON);
-		suchFeld.setFont(NeonUI.normal(13));
+		suchFeld.setFont(NeonUI.normal(14));
+		suchFeld.setToolTipText("Mod-Name eingeben und Enter drücken");
 		suchFeld.setBorder(BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(NeonUI.LINIE, 1, true), BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+				BorderFactory.createLineBorder(NeonUI.LINIE, 1, true), BorderFactory.createEmptyBorder(4, 14, 4, 10)));
 		suchFeld.addActionListener(e -> suche());
 		teil(suchFeld);
-		knopf("SUCHEN", NeonUI.CYAN, RX + HB - 86, 228, 86, 32, this::suche);
-		teil(scroll(treffer, RX, 268, HB, 304));
+		knopf("SUCHEN", NeonUI.CYAN, X + VB - 92, 144, 92, 36, this::suche);
+		teil(scroll(treffer, X, 210, VB, 368));
 		sammeln = null;
 
 		baueProfile();
@@ -157,12 +189,42 @@ final class SeiteMods extends JPanel {
 
 	/** Profil-Liste (false) oder geöffnetes Profil (true) zeigen. */
 	private void zeigeAnsicht(boolean profil) {
-		profilOffen = profil;
-		for (JComponent c : listeTeile) c.setVisible(!profil);
-		for (JComponent c : profilTeile) c.setVisible(profil);
-		schluesselKnopf.setVisible(profil && ModVerwaltung.CURSEFORGE.equals(quelle));
-		aktivierenKnopf.setVisible(profil && !mods.offenesProfil().equals(mods.aktivesProfil()));
+		zeigeAnsicht(profil ? PROFIL : LISTE);
+	}
+
+	private void zeigeAnsicht(int neu) {
+		ansicht = neu;
+		profilOffen = neu != LISTE;
+		for (JComponent c : listeTeile) c.setVisible(neu == LISTE);
+		for (JComponent c : profilTeile) c.setVisible(neu == PROFIL);
+		for (JComponent c : entdeckenTeile) c.setVisible(neu == ENTDECKEN);
+		schluesselKnopf.setVisible(neu == ENTDECKEN && ModVerwaltung.CURSEFORGE.equals(quelle));
+		aktivierenKnopf.setVisible(neu == PROFIL && !mods.offenesProfil().equals(mods.aktivesProfil()));
 		repaint();
+	}
+
+	/** Seite „Mods hinzufügen“ des geöffneten Profils. */
+	private void zeigeEntdecken() {
+		zeigeTreffer(letzteTreffer);   // Häkchen passen zum geöffneten Profil
+		zeigeAnsicht(ENTDECKEN);
+		if (!geladen) suche();         // beim ersten Öffnen: die beliebtesten Mods
+		SwingUtilities.invokeLater(suchFeld::requestFocusInWindow);
+	}
+
+	/** Profil aktivieren und Minecraft starten (der Fortschritt erscheint auf der Startseite). */
+	private void spielenMit(String id) {
+		mods.setzeAktivesProfil(id);
+		baueProfile();
+		l.zeige("start");
+		l.spielen();
+	}
+
+	/** Von der Startseite: anderes Profil zum Spielen wählen (ein geöffnetes Profil wird dabei geschlossen). */
+	void waehleAktiv(String id) {
+		mods.oeffne(null);
+		mods.setzeAktivesProfil(id);
+		baueProfile();
+		zeigeAnsicht(LISTE);
 	}
 
 	/** Öffnet ein Profil: erst jetzt lassen sich seine Mods einstellen. */
@@ -170,9 +232,7 @@ final class SeiteMods extends JPanel {
 		mods.oeffne(id);
 		baueInstalliert();
 		boost.repaint();
-		zeigeTreffer(letzteTreffer);   // Häkchen passen zum geöffneten Profil
-		zeigeAnsicht(true);
-		if (!geladen) suche();         // beim ersten Öffnen: die beliebtesten Mods
+		zeigeAnsicht(PROFIL);
 	}
 
 	private void zurListe() {
@@ -409,15 +469,19 @@ final class SeiteMods extends JPanel {
 	private void zeigeTreffer(List<ModVerwaltung.Projekt> ergebnis) {
 		letzteTreffer = ergebnis;
 		treffer.removeAll();
-		int y = 0;
+		int y = 0, spalte = 0;
 		for (ModVerwaltung.Projekt p : ergebnis) {
 			boolean schon = mods.istExtra(p.slug) || ModVerwaltung.istEmpfohlen(p.slug);
 			TrefferZeile z = new TrefferZeile(p, schon);
-			z.setBounds(0, y, HB - 10, ZEILE - 4);
+			z.setBounds(spalte * (TB + 10), y, TB, TZ - 6);
 			treffer.add(z);
-			y += ZEILE;
+			if (++spalte == 2) {
+				spalte = 0;
+				y += TZ;
+			}
 		}
-		treffer.setPreferredSize(new Dimension(HB - 10, Math.max(y, 10)));
+		if (spalte == 1) y += TZ;
+		treffer.setPreferredSize(new Dimension(VB - 10, Math.max(y, 10)));
 		treffer.revalidate();
 		treffer.repaint();
 		repaint();
@@ -464,7 +528,7 @@ final class SeiteMods extends JPanel {
 						}
 					}));
 		}
-		installiert.setPreferredSize(new Dimension(HB - 10, Math.max(y, 10)));
+		installiert.setPreferredSize(new Dimension(VB - 10, Math.max(y, 10)));
 		installiert.revalidate();
 		installiert.repaint();
 		fehlendeIconsSuchen(ohneIcon);
@@ -491,7 +555,7 @@ final class SeiteMods extends JPanel {
 	}
 
 	private int zeile(int y, ModZeile z) {
-		z.setBounds(0, y, HB - 10, ZEILE - 4);
+		z.setBounds(0, y, VB - 10, ZEILE - 4);
 		installiert.add(z);
 		return y + ZEILE;
 	}
@@ -518,7 +582,7 @@ final class SeiteMods extends JPanel {
 		baueProfile();
 		baueInstalliert();
 		boost.repaint();
-		zeigeAnsicht(profilOffen);
+		zeigeAnsicht(ansicht);
 	}
 
 	// ============================================================ Icons
@@ -548,12 +612,17 @@ final class SeiteMods extends JPanel {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = NeonUI.glatt(graphics);
+		if (ansicht == ENTDECKEN) {
+			zeichneEntdecken(g);
+			g.dispose();
+			return;
+		}
 		if (!profilOffen) {
 			g.setFont(NeonUI.titel(30));
-			NeonUI.leuchtText(g, "MODS", X, 62, NeonUI.TEXT, 1);
+			NeonUI.leuchtText(g, "PROFILE", X, 62, NeonUI.TEXT, 1);
 			g.setFont(NeonUI.normal(13));
 			g.setColor(NeonUI.GRAU);
-			g.drawString("Wähle ein Profil, um seine Mods einzustellen. Gespielt wird das aktive Profil.", X, 84);
+			g.drawString("Jedes Profil hat eigene Mods und eine eigene Minecraft-Version.", X, 84);
 			g.setFont(NeonUI.mono(10));
 			g.setColor(NeonUI.GRAU);
 			g.drawString("SORTIEREN", X, 122);
@@ -579,22 +648,24 @@ final class SeiteMods extends JPanel {
 			NeonUI.zentriert(g, "✓ AKTIV", ax, 104, 80, 30);
 		}
 
-		ueberschrift(g, "INSTALLIERT", X, 184);
-		ueberschrift(g, "ENTDECKEN", RX, 184);
-		// senkrechte Trennlinie zwischen den Hälften
-		g.setColor(NeonUI.LINIE);
-		g.fillRect(X + HB + 7, 176, 1, 396);
+		ueberschrift(g, "INSTALLIERTE MODS", X, 184);
+		g.dispose();
+	}
 
+	/** Kopf der Seite „Mods hinzufügen“. */
+	private void zeichneEntdecken(Graphics2D g) {
+		ModVerwaltung.Profil p = offen();
+		g.setFont(NeonUI.titel(30));
+		NeonUI.leuchtText(g, "MODS HINZUFÜGEN", X, 62, NeonUI.TEXT, 1);
+		g.setFont(NeonUI.normal(13));
+		g.setColor(NeonUI.GRAU);
+		g.drawString(kuerze(g, "Für „" + p.name + "“ · Fabric-Mods für Minecraft " + p.version + " · „+“ fügt die Mod hinzu",
+				VB - 250), X, 84);
+		versionsSchild(g, p, X + VB - 230, 50);
 		g.setFont(NeonUI.normal(12));
 		g.setColor(NeonUI.GRAU);
-		if (!suchStatus.isEmpty()) {
-			g.setFont(NeonUI.normal(11));
-			g.drawString(kuerze(g, suchStatus, HB - 8), RX + 4, 290);
-		}
-		g.setFont(NeonUI.mono(10));
-		g.setColor(new Color(0x5C6B80));
-		g.drawString("Fabric-Mods für " + p.version + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
-		g.dispose();
+		String status = suchStatus.isEmpty() ? (letzteTreffer.isEmpty() ? "" : letzteTreffer.size() + " Mods") : suchStatus;
+		g.drawString(kuerze(g, status, VB), X + 2, 200);
 	}
 
 	/** Schild mit der Minecraft-Version eines Profils. */
@@ -658,7 +729,7 @@ final class SeiteMods extends JPanel {
 	private final class ProfilEintrag extends JComponent {
 		private final ModVerwaltung.Profil p;
 		private final boolean kachel;
-		private boolean ueber, ueberKnopf;
+		private boolean ueber, ueberKnopf, ueberSpielen;
 
 		ProfilEintrag(ModVerwaltung.Profil p, boolean kachel) {
 			this.p = p;
@@ -667,13 +738,15 @@ final class SeiteMods extends JPanel {
 			setToolTipText("Öffnen und Mods einstellen");
 			MouseAdapter maus = new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
-				@Override public void mouseExited(MouseEvent e) { ueber = false; ueberKnopf = false; repaint(); }
+				@Override public void mouseExited(MouseEvent e) { ueber = false; ueberKnopf = false; ueberSpielen = false; repaint(); }
 				@Override public void mouseMoved(MouseEvent e) {
-					boolean k = knopf().contains(e.getPoint());
-					if (k != ueberKnopf) { ueberKnopf = k; repaint(); }
+					boolean k = knopf().contains(e.getPoint()), sp = spielenKnopf().contains(e.getPoint());
+					if (k != ueberKnopf || sp != ueberSpielen) { ueberKnopf = k; ueberSpielen = sp; repaint(); }
 				}
 				@Override public void mouseClicked(MouseEvent e) {
-					if (!istAktiv() && knopf().contains(e.getPoint())) {
+					if (spielenKnopf().contains(e.getPoint())) {
+						spielenMit(ProfilEintrag.this.p.id);
+					} else if (!istAktiv() && knopf().contains(e.getPoint())) {
 						mods.setzeAktivesProfil(ProfilEintrag.this.p.id);
 						baueProfile();
 					} else {
@@ -691,8 +764,16 @@ final class SeiteMods extends JPanel {
 
 		/** Fläche des AKTIVIEREN-Knopfs bzw. des AKTIV-Abzeichens. */
 		private java.awt.Rectangle knopf() {
-			return kachel ? new java.awt.Rectangle(12, getHeight() - 36, getWidth() - 24, 26)
+			int halb = (getWidth() - 24 - 6) / 2;
+			return kachel ? new java.awt.Rectangle(12, getHeight() - 36, halb, 26)
 					: new java.awt.Rectangle(getWidth() - 236, (getHeight() - 28) / 2, 104, 28);
+		}
+
+		/** Fläche des SPIELEN-Knopfs. */
+		private java.awt.Rectangle spielenKnopf() {
+			int halb = (getWidth() - 24 - 6) / 2;
+			return kachel ? new java.awt.Rectangle(12 + halb + 6, getHeight() - 36, halb, 26)
+					: new java.awt.Rectangle(getWidth() - 122, (getHeight() - 28) / 2, 108, 28);
 		}
 
 		@Override
@@ -735,10 +816,23 @@ final class SeiteMods extends JPanel {
 				g.setColor(NeonUI.GRAU);
 				g.drawString(info + "  ·  " + wann, 62, 44);
 				schild(g, p, b - 246, h / 2 - 9);
-				g.setFont(NeonUI.mono(11));
-				g.setColor(ueber ? NeonUI.CYAN : NeonUI.GRAU);
-				g.drawString("ÖFFNEN →", b - 110, h / 2 + 4);
 			}
+			// SPIELEN: aktiviert das Profil und startet Minecraft
+			java.awt.Rectangle sp = spielenKnopf();
+			RoundRectangle2D sf = new RoundRectangle2D.Float(sp.x, sp.y, sp.width, sp.height, 8, 8);
+			if (ueberSpielen) {
+				g.setPaint(new java.awt.GradientPaint(sp.x, 0, NeonUI.NEON, sp.x + sp.width, 0, NeonUI.CYAN));
+				g.fill(sf);
+				g.setColor(NeonUI.DUNKEL);
+			} else {
+				g.setColor(NeonUI.alpha(NeonUI.NEON, 28));
+				g.fill(sf);
+				g.setColor(NeonUI.alpha(NeonUI.NEON, 170));
+				g.draw(sf);
+				g.setColor(NeonUI.NEON);
+			}
+			g.setFont(NeonUI.mono(11));
+			NeonUI.zentriert(g, "▶ SPIELEN", sp.x, sp.y, sp.width, sp.height);
 			// Aktiv-Abzeichen oder AKTIVIEREN-Knopf
 			g.setFont(NeonUI.mono(11));
 			if (aktiv) {
@@ -953,26 +1047,66 @@ final class SeiteMods extends JPanel {
 		protected void paintComponent(Graphics graphics) {
 			Graphics2D g = NeonUI.glatt(graphics);
 			int b = getWidth(), h = getHeight();
-			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 10, 10);
+			boolean cf = ModVerwaltung.CURSEFORGE.equals(p.quelle());
+			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 12, 12);
 			g.setColor(ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
 			g.fill(form);
-			g.setColor(ueber && !drin ? NeonUI.alpha(NeonUI.CYAN, 160) : NeonUI.LINIE);
-			g.draw(form);
-			int textB = b - 46 - 76;
-			icon(g, p.slug, p.icon, p.titel, 10, (h - 28) / 2, 28, ModVerwaltung.CURSEFORGE.equals(p.quelle()) ? CF_FARBE : NeonUI.CYAN);
-			g.setFont(NeonUI.titel(13));
+			if (ueber && !drin) {
+				NeonUI.leuchten(g, form, NeonUI.alpha(NeonUI.CYAN, 200), 2);
+			} else {
+				g.setColor(drin ? NeonUI.alpha(NeonUI.NEON, 120) : NeonUI.LINIE);
+				g.draw(form);
+			}
+			int is = 44, ix = 10, iy = (h - is) / 2;
+			icon(g, p.slug, p.icon, p.titel, ix, iy, is, cf ? CF_FARBE : NeonUI.CYAN);
+			int tx = ix + is + 12, textB = b - tx - 80;
+			g.setFont(NeonUI.titel(14));
 			g.setColor(NeonUI.TEXT);
-			g.drawString(kuerze(g, p.titel, textB), 46, 17);
+			g.drawString(kuerze(g, p.titel, textB), tx, 22);
 			g.setFont(NeonUI.normal(11));
 			g.setColor(NeonUI.GRAU);
-			g.drawString(kuerze(g, p.beschreibung, textB), 46, 32);
+			String[] zeilen = zweiZeilen(g, Sprache.t(p.beschreibung), textB);
+			g.drawString(zeilen[0], tx, 38);
+			g.drawString(zeilen[1], tx, 52);
+			// rechts: Downloads und Knopf
 			g.setFont(NeonUI.mono(9));
-			g.drawString(downloads(p.downloads), b - 70, h / 2 + 3);
-			g.setFont(NeonUI.mono(12));
-			g.setColor(drin ? NeonUI.NEON : NeonUI.CYAN);
-			g.drawString(drin ? "✓" : "+", b - 24, h / 2 + 5);
+			String dl = downloads(p.downloads);
+			if (!dl.isEmpty()) {
+				g.setColor(NeonUI.alpha(NeonUI.GRAU, 200));
+				String t = "↓ " + dl;
+				g.drawString(t, b - 12 - g.getFontMetrics().stringWidth(t), 20);
+			}
+			int kb = 54, kh = 24, kx = b - kb - 10, ky = h - kh - 9;
+			RoundRectangle2D k = new RoundRectangle2D.Float(kx, ky, kb, kh, 8, 8);
+			if (drin) {
+				g.setColor(NeonUI.alpha(NeonUI.NEON, 30));
+				g.fill(k);
+				g.setColor(NeonUI.NEON);
+				g.setFont(NeonUI.mono(10));
+				NeonUI.zentriert(g, "✓ DRIN", kx, ky, kb, kh);
+			} else {
+				g.setColor(ueber ? NeonUI.CYAN : NeonUI.alpha(NeonUI.CYAN, 30));
+				g.fill(k);
+				g.setColor(ueber ? NeonUI.DUNKEL : NeonUI.CYAN);
+				g.setFont(NeonUI.mono(11));
+				NeonUI.zentriert(g, "+ DAZU", kx, ky, kb, kh);
+			}
 			g.dispose();
 		}
+	}
+
+	/** Text auf höchstens zwei Zeilen umbrechen (zweite Zeile mit „…“ gekürzt). */
+	private static String[] zweiZeilen(Graphics2D g, String text, int max) {
+		java.awt.FontMetrics fm = g.getFontMetrics();
+		if (text == null) return new String[]{"", ""};
+		if (fm.stringWidth(text) <= max) return new String[]{text, ""};
+		int bruch = text.length();
+		while (bruch > 0 && fm.stringWidth(text.substring(0, bruch)) > max) bruch--;
+		int leer = text.lastIndexOf(' ', bruch);
+		if (leer > bruch / 2) bruch = leer;
+		String rest = text.substring(bruch).trim();
+		while (rest.length() > 1 && fm.stringWidth(rest + "…") > max) rest = rest.substring(0, rest.length() - 1);
+		return new String[]{text.substring(0, bruch), rest.equals(text.substring(bruch).trim()) ? rest : rest + "…"};
 	}
 
 	private static String downloads(long n) {

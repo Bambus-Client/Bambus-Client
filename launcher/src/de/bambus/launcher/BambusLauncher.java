@@ -53,7 +53,7 @@ public final class BambusLauncher extends JFrame {
 			{"start", "START", "spielen"},          // {Seite, Name wie im Spiel, Pixel-Symbol}
 			{"module", "MOD-MENÜ", "alle"},
 			{"kosmetik", "GARDEROBE", "person"},
-			{"mods", "MODS", "blitz"},
+			{"mods", "PROFILE", "blitz"},
 			{"server", "SERVER", "server"},
 			{"neu", "NEUIGKEITEN", "update"},
 			{"quests", "QUESTS", "stern"},
