@@ -80,8 +80,8 @@ public class BambusMenuScreen extends Screen {
 	private static final Map<String, String> MODUL_TEXT = Map.of(
 			"info", "FPS, Koordinaten und CPS",
 			"tasten", "W A S D, Maus und Leertaste",
-			"server", "Serveradresse und Ping",
-			"status", "Zeigt Toggle Sprint / Sneak",
+			"server", "Adresse des Servers",
+			"ping", "Ping mit Signalbalken",
 			"ruestung", "Rüstung mit Haltbarkeit",
 			"effekte", "Aktive Tränke mit Restzeit"
 	);
@@ -390,16 +390,6 @@ public class BambusMenuScreen extends Screen {
 	private List<Karte> funktionsKarten() {
 		BambusConfig c = cfg();
 		List<Karte> k = new ArrayList<>();
-		k.add(new Karte("Toggle Sprint", "Sprint-Taste 1× drücken = dauerhaft",
-				() -> c.toggleSprint, () -> {
-			c.toggleSprint = !c.toggleSprint;
-			Funktionen.sprintUndSchleichenAnwenden(minecraft);
-		}, Farben.NEON));
-		k.add(new Karte("Toggle Sneak", "Schleich-Taste 1× drücken = dauerhaft",
-				() -> c.toggleSneak, () -> {
-			c.toggleSneak = !c.toggleSneak;
-			Funktionen.sprintUndSchleichenAnwenden(minecraft);
-		}, Farben.NEON));
 		k.add(new Karte("Zoom mit Mausrad", "C halten · Mausrad = näher/weiter",
 				() -> c.scrollZoom, () -> c.scrollZoom = !c.scrollZoom, Farben.NEON));
 		k.add(new Karte("Freelook", "Linke Alt halten · ⚠ nicht überall erlaubt",

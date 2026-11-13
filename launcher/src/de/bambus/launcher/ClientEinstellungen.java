@@ -19,8 +19,8 @@ final class ClientEinstellungen {
 	static final String[][] MODULE = {   // {id, Name, Beschreibung, x, y, Standard an}
 			{"info", "Info", "FPS, Koordinaten und CPS", "4", "4", "true"},
 			{"tasten", "Keystrokes", "W A S D, Maus und Leertaste", "4", "54", "true"},
-			{"server", "Server & Ping", "Serveradresse und Ping", "4", "146", "true"},
-			{"status", "Sprint-Status", "Zeigt Toggle Sprint / Sneak", "4", "172", "true"},
+			{"server", "Server", "Adresse des Servers", "4", "158", "true"},
+			{"ping", "Ping", "Dein Ping mit Signalbalken", "4", "172", "true"},
 			{"ruestung", "Rüstungsanzeige", "Rüstung mit Haltbarkeit", "10000", "4", "true"},
 			{"effekte", "Trank-Effekte", "Aktive Tränke mit Restzeit", "10000", "100", "true"},
 			{"ziel", "Target-HUD", "Name, Leben und Abstand deines Ziels", "10000", "60", "true"},
@@ -39,7 +39,6 @@ final class ClientEinstellungen {
 			{"kompass", "Kompass-Balken", "Himmelsrichtungen gleiten vorbei", "10000", "2", "false"},
 			{"koordinaten", "Koordinaten", "Mit Nether-Umrechnung und Kopier-Taste", "4", "190", "false"},
 			{"spielzeit", "Spielzeit", "Zeit seit dem Betreten, Ingame-Tag", "4", "214", "false"},
-			{"pingverlauf", "Ping-Verlauf", "Signalbalken und Ping der letzten Minute", "10000", "230", "false"},
 	};
 
 	/** {Schlüssel, Name, Beschreibung, Standard, Warnung} */

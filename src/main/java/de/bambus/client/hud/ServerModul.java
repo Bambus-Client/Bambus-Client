@@ -2,20 +2,16 @@ package de.bambus.client.hud;
 
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** Server-Adresse und Ping. */
+/** Server-Adresse (der Ping ist ein eigenes Modul, siehe {@link PingModul}). */
 public class ServerModul extends TextModul {
 
-	private final Option adresse = option("adresse", "Serveradresse", true);
-	private final Option ping = option("ping", "Ping", true);
-
 	public ServerModul() {
-		super("server", "Server & Ping", 4, 158);
+		super("server", "Server", 4, 158, true, "Serveradresse", "INFO");
 	}
 
 	@Override
@@ -25,24 +21,8 @@ public class ServerModul extends TextModul {
 			z.add(new Zeile("Einzelspieler", Farben.WEISS));
 			return z;
 		}
-
 		ServerData server = mc.getCurrentServer();
-		if (adresse.an()) {
-			z.add(new Zeile("Server: " + (server != null ? server.ip : "?"), Farben.WEISS));
-		}
-		if (!this.ping.an()) {
-			return z;
-		}
-
-		int ping = -1;
-		if (mc.getConnection() != null && mc.player != null) {
-			PlayerInfo info = mc.getConnection().getPlayerInfo(mc.player.getUUID());
-			if (info != null) {
-				ping = info.getLatency();
-			}
-		}
-		int farbe = ping < 0 ? Farben.GRAU : ping < 80 ? Farben.GRUEN : ping < 180 ? Farben.GELB : Farben.ROT;
-		z.add(new Zeile("Ping: " + (ping < 0 ? "?" : ping + " ms"), farbe));
+		z.add(new Zeile("Server: " + (server != null ? server.ip : editor ? "bambus.example" : "?"), Farben.WEISS));
 		return z;
 	}
 }
