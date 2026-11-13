@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Launcher: Mod-Icons von Modrinth werden jetzt angezeigt (WebP-Bilder werden gelesen)
 - Ping ist jetzt ein eigenes Modul (Signalbalken, auf Wunsch mit Verlauf der letzten Minute); „Server & Ping“ heißt jetzt „Server“ und zeigt nur die Adresse
 - Toggle Sprint ist jetzt ein eigenes Modul: unter ⋮ lassen sich Toggle Sprint, Toggle Sneak und die Anzeige im HUD einzeln schalten
 - Neue Serverauswahl: Server als Karten mit Icon, farbiger Beschreibung, Ping und Spielerzahl; Favoriten mit ★ stehen oben und haben einen eigenen Tab; Suche, Doppelklick zum Beitreten (abschaltbar im Mod-Menü unter Mehr)
