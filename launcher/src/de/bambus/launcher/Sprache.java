@@ -111,6 +111,17 @@ final class Sprache {
 		g("Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät", "Every version gets its own mods and its own worlds, so nothing gets mixed up");
 		g("Der Bambus Client selbst läuft auf 1.21.11 – andere Versionen starten mit Fabric und deinen Mods", "The Bambus Client itself runs on 1.21.11 – other versions start with Fabric and your mods");
 		g("Serverauswahl, Einstellungs-Code & mehrere Versionen", "Server list, settings code & multiple versions");
+		g("Profil-Menü: jedes Profil direkt spielen, Mods hinzufügen auf eigener Seite mit Suche und Icons", "Profile menu: play any profile directly, add mods on their own page with search and icons");
+		g("Neben SPIELEN: ▾-Pfeil zur Profilauswahl – das aktive Profil steht über dem Knopf", "Next to PLAY: ▾ arrow to pick a profile – the active profile is shown above the button");
+		g("MODS HINZUFÜGEN", "ADD MODS"); g("+  MODS HINZUFÜGEN", "+  ADD MODS"); g("← ZUM PROFIL", "← TO PROFILE");
+		g("INSTALLIERTE MODS", "INSTALLED MODS"); g("PROFIL", "PROFILE"); g("PROFILE VERWALTEN →", "MANAGE PROFILES →");
+		g("▶ SPIELEN", "▶ PLAY"); g("+ DAZU", "+ ADD"); g("✓ DRIN", "✓ ADDED");
+		g("Mods suchen – z. B. Sodium, Iris, Zoom …", "Search mods – e.g. Sodium, Iris, Zoom …");
+		g("Profil zum Spielen auswählen", "Choose the profile to play");
+		g("Dieses Profil aktivieren und Minecraft starten", "Activate this profile and start Minecraft");
+		g("Jedes Profil hat eigene Mods und eine eigene Minecraft-Version.", "Every profile has its own mods and its own Minecraft version.");
+		teil("Für „", "For “"); teil("“ · Fabric-Mods für Minecraft ", "” · Fabric mods for Minecraft "); teil(" · „+“ fügt die Mod hinzu", " · “+” adds the mod");
+		teil(" · mit Bambus", " · with Bambus"); teil(" · ohne Bambus", " · without Bambus");
 		g("Einstellungs-Code: Module mit Anordnung und alle Minecraft-Einstellungen mit einem Code teilen", "Settings code: share modules with their layout and all Minecraft settings with one code");
 		g("Neue Serverauswahl im Spiel: Karten mit Icon, Ping und Spielern – Favoriten ★ stehen oben", "New in-game server list: cards with icon, ping and players – favourites ★ at the top");
 		g("Neues Hauptmenü im Spiel: große Karten für Einzel- und Mehrspieler", "New in-game main menu: big cards for singleplayer and multiplayer");

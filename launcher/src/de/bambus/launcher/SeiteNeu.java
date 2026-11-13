@@ -23,6 +23,8 @@ final class SeiteNeu extends JPanel {
 	private static final String[][] VERSIONEN = {
 			{"3.4", "Serverauswahl, Einstellungs-Code & mehrere Versionen", "00E5FF", "server",
 					"Einstellungs-Code: Module mit Anordnung und alle Minecraft-Einstellungen mit einem Code teilen",
+					"Profil-Menü: jedes Profil direkt spielen, Mods hinzufügen auf eigener Seite mit Suche und Icons",
+					"Neben SPIELEN: ▾-Pfeil zur Profilauswahl – das aktive Profil steht über dem Knopf",
 					"Neue Serverauswahl im Spiel: Karten mit Icon, Ping und Spielern – Favoriten ★ stehen oben",
 					"Neues Hauptmenü im Spiel: große Karten für Einzel- und Mehrspieler",
 					"Ping und Toggle Sprint als eigene Module – Toggle Sneak und HUD-Anzeige einzeln schaltbar",

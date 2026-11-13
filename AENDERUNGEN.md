@@ -1,4 +1,6 @@
 ## Neu in Version 3.4.0
+- Launcher: Aus „Mods“ wird das Profil-Menü – jedes Profil lässt sich direkt mit ▶ SPIELEN starten; „+ MODS HINZUFÜGEN“ öffnet eine eigene Seite mit Suchleiste und Mod-Icons (Modrinth und CurseForge)
+- Launcher: Neben SPIELEN gibt es einen ▾-Pfeil zur Profilauswahl, über dem Knopf steht das aktive Profil
 - Einstellungs-Code: Alle Bambus-Module mit Anordnung, Größe und Einstellungen plus alle Minecraft-Einstellungen (Grafik, Ton, Tastenbelegung) als ein Code kopieren und bei Freunden einfügen – Bambus-Menü → Mehr → EINSTELLUNGS-CODE. Blätter, Quests und Kosmetik werden nicht übertragen
 - Launcher: Mod-Icons von Modrinth werden jetzt angezeigt (WebP-Bilder werden gelesen)
 - Ping ist jetzt ein eigenes Modul (Signalbalken, auf Wunsch mit Verlauf der letzten Minute); „Server & Ping“ heißt jetzt „Server“ und zeigt nur die Adresse

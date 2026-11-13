@@ -573,7 +573,7 @@ final class ModVerwaltung {
 	/** Modrinth-Suche; ohne Suchtext die beliebtesten Mods. */
 	List<Projekt> suche(String text) throws IOException {
 		String facets = "[[\"categories:fabric\"],[\"versions:" + versionOffen() + "\"],[\"project_type:mod\"]]";
-		String url = API + "search?limit=20&index=" + (text.isEmpty() ? "downloads" : "relevance")
+		String url = API + "search?limit=40&index=" + (text.isEmpty() ? "downloads" : "relevance")
 				+ "&query=" + enc(text) + "&facets=" + enc(facets);
 		Map<String, Object> antwort = Json.objekt(Json.parse(new String(Installer.lade(url), StandardCharsets.UTF_8)));
 		List<Projekt> l = new ArrayList<>();
@@ -662,7 +662,7 @@ final class ModVerwaltung {
 
 	/** CurseForge-Suche (Fabric-Mods für die Minecraft-Version); ohne Suchtext die beliebtesten. */
 	private List<Projekt> sucheCurseforge(String text) throws IOException {
-		Map<String, Object> antwort = Json.objekt(cf("mods/search?gameId=432&classId=6&modLoaderType=4&pageSize=20"
+		Map<String, Object> antwort = Json.objekt(cf("mods/search?gameId=432&classId=6&modLoaderType=4&pageSize=40"
 				+ "&sortField=" + (text.isEmpty() ? "6" : "1") + "&sortOrder=desc"
 				+ "&gameVersion=" + enc(versionOffen()) + "&searchFilter=" + enc(text)));
 		List<Projekt> l = new ArrayList<>();
