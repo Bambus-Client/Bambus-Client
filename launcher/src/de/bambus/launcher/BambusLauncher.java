@@ -682,7 +682,7 @@ public final class BambusLauncher extends JFrame {
 			g.drawString("LOADER", 24, h - 70);
 			g.setColor(NeonUI.TEXT);
 			g.drawString(VERSION, 110, h - 106);
-			g.drawString(Installer.MC_VERSION, 110, h - 88);
+			g.drawString(installer.spielVersion(), 110, h - 88);
 			g.drawString("Fabric " + Installer.LOADER_VERSION, 110, h - 70);
 			// Pflichthinweis nach den Minecraft-Markenrichtlinien von Mojang
 			g.setFont(new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.PLAIN, 9));   // Pflichthinweis gut lesbar in normaler Schrift

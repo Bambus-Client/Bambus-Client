@@ -92,19 +92,22 @@ final class DirektStart {
 	// ============================================================ Start
 
 	Process starte(MicrosoftKonto.Sitzung s, int ramGb, Installer.Fortschritt f) throws IOException {
-		f.melde("Minecraft-Version wird geprüft …", 5);
-		Map<String, Object> vanilla = vanillaVersion();
+		String mcv = installer.spielVersion();
+		String versionId = Installer.versionId(mcv);
+		f.melde("Minecraft " + mcv + " wird geprüft …", 5);
+		Map<String, Object> vanilla = vanillaVersion(mcv);
 		Map<String, Object> fabric = Json.objekt(Json.parse(new String(Files.readAllBytes(
-				mc.resolve("versions").resolve(Installer.VERSION_ID).resolve(Installer.VERSION_ID + ".json")), StandardCharsets.UTF_8)));
+				mc.resolve("versions").resolve(versionId).resolve(versionId + ".json")), StandardCharsets.UTF_8)));
 		if (fabric == null) throw new IOException("Fabric-Profil fehlt.");
 
 		f.melde("Minecraft wird geladen …", 10);
-		Path clientJar = mc.resolve("versions").resolve(Installer.MC_VERSION).resolve(Installer.MC_VERSION + ".jar");
+		Path clientJar = mc.resolve("versions").resolve(mcv).resolve(mcv + ".jar");
 		Map<String, Object> client = Json.objekt(Json.objekt(vanilla.get("downloads")).get("client"));
 		sichere(str(client.get("url")), clientJar, str(client.get("sha1")));
 
 		f.melde("Bibliotheken werden geprüft …", 20);
-		List<Path> klassenpfad = bibliotheken(fabric, vanilla, f);
+		List<Path> nativeJars = new ArrayList<>();
+		List<Path> klassenpfad = bibliotheken(fabric, vanilla, nativeJars, f);
 		klassenpfad.add(clientJar);
 
 		f.melde("Spielgrafiken und Töne werden geprüft …", 45);
@@ -113,14 +116,15 @@ final class DirektStart {
 		f.melde("Java für Minecraft wird geprüft …", 80);
 		Path java = java(vanilla, f);
 
-		Path natives = mc.resolve("bin").resolve("bambus-" + Installer.MC_VERSION);
+		Path natives = mc.resolve("bin").resolve("bambus-" + mcv);
 		Files.createDirectories(natives);
+		entpackeNatives(nativeJars, natives);
 		Files.createDirectories(installer.spielOrdner);
 
 		// Platzhalter wie im offiziellen Launcher
 		Map<String, String> w = new LinkedHashMap<>();
 		w.put("auth_player_name", s.name);
-		w.put("version_name", Installer.VERSION_ID);
+		w.put("version_name", versionId);
 		w.put("game_directory", installer.spielOrdner.toString());
 		w.put("assets_root", mc.resolve("assets").toString());
 		w.put("assets_index_name", assetIndex);
@@ -174,20 +178,21 @@ final class DirektStart {
 
 	// ============================================================ Teile
 
-	private Map<String, Object> vanillaVersion() throws IOException {
-		Path json = mc.resolve("versions").resolve(Installer.MC_VERSION).resolve(Installer.MC_VERSION + ".json");
+	private Map<String, Object> vanillaVersion(String mcv) throws IOException {
+		Path json = mc.resolve("versions").resolve(mcv).resolve(mcv + ".json");
 		Map<String, Object> m = Json.objekt(Json.parse(new String(Installer.lade(MANIFEST), StandardCharsets.UTF_8)));
 		for (Object o : Json.liste(m.get("versions"))) {
 			Map<String, Object> v = Json.objekt(o);
-			if (Installer.MC_VERSION.equals(v.get("id"))) {
+			if (mcv.equals(v.get("id"))) {
 				sichere(str(v.get("url")), json, str(v.get("sha1")));
 				return Json.objekt(Json.parse(new String(Files.readAllBytes(json), StandardCharsets.UTF_8)));
 			}
 		}
-		throw new IOException("Minecraft " + Installer.MC_VERSION + " nicht bei Mojang gefunden.");
+		throw new IOException("Minecraft " + mcv + " nicht bei Mojang gefunden.");
 	}
 
-	private List<Path> bibliotheken(Map<String, Object> fabric, Map<String, Object> vanilla, Installer.Fortschritt f) throws IOException {
+	private List<Path> bibliotheken(Map<String, Object> fabric, Map<String, Object> vanilla, List<Path> nativeJars,
+									Installer.Fortschritt f) throws IOException {
 		List<Path> pfade = new ArrayList<>();
 		Set<String> schon = new LinkedHashSet<>();
 		List<Object> alle = new ArrayList<>();
@@ -201,11 +206,26 @@ final class DirektStart {
 			String name = str(lib.get("name"));
 			String[] teile = name.split(":");
 			if (teile.length < 3) continue;
-			String schluessel = teile[0] + ":" + teile[1] + (teile.length > 3 ? ":" + teile[3] : "");
-			if (!schon.add(schluessel)) continue;            // gleiche Bibliothek: die von Fabric gewinnt
-
 			Map<String, Object> dl = Json.objekt(lib.get("downloads"));
 			Map<String, Object> artefakt = dl == null ? null : Json.objekt(dl.get("artifact"));
+			// Alte Versionen (bis 1.18): Natives als „classifiers“ in einem eigenen Eintrag mit gleichem Namen –
+			// laden und später entpacken (vor der Doppelt-Prüfung, sonst würde der Eintrag übersprungen)
+			Map<String, Object> nativesNamen = Json.objekt(lib.get("natives"));
+			Map<String, Object> klassen = dl == null ? null : Json.objekt(dl.get("classifiers"));
+			if (nativesNamen != null && klassen != null && nativesNamen.get(os()) instanceof String) {
+				String klasse = ((String) nativesNamen.get(os())).replace("${arch}", "64");
+				Map<String, Object> n = Json.objekt(klassen.get(klasse));
+				if (n != null) {
+					Path nz = mc.resolve("libraries").resolve(str(n.get("path")));
+					if (!nativeJars.contains(nz)) {
+						sichere(str(n.get("url")), nz, str(n.get("sha1")));
+						nativeJars.add(nz);
+					}
+				}
+			}
+
+			String schluessel = teile[0] + ":" + teile[1] + (teile.length > 3 ? ":" + teile[3] : "");
+			if (!schon.add(schluessel)) continue;            // gleiche Bibliothek: die von Fabric gewinnt
 			String pfad, url, sha1;
 			if (artefakt != null) {
 				pfad = str(artefakt.get("path"));
@@ -224,6 +244,23 @@ final class DirektStart {
 			if (i % 10 == 0) f.melde("Bibliotheken: " + i + " / " + alle.size(), 20 + 25 * i / Math.max(1, alle.size()));
 		}
 		return pfade;
+	}
+
+	/** Natives alter Versionen (DLL/SO/DYLIB) in den Natives-Ordner entpacken. */
+	private static void entpackeNatives(List<Path> jars, Path ziel) throws IOException {
+		for (Path jar : jars) {
+			try (java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(Files.newInputStream(jar))) {
+				java.util.zip.ZipEntry e;
+				while ((e = zip.getNextEntry()) != null) {
+					String n = e.getName();
+					if (e.isDirectory() || n.startsWith("META-INF") || n.contains("..")) continue;
+					Path datei = ziel.resolve(n);
+					if (Files.isRegularFile(datei)) continue;
+					Files.createDirectories(datei.getParent());
+					Files.copy(zip, datei, StandardCopyOption.REPLACE_EXISTING);
+				}
+			}
+		}
 	}
 
 	static String mavenPfad(String[] t) {

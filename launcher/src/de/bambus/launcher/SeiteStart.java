@@ -116,7 +116,7 @@ final class SeiteStart extends JPanel {
 		// --- Titel
 		g.setFont(NeonUI.mono(12));
 		g.setColor(NeonUI.CYAN);
-		g.drawString("MINECRAFT " + Installer.MC_VERSION + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72);
+		g.drawString("MINECRAFT " + l.installer.spielVersion() + "  ·  FABRIC  ·  V" + BambusLauncher.VERSION, 42, 72);
 		g.setFont(NeonUI.titel(56));
 		NeonUI.leuchtText(g, "BAMBUS", 38, 136, NeonUI.NEON, 3);
 		int tb = g.getFontMetrics().stringWidth("BAMBUS ");

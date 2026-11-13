@@ -31,6 +31,7 @@ import java.util.Set;
  * MODS: Zuerst die Liste aller Profile (sortierbar, als Liste oder Kacheln). Ein Klick öffnet ein Profil –
  * erst dann lassen sich seine Mods einstellen: links die installierten Mods, rechts die Suche bei
  * Modrinth und CurseForge, mit Mod-Icons. Gespielt wird mit dem aktiven Profil.
+ * Ein neues Profil beginnt im Versions-Menü: Name eingeben und die Minecraft-Version wählen.
  */
 final class SeiteMods extends JPanel {
 
@@ -59,10 +60,22 @@ final class SeiteMods extends JPanel {
 	/** Bauteile der Profil-Liste bzw. des geöffneten Profils – je nach Ansicht sichtbar. */
 	private final List<JComponent> listeTeile = new ArrayList<>();
 	private final List<JComponent> profilTeile = new ArrayList<>();
+	private final List<JComponent> versionTeile = new ArrayList<>();
 	private List<JComponent> sammeln;
 	private final Map<String, NeonUI.UmrissKnopf> sortKnoepfe = new HashMap<>();
 	private NeonUI.UmrissKnopf ansichtKnopf, aktivierenKnopf;
 	private boolean profilOffen;
+
+	// ---- Versions-Menü (neues Profil / Version ändern)
+	private static final int LISTE = 0, PROFIL = 1, VERSION = 2;
+	private int ansicht = LISTE;
+	private boolean versionAendern;                     // false = neues Profil, true = Version des offenen Profils
+	private String gewaehlteVersion;
+	private List<String> versionsListe = new ArrayList<>();
+	private boolean versionenGeladen;
+	private final JTextField nameFeld = new JTextField();
+	private final JPanel versionGitter = liste();
+	private NeonUI.UmrissKnopf erstellenKnopf;
 
 	SeiteMods(BambusLauncher l) {
 		this.l = l;
@@ -96,15 +109,16 @@ final class SeiteMods extends JPanel {
 		// ---- Ansicht 2: ein geöffnetes Profil
 		sammeln = profilTeile;
 		knopf("← PROFILE", NeonUI.CYAN, X, 104, 104, 30, this::zurListe).setToolTipText("Zurück zur Liste aller Profile");
-		int kx = X + VB - 4 * 80 - 3 * 4;
+		int kx = KNOPF_X;
 		aktivierenKnopf = knopf("AKTIVIEREN", NeonUI.NEON, kx, 104, 80, 30, () -> {
 			mods.setzeAktivesProfil(mods.offenesProfil());
 			aktualisiere();
 		});
 		aktivierenKnopf.setToolTipText("Mit diesem Profil spielen");
-		knopf("NAME", NeonUI.GRAU, kx + 84, 104, 80, 30, this::profilUmbenennen).setToolTipText("Profil umbenennen");
-		knopf("KOPIE", NeonUI.GRAU, kx + 168, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
-		knopf("LÖSCHEN", NeonUI.PINK, kx + 252, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
+		knopf("VERSION", NeonUI.CYAN, kx + 84, 104, 80, 30, () -> zeigeVersionen(true)).setToolTipText("Minecraft-Version ändern");
+		knopf("NAME", NeonUI.GRAU, kx + 168, 104, 80, 30, this::profilUmbenennen).setToolTipText("Profil umbenennen");
+		knopf("KOPIE", NeonUI.GRAU, kx + 252, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
+		knopf("LÖSCHEN", NeonUI.PINK, kx + 336, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
 
 		// ---- linke Hälfte: installiert
 		boost = new BoostKarte();
@@ -140,6 +154,21 @@ final class SeiteMods extends JPanel {
 		teil(suchFeld);
 		knopf("SUCHEN", NeonUI.CYAN, RX + HB - 86, 228, 86, 32, this::suche);
 		teil(scroll(treffer, RX, 268, HB, 304));
+
+		// ---- Ansicht 3: Versions-Menü
+		sammeln = versionTeile;
+		nameFeld.setBounds(X, 132, 320, 34);
+		nameFeld.setBackground(NeonUI.KARTE);
+		nameFeld.setForeground(NeonUI.TEXT);
+		nameFeld.setCaretColor(NeonUI.NEON);
+		nameFeld.setFont(NeonUI.normal(14));
+		nameFeld.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createLineBorder(NeonUI.LINIE, 1, true), BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+		nameFeld.addActionListener(e -> versionBestaetigen());
+		teil(nameFeld);
+		teil(scroll(versionGitter, X, 206, VB, 300));
+		knopf("ABBRECHEN", NeonUI.GRAU, X + VB - 340, 542, 140, 32, this::versionAbbrechen);
+		erstellenKnopf = knopf("PROFIL ERSTELLEN", NeonUI.NEON, X + VB - 190, 542, 190, 32, this::versionBestaetigen);
 		sammeln = null;
 
 		baueProfile();
@@ -155,13 +184,24 @@ final class SeiteMods extends JPanel {
 
 	/** Profil-Liste (false) oder geöffnetes Profil (true) zeigen. */
 	private void zeigeAnsicht(boolean profil) {
+		zeigeAnsicht(profil ? PROFIL : LISTE);
+	}
+
+	private void zeigeAnsicht(int neu) {
+		ansicht = neu;
+		boolean profil = neu == PROFIL;
 		profilOffen = profil;
-		for (JComponent c : listeTeile) c.setVisible(!profil);
+		for (JComponent c : listeTeile) c.setVisible(neu == LISTE);
 		for (JComponent c : profilTeile) c.setVisible(profil);
+		for (JComponent c : versionTeile) c.setVisible(neu == VERSION);
+		nameFeld.setVisible(neu == VERSION && !versionAendern);
 		schluesselKnopf.setVisible(profil && ModVerwaltung.CURSEFORGE.equals(quelle));
 		aktivierenKnopf.setVisible(profil && !mods.offenesProfil().equals(mods.aktivesProfil()));
 		repaint();
 	}
+
+	/** Linke Kante der Knopfreihe im geöffneten Profil (AKTIVIEREN, VERSION, NAME, KOPIE, LÖSCHEN). */
+	private static final int KNOPF_X = X + VB - 5 * 80 - 4 * 4;
 
 	/** Öffnet ein Profil: erst jetzt lassen sich seine Mods einstellen. */
 	private void oeffneProfil(String id) {
@@ -260,10 +300,82 @@ final class SeiteMods extends JPanel {
 		return mods.profil(mods.offenesProfil());
 	}
 
+	/** Neues Profil: zuerst ins Versions-Menü – ohne gewählte Version geht es nicht weiter. */
 	private void neuesProfil() {
-		String name = frageName("Neues Profil", "Profil " + (mods.profile().size() + 1));
-		if (name != null) {
-			oeffneProfil(mods.neuesProfil(name, null));
+		nameFeld.setText("Profil " + (mods.profile().size() + 1));
+		zeigeVersionen(false);
+		SwingUtilities.invokeLater(() -> {
+			nameFeld.requestFocusInWindow();
+			nameFeld.selectAll();
+		});
+	}
+
+	// ============================================================ Versions-Menü
+
+	private void zeigeVersionen(boolean aendern) {
+		versionAendern = aendern;
+		gewaehlteVersion = aendern ? offen().version : null;
+		erstellenKnopf.setText(aendern ? "ÜBERNEHMEN" : "PROFIL ERSTELLEN");
+		baueVersionen();
+		zeigeAnsicht(VERSION);
+		if (!versionenGeladen) {
+			Thread t = new Thread(() -> {
+				List<String> l = ModVerwaltung.mcVersionen();
+				SwingUtilities.invokeLater(() -> {
+					versionsListe = new ArrayList<>(l);
+					versionenGeladen = true;
+					baueVersionen();
+				});
+			}, "Minecraft-Versionen");
+			t.setDaemon(true);
+			t.start();
+		}
+	}
+
+	private void baueVersionen() {
+		versionGitter.removeAll();
+		List<String> liste = new ArrayList<>(versionsListe);
+		// Bambus-Version immer zuerst, eine schon gewählte (ältere) Version nie verlieren
+		liste.remove(Installer.MC_VERSION);
+		liste.add(0, Installer.MC_VERSION);
+		if (gewaehlteVersion != null && !liste.contains(gewaehlteVersion)) liste.add(1, gewaehlteVersion);
+		int spalten = 6, abstand = 10, b = VB - 12;
+		int kb = (b - (spalten - 1) * abstand) / spalten, kh = 46;
+		for (int i = 0; i < liste.size(); i++) {
+			VersionKachel k = new VersionKachel(liste.get(i));
+			k.setBounds((i % spalten) * (kb + abstand), (i / spalten) * (kh + abstand), kb, kh);
+			versionGitter.add(k);
+		}
+		versionGitter.setPreferredSize(new Dimension(b, ((liste.size() + spalten - 1) / spalten) * (kh + abstand)));
+		versionGitter.revalidate();
+		versionGitter.repaint();
+		erstellenKnopf.setEnabled(gewaehlteVersion != null);
+		erstellenKnopf.setzeFarbe(gewaehlteVersion != null ? NeonUI.NEON : NeonUI.GRAU);
+		repaint();
+	}
+
+	private void versionBestaetigen() {
+		if (gewaehlteVersion == null) {
+			JOptionPane.showMessageDialog(l, Sprache.t("Bitte wähle zuerst eine Minecraft-Version."));
+			return;
+		}
+		if (versionAendern) {
+			mods.setzeVersion(mods.offenesProfil(), gewaehlteVersion);
+			oeffneProfil(mods.offenesProfil());
+			suche();   // Treffer passend zur neuen Version
+			return;
+		}
+		String name = nameFeld.getText().trim();
+		if (name.isEmpty()) name = "Profil " + (mods.profile().size() + 1);
+		oeffneProfil(mods.neuesProfil(name, null, gewaehlteVersion));
+		suche();
+	}
+
+	private void versionAbbrechen() {
+		if (versionAendern) {
+			zeigeAnsicht(PROFIL);
+		} else {
+			zurListe();
 		}
 	}
 
@@ -314,7 +426,7 @@ final class SeiteMods extends JPanel {
 			String status;
 			try {
 				ergebnis = mods.suche(text, wo);
-				status = ergebnis.isEmpty() ? "Nichts gefunden für Minecraft " + Installer.MC_VERSION + "." : "";
+				status = ergebnis.isEmpty() ? "Nichts gefunden für Minecraft " + mods.offeneVersion() + "." : "";
 			} catch (Exception ex) {
 				boolean schluessel = String.valueOf(ex.getMessage()).contains("(403)") || String.valueOf(ex.getMessage()).contains("(401)");
 				status = schluessel ? "CurseForge lehnt den Schlüssel ab – bitte unter SCHLÜSSEL prüfen."
@@ -425,7 +537,7 @@ final class SeiteMods extends JPanel {
 
 	private void dateiHinzufuegen() {
 		JFileChooser wahl = new JFileChooser();
-		wahl.setDialogTitle("Fabric-Mod (.jar) für Minecraft " + Installer.MC_VERSION + " auswählen");
+		wahl.setDialogTitle("Fabric-Mod (.jar) für Minecraft " + mods.offeneVersion() + " auswählen");
 		wahl.setFileFilter(new FileNameExtensionFilter("Minecraft-Mod (*.jar)", "jar"));
 		wahl.setMultiSelectionEnabled(true);
 		if (wahl.showOpenDialog(l) != JFileChooser.APPROVE_OPTION) {
@@ -445,7 +557,7 @@ final class SeiteMods extends JPanel {
 		baueProfile();
 		baueInstalliert();
 		boost.repaint();
-		zeigeAnsicht(profilOffen);
+		zeigeAnsicht(ansicht);
 	}
 
 	// ============================================================ Icons
@@ -475,6 +587,11 @@ final class SeiteMods extends JPanel {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = NeonUI.glatt(graphics);
+		if (ansicht == VERSION) {
+			zeichneVersionsMenue(g);
+			g.dispose();
+			return;
+		}
 		if (!profilOffen) {
 			g.setFont(NeonUI.titel(30));
 			NeonUI.leuchtText(g, "MODS", X, 62, NeonUI.TEXT, 1);
@@ -494,11 +611,23 @@ final class SeiteMods extends JPanel {
 		NeonUI.leuchtText(g, titel, X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(aktiv ? NeonUI.NEON : NeonUI.GRAU);
-		g.drawString(aktiv ? "● Aktives Profil – wird beim nächsten SPIELEN eingerichtet."
-				: "○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", X, 84);
+		String status = aktiv ? "● Aktiv – wird beim nächsten SPIELEN eingerichtet" : "○ Nicht aktiv – mit AKTIVIEREN spielst du damit";
+		g.drawString(status, X, 84);
+		int vx = X + g.getFontMetrics().stringWidth(status) + 14;
+		boolean bambus = Installer.bambusModFuer(p.version);
+		g.setFont(NeonUI.mono(11));
+		String vt = "MINECRAFT " + p.version;
+		int vb = g.getFontMetrics().stringWidth(vt) + 16;
+		g.setColor(NeonUI.alpha(NeonUI.CYAN, 30));
+		g.fillRect(vx, 70, vb, 20);
+		g.setColor(NeonUI.CYAN);
+		g.drawRect(vx, 70, vb - 1, 19);
+		NeonUI.zentriert(g, vt, vx, 70, vb, 20);
+		g.setColor(bambus ? NeonUI.NEON : NeonUI.PINK);
+		g.drawString(bambus ? "✓ mit Bambus-Funktionen" : "ohne Bambus-Funktionen", vx + vb + 10, 84);
 		if (aktiv) {
 			g.setFont(NeonUI.mono(11));
-			int ax = X + VB - 4 * 80 - 3 * 4;
+			int ax = KNOPF_X;
 			g.setColor(NeonUI.alpha(NeonUI.NEON, 40));
 			g.fillRect(ax, 104, 80, 30);
 			g.setColor(NeonUI.NEON);
@@ -519,8 +648,41 @@ final class SeiteMods extends JPanel {
 		}
 		g.setFont(NeonUI.mono(10));
 		g.setColor(new Color(0x5C6B80));
-		g.drawString("Fabric-Mods für " + Installer.MC_VERSION + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
+		g.drawString("Fabric-Mods für Minecraft " + p.version + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
 		g.dispose();
+	}
+
+	private void zeichneVersionsMenue(Graphics2D g) {
+		g.setFont(NeonUI.titel(30));
+		NeonUI.leuchtText(g, versionAendern ? "VERSION ÄNDERN" : "NEUES PROFIL", X, 62, NeonUI.TEXT, 1);
+		g.setFont(NeonUI.normal(13));
+		g.setColor(NeonUI.GRAU);
+		g.drawString(versionAendern ? "Wähle die Minecraft-Version für „" + offen().name + "“."
+				: "Gib deinem Profil einen Namen und wähle die Minecraft-Version.", X, 84);
+		if (!versionAendern) ueberschrift(g, "NAME", X, 122);
+		ueberschrift(g, "MINECRAFT-VERSION", X, 196);
+		g.setFont(NeonUI.normal(11));
+		g.setColor(NeonUI.GRAU);
+		if (!versionenGeladen) {
+			g.drawString("Versionen werden geladen …", X + 190, 196);
+		}
+		// Hinweis zur gewählten Version
+		g.setFont(NeonUI.normal(12));
+		String hinweis;
+		Color farbe;
+		if (gewaehlteVersion == null) {
+			hinweis = "Wähle eine Version, um weiterzumachen.";
+			farbe = NeonUI.GRAU;
+		} else if (Installer.bambusModFuer(gewaehlteVersion)) {
+			hinweis = "✓ Minecraft " + gewaehlteVersion + " – mit allen Bambus-Funktionen (HUD, Kosmetik, Quests, Helfer).";
+			farbe = NeonUI.NEON;
+		} else {
+			hinweis = "Minecraft " + gewaehlteVersion + " – mit Fabric und deinen Mods, ohne Bambus-Funktionen (nur "
+					+ Installer.MC_VERSION + ").";
+			farbe = NeonUI.PINK;
+		}
+		g.setColor(farbe);
+		g.drawString(kuerze(g, hinweis, VB), X, 526);
 	}
 
 	private static void ueberschrift(Graphics2D g, String text, int x, int y) {
@@ -615,7 +777,7 @@ final class SeiteMods extends JPanel {
 			g.setStroke(new BasicStroke(1.2f));
 			g.draw(form);
 			Color farbe = aktiv ? NeonUI.NEON : NeonUI.CYAN;
-			String info = p.mods + (p.mods == 1 ? " Mod" : " Mods");
+			String info = "MC " + p.version + "  ·  " + p.mods + (p.mods == 1 ? " Mod" : " Mods");
 			boolean en = Sprache.englisch();
 			String wann = p.zuletzt > 0 ? (en ? "last used " : "zuletzt ") + vor(p.zuletzt) : en ? "not used yet" : "noch nicht benutzt";
 			java.awt.Rectangle k = knopf();
@@ -658,6 +820,64 @@ final class SeiteMods extends JPanel {
 				g.setColor(NeonUI.alpha(NeonUI.NEON, ueberKnopf ? 255 : 140));
 				g.drawRect(k.x, k.y, k.width - 1, k.height - 1);
 				NeonUI.zentriert(g, "AKTIVIEREN", k.x, k.y, k.width, k.height);
+			}
+			g.dispose();
+		}
+	}
+
+	/** Eine Minecraft-Version im Versions-Menü; die Bambus-Version ist besonders markiert. */
+	private final class VersionKachel extends JComponent {
+		private final String version;
+		private boolean ueber;
+
+		VersionKachel(String version) {
+			this.version = version;
+			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			setToolTipText(Installer.bambusModFuer(version) ? "Empfohlen: mit allen Bambus-Funktionen"
+					: "Minecraft " + version + " mit Fabric (ohne Bambus-Funktionen)");
+			addMouseListener(new MouseAdapter() {
+				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
+				@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
+				@Override public void mouseClicked(MouseEvent e) {
+					boolean doppelt = e.getClickCount() >= 2 && version.equals(gewaehlteVersion);
+					gewaehlteVersion = version;
+					baueVersionen();
+					if (doppelt) versionBestaetigen();
+				}
+			});
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g = NeonUI.glatt(graphics);
+			int b = getWidth(), h = getHeight();
+			boolean gewaehlt = version.equals(gewaehlteVersion);
+			boolean bambus = Installer.bambusModFuer(version);
+			Color farbe = bambus ? NeonUI.NEON : NeonUI.CYAN;
+			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 10, 10);
+			g.setColor(gewaehlt ? NeonUI.alpha(farbe, 45) : ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+			g.fill(form);
+			if (gewaehlt) {
+				NeonUI.leuchten(g, form, farbe, 2);
+			} else {
+				g.setColor(ueber ? NeonUI.alpha(farbe, 160) : bambus ? NeonUI.alpha(NeonUI.NEON, 110) : NeonUI.LINIE);
+				g.setStroke(new BasicStroke(1.2f));
+				g.draw(form);
+			}
+			g.setFont(NeonUI.titel(bambus ? 15 : 16));
+			g.setColor(gewaehlt ? NeonUI.TEXT : bambus ? NeonUI.NEON : NeonUI.TEXT);
+			if (bambus) {
+				NeonUI.zentriert(g, version, 0, 4, b, h / 2);
+				g.setFont(NeonUI.mono(9));
+				g.setColor(NeonUI.NEON);
+				NeonUI.zentriert(g, "★ BAMBUS", 0, h / 2, b, h / 2 - 6);
+			} else {
+				NeonUI.zentriert(g, version, 0, 0, b, h);
+			}
+			if (gewaehlt) {
+				g.setFont(NeonUI.mono(11));
+				g.setColor(farbe);
+				g.drawString("✓", b - 16, 16);
 			}
 			g.dispose();
 		}

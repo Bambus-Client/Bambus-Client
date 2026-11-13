@@ -1,4 +1,6 @@
 ## Neu in dieser Version
+- Launcher: Neues Profil öffnet ein Versions-Menü – Name eingeben und die Minecraft-Version wählen (1.14 bis 1.21.11); die Version lässt sich im Profil unter VERSION ändern. Mod-Suche und Downloads richten sich nach der Version des Profils. Bambus-Funktionen gibt es weiterhin nur für 1.21.11
+- Launcher: Mod-Icons von Modrinth werden jetzt angezeigt (WebP-Bilder werden gelesen)
 - Neue Serverauswahl: Server als Karten mit Icon, farbiger Beschreibung, Ping und Spielerzahl; Favoriten mit ★ stehen oben und haben einen eigenen Tab; Suche, Doppelklick zum Beitreten (abschaltbar im Mod-Menü unter Mehr)
 - Neues Hauptmenü: Einzelspieler und Mehrspieler als große Karten mit Minecraft-Gegenständen, kleinere Knöpfe darunter, Profil mit Rang und Blättern, Pixel-Logo wie im Launcher
 - Ladebildschirm beim Server-Beitritt: Der „Abbrechen“-Knopf liegt jetzt unter dem Ladebalken statt mitten auf dem Bild – bei jeder Auflösung; dazu „Verbinde mit dem Server …“

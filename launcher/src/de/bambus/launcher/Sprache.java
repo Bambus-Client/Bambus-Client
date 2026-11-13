@@ -274,6 +274,25 @@ final class Sprache {
 		g("SORTIEREN", "SORT"); g("ZULETZT", "RECENT"); g("NEUESTE", "NEWEST"); g("KACHELN", "TILES"); g("LISTE", "LIST");
 		g("+ NEUES PROFIL", "+ NEW PROFILE"); g("← PROFILE", "← PROFILES"); g("AKTIVIEREN", "ACTIVATE"); g("✓ AKTIV", "✓ ACTIVE");
 		g("Wähle ein Profil, um seine Mods einzustellen. Gespielt wird das aktive Profil.", "Pick a profile to set up its mods. You play with the active profile.");
+		// Versions-Menü und Version je Profil
+		g("NEUES PROFIL", "NEW PROFILE"); g("VERSION ÄNDERN", "CHANGE VERSION"); g("PROFIL ERSTELLEN", "CREATE PROFILE");
+		g("ÜBERNEHMEN", "APPLY"); g("MINECRAFT-VERSION", "MINECRAFT VERSION"); g("NAME", "NAME"); g("VERSION", "VERSION");
+		g("Gib deinem Profil einen Namen und wähle die Minecraft-Version.", "Give your profile a name and pick the Minecraft version.");
+		g("Versionen werden geladen …", "Loading versions …"); g("Wähle eine Version, um weiterzumachen.", "Pick a version to continue.");
+		g("★ BAMBUS", "★ BAMBUS"); g("Minecraft-Version ändern", "Change the Minecraft version");
+		g("✓ mit Bambus-Funktionen", "✓ with Bambus features"); g("ohne Bambus-Funktionen", "without Bambus features");
+		g("● Aktiv – wird beim nächsten SPIELEN eingerichtet", "● Active – set up the next time you PLAY");
+		g("○ Nicht aktiv – mit AKTIVIEREN spielst du damit", "○ Not active – ACTIVATE to play with it");
+		g("Bitte wähle zuerst eine Minecraft-Version.", "Please pick a Minecraft version first.");
+		g("Empfohlen: mit allen Bambus-Funktionen", "Recommended: with all Bambus features");
+		teil("Wähle die Minecraft-Version für „", "Pick the Minecraft version for “"); teil("“.", "”.");
+		teil(" – mit allen Bambus-Funktionen (HUD, Kosmetik, Quests, Helfer).", " – with all Bambus features (HUD, cosmetics, quests, helper).");
+		teil(" – mit Fabric und deinen Mods, ohne Bambus-Funktionen (nur ", " – with Fabric and your mods, without Bambus features (only ");
+		teil(" mit Fabric (ohne Bambus-Funktionen)", " with Fabric (without Bambus features)");
+		teil("Fabric-Mods für Minecraft ", "Fabric mods for Minecraft "); teil("Nichts gefunden für Minecraft ", "Nothing found for Minecraft ");
+		teil("Bambus-Funktionen gibt es nur für Minecraft ", "Bambus features only exist for Minecraft ");
+		teil(" startet mit Fabric und deinen Mods", " starts with Fabric and your mods");
+		teil(" gibt es nicht für Minecraft ", " is not available for Minecraft ");
 		g("● Aktives Profil – wird beim nächsten SPIELEN eingerichtet.", "● Active profile – set up the next time you PLAY.");
 		g("○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", "○ Not active – click ACTIVATE to play with this profile.");
 		g("Öffnen und Mods einstellen", "Open and set up mods"); g("Mit diesem Profil spielen", "Play with this profile");

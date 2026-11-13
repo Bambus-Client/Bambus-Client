@@ -72,15 +72,16 @@ final class ModVerwaltung {
 		}
 	}
 
-	/** Ein Mod-Profil: eigener Name, eigene Mod-Auswahl. */
+	/** Ein Mod-Profil: eigener Name, eigene Minecraft-Version, eigene Mod-Auswahl. */
 	static final class Profil {
-		final String id, name;
+		final String id, name, version;
 		final int mods;
 		final long erstellt, zuletzt;   // Millisekunden; zuletzt = zuletzt aktiviert oder gespielt
 
-		Profil(String id, String name, int mods, long erstellt, long zuletzt) {
+		Profil(String id, String name, String version, int mods, long erstellt, long zuletzt) {
 			this.id = id;
 			this.name = name;
+			this.version = version;
 			this.mods = mods;
 			this.erstellt = erstellt;
 			this.zuletzt = zuletzt;
@@ -184,7 +185,8 @@ final class ModVerwaltung {
 		for (Map.Entry<String, Object> e : alleProfile().entrySet()) {
 			Map<String, Object> p = Json.objekt(e.getValue());
 			if (p != null) {
-				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), anzahlMods(p), zahl(p.get("erstellt")), zahl(p.get("zuletzt"))));
+				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), str(p.get("version"), Installer.MC_VERSION),
+						anzahlMods(p), zahl(p.get("erstellt")), zahl(p.get("zuletzt"))));
 			}
 		}
 		return l;
@@ -268,8 +270,73 @@ final class ModVerwaltung {
 		}
 	}
 
+	// ================================================================ Minecraft-Version je Profil
+
+	/** Minecraft-Version eines Profils (ältere Profile ohne Eintrag: die Bambus-Version). */
+	String version(String profilId) {
+		Map<String, Object> p = Json.objekt(alleProfile().get(profilId));
+		return p == null ? Installer.MC_VERSION : str(p.get("version"), Installer.MC_VERSION);
+	}
+
+	/** Version des Profils, mit dem gespielt wird. */
+	String spielVersion() {
+		return version(aktivesProfil());
+	}
+
+	/** Version des geöffneten Profils – danach richten sich Suche und Mod-Auswahl. */
+	String offeneVersion() {
+		return version(offenesProfil());
+	}
+
+	void setzeVersion(String profilId, String version) {
+		Map<String, Object> p = Json.objekt(alleProfile().get(profilId));
+		if (p != null && version != null && !version.isEmpty()) {
+			p.put("version", version);
+			speichern();
+		}
+	}
+
+	/** Eingebaute Liste, falls Fabric gerade nicht erreichbar ist. */
+	private static final String[] VERSIONEN_OFFLINE = {
+			"1.21.11", "1.21.10", "1.21.9", "1.21.8", "1.21.7", "1.21.6", "1.21.5", "1.21.4", "1.21.3", "1.21.1", "1.21",
+			"1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4", "1.19.2", "1.18.2", "1.17.1", "1.16.5"};
+	private static volatile List<String> versionen;
+
+	/**
+	 * Alle Minecraft-Versionen, für die es Fabric gibt (nur Vollversionen, neueste zuerst, ab 1.14).
+	 * Fragt beim ersten Aufruf meta.fabricmc.net – darf nicht im Swing-Thread laufen.
+	 */
+	static List<String> mcVersionen() {
+		List<String> l = versionen;
+		if (l != null) return l;
+		l = new ArrayList<>();
+		try {
+			List<Object> alle = Json.liste(Json.parse(new String(Installer.lade("https://meta.fabricmc.net/v2/versions/game"),
+					StandardCharsets.UTF_8)));
+			if (alle != null) {
+				for (Object o : alle) {
+					Map<String, Object> v = Json.objekt(o);
+					if (v == null || !Boolean.TRUE.equals(v.get("stable")) || !(v.get("version") instanceof String)) continue;
+					String id = (String) v.get("version");
+					if (id.matches("1\\.(1[4-9]|[2-9]\\d)(\\.\\d+)?")) l.add(id);
+				}
+			}
+		} catch (Exception e) {
+			l.clear();
+		}
+		if (l.isEmpty()) {
+			return Collections.unmodifiableList(java.util.Arrays.asList(VERSIONEN_OFFLINE));   // später nochmal fragen
+		}
+		versionen = Collections.unmodifiableList(l);
+		return versionen;
+	}
+
 	/** Neues Profil; kopieVon = Id eines Profils, dessen Mods übernommen werden (oder null für ein frisches). */
 	String neuesProfil(String name, String kopieVon) {
+		return neuesProfil(name, kopieVon, kopieVon == null ? Installer.MC_VERSION : version(kopieVon));
+	}
+
+	String neuesProfil(String name, String kopieVon, String version) {
 		Map<String, Object> profile = alleProfile();
 		String id;
 		int nr = profile.size();
@@ -278,6 +345,7 @@ final class ModVerwaltung {
 		} while (profile.containsKey(id));
 		Map<String, Object> p = new LinkedHashMap<>();
 		p.put("name", profilName(name));
+		p.put("version", version == null || version.isEmpty() ? Installer.MC_VERSION : version);
 		Map<String, Object> vorlage = kopieVon == null ? null : Json.objekt(profile.get(kopieVon));
 		Map<String, Object> an = new LinkedHashMap<>(), extra = new LinkedHashMap<>();
 		if (vorlage != null) {
@@ -515,7 +583,7 @@ final class ModVerwaltung {
 
 	/** Modrinth-Suche; ohne Suchtext die beliebtesten Mods. */
 	List<Projekt> suche(String text) throws IOException {
-		String facets = "[[\"categories:fabric\"],[\"versions:" + Installer.MC_VERSION + "\"],[\"project_type:mod\"]]";
+		String facets = "[[\"categories:fabric\"],[\"versions:" + offeneVersion() + "\"],[\"project_type:mod\"]]";
 		String url = API + "search?limit=20&index=" + (text.isEmpty() ? "downloads" : "relevance")
 				+ "&query=" + enc(text) + "&facets=" + enc(facets);
 		Map<String, Object> antwort = Json.objekt(Json.parse(new String(Installer.lade(url), StandardCharsets.UTF_8)));
@@ -607,7 +675,7 @@ final class ModVerwaltung {
 	private List<Projekt> sucheCurseforge(String text) throws IOException {
 		Map<String, Object> antwort = Json.objekt(cf("mods/search?gameId=432&classId=6&modLoaderType=4&pageSize=20"
 				+ "&sortField=" + (text.isEmpty() ? "6" : "1") + "&sortOrder=desc"
-				+ "&gameVersion=" + enc(Installer.MC_VERSION) + "&searchFilter=" + enc(text)));
+				+ "&gameVersion=" + enc(offeneVersion()) + "&searchFilter=" + enc(text)));
 		List<Projekt> l = new ArrayList<>();
 		List<Object> treffer = antwort == null ? null : Json.liste(antwort.get("data"));
 		if (treffer == null) return l;
@@ -622,10 +690,10 @@ final class ModVerwaltung {
 		return l;
 	}
 
-	/** Neueste stabile Datei (sonst neueste überhaupt) eines CurseForge-Projekts für Fabric + MC_VERSION. */
-	private Map<String, Object> passendeCurseforgeDatei(String nummer) throws IOException {
+	/** Neueste stabile Datei (sonst neueste überhaupt) eines CurseForge-Projekts für Fabric + Minecraft-Version. */
+	private Map<String, Object> passendeCurseforgeDatei(String nummer, String mc) throws IOException {
 		Map<String, Object> antwort = Json.objekt(cf("mods/" + enc(nummer) + "/files?modLoaderType=4&pageSize=20&gameVersion="
-				+ enc(Installer.MC_VERSION)));
+				+ enc(mc)));
 		List<Object> dateien = antwort == null ? null : Json.liste(antwort.get("data"));
 		if (dateien == null || dateien.isEmpty()) return null;
 		for (Object o : dateien) {
@@ -636,12 +704,13 @@ final class ModVerwaltung {
 	}
 
 	/** Lädt eine CurseForge-Mod; gibt den Dateinamen zurück und hängt benötigte Abhängigkeiten an die Warteschlange. */
-	private String installiereCurseforge(String schluessel, List<String> warteschlange, List<String> hinweise) throws IOException {
+	private String installiereCurseforge(String schluessel, String mc, List<String> warteschlange, List<String> hinweise)
+			throws IOException {
 		String nummer = schluessel.substring(CF.length());
 		String titel = titel(schluessel);
-		Map<String, Object> datei = passendeCurseforgeDatei(nummer);
+		Map<String, Object> datei = passendeCurseforgeDatei(nummer, mc);
 		if (datei == null) {
-			hinweise.add(titel + " gibt es noch nicht für Minecraft " + Installer.MC_VERSION);
+			hinweise.add(titel + " gibt es nicht für Minecraft " + mc);
 			return null;
 		}
 		String name = str(datei.get("fileName"), "curseforge-" + nummer + ".jar");
@@ -681,18 +750,33 @@ final class ModVerwaltung {
 
 	/**
 	 * Bringt den Mods-Ordner auf den gewünschten Stand: lädt eingeschaltete Mods (samt benötigter
-	 * Abhängigkeiten) passend zu Minecraft {@link Installer#MC_VERSION}, entfernt abgeschaltete.
+	 * Abhängigkeiten) passend zur Minecraft-Version des aktiven Profils, entfernt abgeschaltete.
 	 * Einzelne Fehler stoppen den Start nicht – sie werden als Hinweise zurückgegeben.
 	 */
 	List<String> installiere(Installer.Fortschritt f, int von, int bis) {
 		List<String> hinweise = new ArrayList<>();
 		List<String> gewuenscht = new ArrayList<>();
 		String aktiv = aktivesProfil();   // gespielt wird immer das aktive Profil, egal welches gerade offen ist
+		String mc = version(aktiv);
 		for (String[] m : EMPFOHLEN) if (istAn(aktiv, m[0])) gewuenscht.add(m[0]);
 		for (Projekt p : extras(aktiv)) if (istAn(aktiv, p.slug)) gewuenscht.add(p.slug);
 		merkeZuletzt(aktiv);
 
 		Map<String, Object> installiert = map("installiert");
+		if (!mc.equals(str(daten.get("installiertFuer"), Installer.MC_VERSION))) {
+			// andere Minecraft-Version als beim letzten Mal: alle von Bambus geladenen Mods neu holen
+			for (Object alt : installiert.values()) {
+				if (alt instanceof String) {
+					try {
+						Files.deleteIfExists(installer.modsOrdner.resolve((String) alt));
+					} catch (IOException ignoriert) {
+						// wird beim Laden überschrieben
+					}
+				}
+			}
+			installiert.clear();
+		}
+		daten.put("installiertFuer", mc);
 		Map<String, String> neu = new LinkedHashMap<>();
 		Set<String> gesehen = new LinkedHashSet<>();
 		List<String> warteschlange = new ArrayList<>(gewuenscht);
@@ -704,13 +788,13 @@ final class ModVerwaltung {
 			f.melde("Mods: " + titel(projekt) + " …", von + (bis - von) * Math.min(nr, 10) / 10);
 			try {
 				if (projekt.startsWith(CF)) {
-					String name = installiereCurseforge(projekt, warteschlange, hinweise);
+					String name = installiereCurseforge(projekt, mc, warteschlange, hinweise);
 					if (name != null) neu.put(projekt, name);
 					continue;
 				}
-				Map<String, Object> version = passendeVersion(projekt);
+				Map<String, Object> version = passendeVersion(projekt, mc);
 				if (version == null) {
-					hinweise.add(projekt + " gibt es noch nicht für Minecraft " + Installer.MC_VERSION);
+					hinweise.add(titel(projekt) + " gibt es nicht für Minecraft " + mc);
 					continue;
 				}
 				String slug = projekt;
@@ -757,10 +841,10 @@ final class ModVerwaltung {
 		return hinweise;
 	}
 
-	/** Neueste stabile Version (sonst neueste Beta) für Fabric + MC_VERSION. */
-	private Map<String, Object> passendeVersion(String projekt) throws IOException {
+	/** Neueste stabile Version (sonst neueste Beta) für Fabric + Minecraft-Version. */
+	private Map<String, Object> passendeVersion(String projekt, String mc) throws IOException {
 		String url = API + "project/" + enc(projekt) + "/version?loaders=" + enc("[\"fabric\"]")
-				+ "&game_versions=" + enc("[\"" + Installer.MC_VERSION + "\"]");
+				+ "&game_versions=" + enc("[\"" + mc + "\"]");
 		List<Object> versionen = Json.liste(Json.parse(new String(Installer.lade(url), StandardCharsets.UTF_8)));
 		if (versionen == null || versionen.isEmpty()) return null;
 		for (Object o : versionen) {
