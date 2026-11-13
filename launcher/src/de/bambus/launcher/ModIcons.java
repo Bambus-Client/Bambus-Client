@@ -63,6 +63,7 @@ final class ModIcons {
 				}
 			} catch (Exception e) {
 				fehlgeschlagen.add(adresse);
+				protokoll(adresse, e.toString());
 			} finally {
 				laedt.remove(adresse);
 			}
@@ -77,8 +78,13 @@ final class ModIcons {
 			if (b != null) return b;
 		}
 		if (!adresse.startsWith("https://")) return null;
-		BufferedImage roh = ImageIO.read(new ByteArrayInputStream(Installer.lade(adresse)));
-		if (roh == null) return null;   // Format, das Java nicht kennt
+		byte[] daten = Installer.lade(adresse);
+		BufferedImage roh = ImageIO.read(new ByteArrayInputStream(daten));
+		if (roh == null) {   // Format, das Java nicht kennt
+			protokoll(adresse, "Format nicht lesbar (" + daten.length + " Bytes, Anfang: " + anfang(daten)
+					+ ", WebP-Leser: " + (webpMoeglich() ? "ja" : "NEIN") + ")");
+			return null;
+		}
 		BufferedImage klein = verkleinere(roh);
 		try {
 			Files.createDirectories(ordner);
@@ -87,6 +93,40 @@ final class ModIcons {
 			// dann eben ohne Zwischenspeicher
 		}
 		return klein;
+	}
+
+	/** Fehlgeschlagene Icons beim nächsten Anzeigen noch einmal versuchen (z. B. nach einer neuen Suche). */
+	void nochmalVersuchen() {
+		fehlgeschlagen.clear();
+	}
+
+	/** Kann dieses Java WebP lesen (Bibliothek im Launcher eingebaut)? */
+	static boolean webpMoeglich() {
+		return ImageIO.getImageReadersBySuffix("webp").hasNext();
+	}
+
+	/** Warum ein Icon nicht geladen werden konnte – in .bambus-launcher/mod-icons.log (höchstens ~200 KB). */
+	private static synchronized void protokoll(String adresse, String grund) {
+		try {
+			java.nio.file.Path datei = java.nio.file.Paths.get(System.getProperty("user.home"), ".bambus-launcher", "mod-icons.log");
+			Files.createDirectories(datei.getParent());
+			if (Files.isRegularFile(datei) && Files.size(datei) > 200_000) Files.delete(datei);
+			String zeile = java.time.LocalDateTime.now().withNano(0) + "  Launcher " + BambusLauncher.VERSION + "  Java "
+					+ System.getProperty("java.version") + "  " + adresse + "  →  " + grund + System.lineSeparator();
+			Files.write(datei, zeile.getBytes(StandardCharsets.UTF_8),
+					java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+		} catch (Exception ignoriert) {
+			// ohne Protokoll weiter
+		}
+	}
+
+	private static String anfang(byte[] d) {
+		StringBuilder s = new StringBuilder();
+		for (int i = 0; i < Math.min(16, d.length); i++) {
+			char c = (char) (d[i] & 0xFF);
+			s.append(c >= 32 && c < 127 ? c : '.');
+		}
+		return s.toString();
 	}
 
 	/** In mehreren Halbierungs-Schritten verkleinern – sieht bei großen Icons viel sauberer aus als ein Schritt. */

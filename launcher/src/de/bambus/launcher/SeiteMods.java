@@ -436,6 +436,7 @@ final class SeiteMods extends JPanel {
 
 	private void suche() {
 		geladen = true;
+		icons.nochmalVersuchen();
 		final String text = suchFeld.getText().trim();
 		final String wo = quelle;
 		final String name = ModVerwaltung.CURSEFORGE.equals(wo) ? "CurseForge" : "Modrinth";
