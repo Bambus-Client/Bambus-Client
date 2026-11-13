@@ -817,12 +817,7 @@ public class BambusMenuScreen extends Screen {
 
 		Neon.text(g, font, "TEILEN & STEUERUNG", x, zy, 0.75f, Farben.NEON, false);
 		zy += 12;
-		kleinKnopf(g, mx, my, "EXPORT", x, zy, 60, () -> {
-			minecraft.keyboardHandler.setClipboard(c.alsJson());
-			melde("Einstellungen in die Zwischenablage kopiert");
-		});
-		kleinKnopf(g, mx, my, "IMPORT", x + 64, zy, 60, () ->
-				melde(Profile.uebernehmen(minecraft.keyboardHandler.getClipboard()) ? "Einstellungen übernommen" : "In der Zwischenablage sind keine Bambus-Einstellungen"));
+		kleinKnopf(g, mx, my, "EINSTELLUNGS-CODE", x, zy, 124, () -> minecraft.setScreen(new EinstellungsCodeScreen(this)));
 		kleinKnopf(g, mx, my, "TASTENBELEGUNG", x + 128, zy, 84, () ->
 				minecraft.setScreen(new KeyBindsScreen(this, minecraft.options)));
 		zy += 22;

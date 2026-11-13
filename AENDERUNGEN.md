@@ -1,4 +1,5 @@
 ## Neu in dieser Version
+- Einstellungs-Code: Alle Bambus-Module mit Anordnung, Größe und Einstellungen plus alle Minecraft-Einstellungen (Grafik, Ton, Tastenbelegung) als ein Code kopieren und bei Freunden einfügen – Bambus-Menü → Mehr → EINSTELLUNGS-CODE. Blätter, Quests und Kosmetik werden nicht übertragen
 - Launcher: Mod-Icons von Modrinth werden jetzt angezeigt (WebP-Bilder werden gelesen)
 - Ping ist jetzt ein eigenes Modul (Signalbalken, auf Wunsch mit Verlauf der letzten Minute); „Server & Ping“ heißt jetzt „Server“ und zeigt nur die Adresse
 - Toggle Sprint ist jetzt ein eigenes Modul: unter ⋮ lassen sich Toggle Sprint, Toggle Sneak und die Anzeige im HUD einzeln schalten
