@@ -19,7 +19,7 @@ import java.util.Map;
  * Automatische Updates über die Releases-Seite des GitHub-Projekts.
  *
  * So funktioniert's:
- *  1. Ein neuer Tag (z. B. v3.3.0) auf GitHub baut alles und legt ein Release an.
+ *  1. Ein neuer Tag (z. B. v3.4.0) auf GitHub baut alles und legt ein Release an.
  *  2. Der Launcher fragt beim Start die öffentliche GitHub-Schnittstelle nach dem neuesten Release.
  *  3. Ist es neuer, lädt er die Client-Mod (bambus-client-….jar) leise herunter, prüft die
  *     SHA-256-Prüfsumme und spielt sie beim nächsten SPIELEN ein – ohne neue Installation.

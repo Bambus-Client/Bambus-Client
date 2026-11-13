@@ -21,11 +21,20 @@ final class SeiteNeu extends JPanel {
 
 	/** {Version, Untertitel, Farbe(hex), Symbol, Punkte …} – neueste zuerst. */
 	private static final String[][] VERSIONEN = {
-			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
+			{"3.4", "Serverauswahl, Einstellungs-Code & mehrere Versionen", "00E5FF", "server",
+					"Einstellungs-Code: Module mit Anordnung und alle Minecraft-Einstellungen mit einem Code teilen",
+					"Neue Serverauswahl im Spiel: Karten mit Icon, Ping und Spielern – Favoriten ★ stehen oben",
+					"Neues Hauptmenü im Spiel: große Karten für Einzel- und Mehrspieler",
+					"Ping und Toggle Sprint als eigene Module – Toggle Sneak und HUD-Anzeige einzeln schaltbar",
 					"Mehrere Minecraft-Versionen: jedes Mod-Profil spielt seine eigene (1.21.11 bis 26.3)",
 					"Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar",
 					"Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät",
 					"Der Bambus Client selbst läuft auf 1.21.11 – andere Versionen starten mit Fabric und deinen Mods",
+					"Mod-Icons von Modrinth werden jetzt im Launcher angezeigt",
+					"Bambus-Helfer kennt alle Crafting-Rezepte, versteht Deutsch besser und erklärt PvP-Taktiken",
+					"Side Shield: beim Blocken in die normale Position, danach wieder zur Seite",
+					"Beim Server-Beitritt liegt „Abbrechen“ nicht mehr mitten im Bild"},
+			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
 					"Quests, Blätter und Ränge (Bronze bis Legende): Punkte sammeln und Kosmetik freischalten – kostenlos",
 					"Start-Set geschenkt: Umhang, Flügel, Hut, Partikel und Pfeil-Spur gehören dir von Anfang an",
 					"Alle weitere Kosmetik kostet Blätter – Preis steht auf jeder Kachel, Kauf auch in der Garderobe",

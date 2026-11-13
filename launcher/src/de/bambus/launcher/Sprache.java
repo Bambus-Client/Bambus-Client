@@ -110,6 +110,15 @@ final class Sprache {
 		g("Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar", "You pick the version when you create a profile – change it later with VERSION");
 		g("Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät", "Every version gets its own mods and its own worlds, so nothing gets mixed up");
 		g("Der Bambus Client selbst läuft auf 1.21.11 – andere Versionen starten mit Fabric und deinen Mods", "The Bambus Client itself runs on 1.21.11 – other versions start with Fabric and your mods");
+		g("Serverauswahl, Einstellungs-Code & mehrere Versionen", "Server list, settings code & multiple versions");
+		g("Einstellungs-Code: Module mit Anordnung und alle Minecraft-Einstellungen mit einem Code teilen", "Settings code: share modules with their layout and all Minecraft settings with one code");
+		g("Neue Serverauswahl im Spiel: Karten mit Icon, Ping und Spielern – Favoriten ★ stehen oben", "New in-game server list: cards with icon, ping and players – favourites ★ at the top");
+		g("Neues Hauptmenü im Spiel: große Karten für Einzel- und Mehrspieler", "New in-game main menu: big cards for singleplayer and multiplayer");
+		g("Ping und Toggle Sprint als eigene Module – Toggle Sneak und HUD-Anzeige einzeln schaltbar", "Ping and Toggle Sprint as their own modules – Toggle Sneak and HUD display can be switched separately");
+		g("Mod-Icons von Modrinth werden jetzt im Launcher angezeigt", "Mod icons from Modrinth now show up in the launcher");
+		g("Bambus-Helfer kennt alle Crafting-Rezepte, versteht Deutsch besser und erklärt PvP-Taktiken", "Bambus Helper knows every crafting recipe, understands German better and explains PvP tactics");
+		g("Side Shield: beim Blocken in die normale Position, danach wieder zur Seite", "Side Shield: moves to the normal position while blocking, then back to the side");
+		g("Beim Server-Beitritt liegt „Abbrechen“ nicht mehr mitten im Bild", "When joining a server, “Cancel” is no longer in the middle of the screen");
 		g("SAISON", "SEASON"); g("Saison-Set", "Season set"); g("Set", "Set"); g("Einzeln", "Separately"); g("du sparst", "you save");
 		g("Frühling", "Spring"); g("Sommer", "Summer"); g("Herbst", "Autumn"); g("Winter", "Winter");
 		g("SET HOLEN →", "GET SET →"); g("✓ KOMPLETT", "✓ COMPLETE"); g("Serie", "Streak"); g("Tage", "days"); g("Stufe", "Level");

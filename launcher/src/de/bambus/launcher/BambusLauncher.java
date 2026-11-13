@@ -42,7 +42,7 @@ import java.util.Properties;
 /** Der Bambus Launcher im Neon-Look. */
 public final class BambusLauncher extends JFrame {
 
-	static final String VERSION = "3.3.0";
+	static final String VERSION = "3.4.0";
 
 	static final int BREITE = 1000;
 	static final int HOEHE = 640;

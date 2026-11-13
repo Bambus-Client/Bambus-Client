@@ -55,7 +55,7 @@ import java.util.List;
 public class BambusClient implements ClientModInitializer {
 
 	public static final String MOD_ID = "bambus";
-	public static final String VERSION = "3.3.0";
+	public static final String VERSION = "3.4.0";
 	private static final String FENSTERTITEL = "Bambus Client " + VERSION + " – Minecraft 1.21.11";
 
 	public static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("Bambus");

@@ -6,7 +6,7 @@
 #define AppName "Bambus Launcher"
 #define AppExe "Bambus Launcher.exe"
 #ifndef AppVersion
-  #define AppVersion "3.3.0"
+  #define AppVersion "3.4.0"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\..\..\ausgabe\Bambus Launcher"
