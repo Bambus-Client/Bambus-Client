@@ -6,6 +6,11 @@
 - Bambus-Helfer erklärt viele PvP-Taktiken: Krits, Abklingzeit, Strafen, Jump Reset, Schild und Axt, Angel, Bogen, Combos, Clutches, Bridgen, Crystal-PvP, Streitkolben und mehr
 - Side Shield: Beim Blocken gleitet der Schild in die normale Block-Position und danach wieder zur Seite
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.
+- Mehrere Minecraft-Versionen: Jedes Mod-Profil hat seine eigene Version, wählbar beim Anlegen und später über den Knopf VERSION. Zur Auswahl stehen 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 und 26.3
+- Jede Version bekommt einen eigenen Spielordner mit eigenen Mods und eigenen Welten – eine neuere Version baut dadurch keine alten Welten um
+- Mod-Suche bei Modrinth und CurseForge zeigt nur Mods, die zur Version des geöffneten Profils passen
+- Fabric wird zur gewählten Version passend eingerichtet (neuester stabiler Loader)
+- Der Bambus Client selbst läuft weiterhin auf 1.21.11; Profile mit anderer Version starten Minecraft mit Fabric und den gewählten Mods
 - Start-Set geschenkt: Bambus-Umhang, Engel-Classic-Flügel, Bandana, Funken-Partikel und Funken-Spur gehören dir von Anfang an
 - Alle weitere Kosmetik kostet Blätter – der Preis steht auf jeder Kachel; kaufen geht im Launcher unter KOSMETIK und im Spiel in der Garderobe (einmal klicken fragt nach, zweimal kauft)
 - Saison-Sets: vier passende Stücke je Jahreszeit (Umhang, Flügel, Hut, Partikel) im Paket – deutlich günstiger als einzeln

@@ -74,16 +74,22 @@ final class ModVerwaltung {
 
 	/** Ein Mod-Profil: eigener Name, eigene Mod-Auswahl. */
 	static final class Profil {
-		final String id, name;
+		final String id, name, version;
 		final int mods;
 		final long erstellt, zuletzt;   // Millisekunden; zuletzt = zuletzt aktiviert oder gespielt
 
-		Profil(String id, String name, int mods, long erstellt, long zuletzt) {
+		Profil(String id, String name, String version, int mods, long erstellt, long zuletzt) {
 			this.id = id;
 			this.name = name;
+			this.version = version;
 			this.mods = mods;
 			this.erstellt = erstellt;
 			this.zuletzt = zuletzt;
+		}
+
+		/** Läuft der Bambus Client in diesem Profil mit? */
+		boolean mitBambus() {
+			return Installer.MC_VERSION.equals(version);
 		}
 	}
 
@@ -110,12 +116,15 @@ final class ModVerwaltung {
 
 	private final Installer installer;
 	private final Path datei;
+	/** Minecraft-Version, für die gerade installiert wird. */
+	private String zielVersion = Installer.MC_VERSION;
 	private Map<String, Object> daten = new LinkedHashMap<>();
 
 	ModVerwaltung(Installer installer) {
 		this.installer = installer;
 		this.datei = installer.spielOrdner.resolve("config").resolve("bambus-mods.json");
 		laden();
+		installer.nutzeVersion(versionDesProfils(aktivesProfil()));
 	}
 
 	// ================================================================ Einstellungen
@@ -177,6 +186,7 @@ final class ModVerwaltung {
 	/** Öffnet ein Profil zum Bearbeiten (null = zurück zur Liste). */
 	void oeffne(String id) {
 		offen = id != null && alleProfile().containsKey(id) ? id : null;
+		installer.nutzeVersion(versionOffen());
 	}
 
 	List<Profil> profile() {
@@ -184,7 +194,8 @@ final class ModVerwaltung {
 		for (Map.Entry<String, Object> e : alleProfile().entrySet()) {
 			Map<String, Object> p = Json.objekt(e.getValue());
 			if (p != null) {
-				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), anzahlMods(p), zahl(p.get("erstellt")), zahl(p.get("zuletzt"))));
+				l.add(new Profil(e.getKey(), str(p.get("name"), e.getKey()), version(p), anzahlMods(p),
+						zahl(p.get("erstellt")), zahl(p.get("zuletzt"))));
 			}
 		}
 		return l;
@@ -260,16 +271,47 @@ final class ModVerwaltung {
 		return n;
 	}
 
+	private static String version(Map<String, Object> profil) {
+		String v = profil == null ? null : str(profil.get("version"), Installer.MC_VERSION);
+		return Installer.kenntVersion(v) ? v : Installer.MC_VERSION;
+	}
+
+	/** Version des Profils, das gerade bearbeitet wird – danach richtet sich die Mod-Suche. */
+	String versionOffen() {
+		return versionDesProfils(offenesProfil());
+	}
+
+	/** Minecraft-Version eines Profils (ältere Profile ohne Eintrag spielen 1.21.11). */
+	String versionDesProfils(String id) {
+		return version(Json.objekt(alleProfile().get(id)));
+	}
+
+	/** Stellt die Minecraft-Version eines Profils um. */
+	void setzeVersion(String id, String version) {
+		Map<String, Object> p = Json.objekt(alleProfile().get(id));
+		if (p != null && Installer.kenntVersion(version)) {
+			p.put("version", version);
+			speichern();
+			installer.nutzeVersion(versionOffen());
+		}
+	}
+
 	void setzeAktivesProfil(String id) {
 		if (alleProfile().containsKey(id)) {
 			daten.put("aktiv", id);
 			merkeZuletzt(id);
 			speichern();
+			installer.nutzeVersion(versionOffen());
 		}
 	}
 
 	/** Neues Profil; kopieVon = Id eines Profils, dessen Mods übernommen werden (oder null für ein frisches). */
 	String neuesProfil(String name, String kopieVon) {
+		return neuesProfil(name, kopieVon, Installer.MC_VERSION);
+	}
+
+	/** Neues Profil mit eigener Minecraft-Version. */
+	String neuesProfil(String name, String kopieVon, String version) {
 		Map<String, Object> profile = alleProfile();
 		String id;
 		int nr = profile.size();
@@ -292,6 +334,7 @@ final class ModVerwaltung {
 		}
 		p.put("an", an);
 		p.put("extra", extra);
+		p.put("version", Installer.kenntVersion(version) ? version : Installer.MC_VERSION);
 		p.put("erstellt", System.currentTimeMillis());
 		profile.put(id, p);
 		speichern();
@@ -356,6 +399,20 @@ final class ModVerwaltung {
 	}
 
 	/** „an“ und „extra“ gehören zum geöffneten Profil, alles andere (z. B. „installiert“) gilt für alle. */
+	/**
+	 * Merkliste der Dateien, die Bambus selbst in den Mods-Ordner gelegt hat – je Minecraft-Version
+	 * eine eigene, denn jede Version hat ihren eigenen Mods-Ordner.
+	 */
+	private Map<String, Object> installiertMap(String version) {
+		String schluessel = Installer.MC_VERSION.equals(version) ? "installiert" : "installiert-" + version;
+		Map<String, Object> m = Json.objekt(daten.get(schluessel));
+		if (m == null) {
+			m = new LinkedHashMap<>();
+			daten.put(schluessel, m);
+		}
+		return m;
+	}
+
 	private Map<String, Object> map(String schluessel) {
 		return map(offenesProfil(), schluessel);
 	}
@@ -460,7 +517,7 @@ final class ModVerwaltung {
 	/** Dateinamen, die Bambus selbst verwaltet (nicht als "eigene Mod" anzeigen). */
 	private Set<String> verwalteteDateien() {
 		Set<String> s = new LinkedHashSet<>();
-		for (Object v : map("installiert").values()) {
+		for (Object v : installiertMap(versionOffen()).values()) {
 			if (v instanceof String) {
 				s.add((String) v);
 			}
@@ -515,7 +572,7 @@ final class ModVerwaltung {
 
 	/** Modrinth-Suche; ohne Suchtext die beliebtesten Mods. */
 	List<Projekt> suche(String text) throws IOException {
-		String facets = "[[\"categories:fabric\"],[\"versions:" + Installer.MC_VERSION + "\"],[\"project_type:mod\"]]";
+		String facets = "[[\"categories:fabric\"],[\"versions:" + versionOffen() + "\"],[\"project_type:mod\"]]";
 		String url = API + "search?limit=20&index=" + (text.isEmpty() ? "downloads" : "relevance")
 				+ "&query=" + enc(text) + "&facets=" + enc(facets);
 		Map<String, Object> antwort = Json.objekt(Json.parse(new String(Installer.lade(url), StandardCharsets.UTF_8)));
@@ -607,7 +664,7 @@ final class ModVerwaltung {
 	private List<Projekt> sucheCurseforge(String text) throws IOException {
 		Map<String, Object> antwort = Json.objekt(cf("mods/search?gameId=432&classId=6&modLoaderType=4&pageSize=20"
 				+ "&sortField=" + (text.isEmpty() ? "6" : "1") + "&sortOrder=desc"
-				+ "&gameVersion=" + enc(Installer.MC_VERSION) + "&searchFilter=" + enc(text)));
+				+ "&gameVersion=" + enc(versionOffen()) + "&searchFilter=" + enc(text)));
 		List<Projekt> l = new ArrayList<>();
 		List<Object> treffer = antwort == null ? null : Json.liste(antwort.get("data"));
 		if (treffer == null) return l;
@@ -625,7 +682,7 @@ final class ModVerwaltung {
 	/** Neueste stabile Datei (sonst neueste überhaupt) eines CurseForge-Projekts für Fabric + MC_VERSION. */
 	private Map<String, Object> passendeCurseforgeDatei(String nummer) throws IOException {
 		Map<String, Object> antwort = Json.objekt(cf("mods/" + enc(nummer) + "/files?modLoaderType=4&pageSize=20&gameVersion="
-				+ enc(Installer.MC_VERSION)));
+				+ enc(zielVersion)));
 		List<Object> dateien = antwort == null ? null : Json.liste(antwort.get("data"));
 		if (dateien == null || dateien.isEmpty()) return null;
 		for (Object o : dateien) {
@@ -641,7 +698,7 @@ final class ModVerwaltung {
 		String titel = titel(schluessel);
 		Map<String, Object> datei = passendeCurseforgeDatei(nummer);
 		if (datei == null) {
-			hinweise.add(titel + " gibt es noch nicht für Minecraft " + Installer.MC_VERSION);
+			hinweise.add(titel + " gibt es noch nicht für Minecraft " + zielVersion);
 			return null;
 		}
 		String name = str(datei.get("fileName"), "curseforge-" + nummer + ".jar");
@@ -688,11 +745,12 @@ final class ModVerwaltung {
 		List<String> hinweise = new ArrayList<>();
 		List<String> gewuenscht = new ArrayList<>();
 		String aktiv = aktivesProfil();   // gespielt wird immer das aktive Profil, egal welches gerade offen ist
+		zielVersion = versionDesProfils(aktiv);
 		for (String[] m : EMPFOHLEN) if (istAn(aktiv, m[0])) gewuenscht.add(m[0]);
 		for (Projekt p : extras(aktiv)) if (istAn(aktiv, p.slug)) gewuenscht.add(p.slug);
 		merkeZuletzt(aktiv);
 
-		Map<String, Object> installiert = map("installiert");
+		Map<String, Object> installiert = installiertMap(zielVersion);
 		Map<String, String> neu = new LinkedHashMap<>();
 		Set<String> gesehen = new LinkedHashSet<>();
 		List<String> warteschlange = new ArrayList<>(gewuenscht);
@@ -710,7 +768,7 @@ final class ModVerwaltung {
 				}
 				Map<String, Object> version = passendeVersion(projekt);
 				if (version == null) {
-					hinweise.add(projekt + " gibt es noch nicht für Minecraft " + Installer.MC_VERSION);
+					hinweise.add(projekt + " gibt es noch nicht für Minecraft " + zielVersion);
 					continue;
 				}
 				String slug = projekt;
@@ -760,7 +818,7 @@ final class ModVerwaltung {
 	/** Neueste stabile Version (sonst neueste Beta) für Fabric + MC_VERSION. */
 	private Map<String, Object> passendeVersion(String projekt) throws IOException {
 		String url = API + "project/" + enc(projekt) + "/version?loaders=" + enc("[\"fabric\"]")
-				+ "&game_versions=" + enc("[\"" + Installer.MC_VERSION + "\"]");
+				+ "&game_versions=" + enc("[\"" + zielVersion + "\"]");
 		List<Object> versionen = Json.liste(Json.parse(new String(Installer.lade(url), StandardCharsets.UTF_8)));
 		if (versionen == null || versionen.isEmpty()) return null;
 		for (Object o : versionen) {

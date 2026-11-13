@@ -22,6 +22,10 @@ final class SeiteNeu extends JPanel {
 	/** {Version, Untertitel, Farbe(hex), Symbol, Punkte …} – neueste zuerst. */
 	private static final String[][] VERSIONEN = {
 			{"3.3", "Kosmetik im HD-Look & neue Oberfläche", "3DFF9A", "kosmetik",
+					"Mehrere Minecraft-Versionen: jedes Mod-Profil spielt seine eigene (1.21.11 bis 26.3)",
+					"Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar",
+					"Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät",
+					"Der Bambus Client selbst läuft auf 1.21.11 – andere Versionen starten mit Fabric und deinen Mods",
 					"Quests, Blätter und Ränge (Bronze bis Legende): Punkte sammeln und Kosmetik freischalten – kostenlos",
 					"Start-Set geschenkt: Umhang, Flügel, Hut, Partikel und Pfeil-Spur gehören dir von Anfang an",
 					"Alle weitere Kosmetik kostet Blätter – Preis steht auf jeder Kachel, Kauf auch in der Garderobe",

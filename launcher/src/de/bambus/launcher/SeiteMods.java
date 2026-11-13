@@ -96,15 +96,17 @@ final class SeiteMods extends JPanel {
 		// ---- Ansicht 2: ein geöffnetes Profil
 		sammeln = profilTeile;
 		knopf("← PROFILE", NeonUI.CYAN, X, 104, 104, 30, this::zurListe).setToolTipText("Zurück zur Liste aller Profile");
-		int kx = X + VB - 4 * 80 - 3 * 4;
+		int kx = X + VB - 5 * 80 - 4 * 4;
 		aktivierenKnopf = knopf("AKTIVIEREN", NeonUI.NEON, kx, 104, 80, 30, () -> {
 			mods.setzeAktivesProfil(mods.offenesProfil());
 			aktualisiere();
 		});
 		aktivierenKnopf.setToolTipText("Mit diesem Profil spielen");
 		knopf("NAME", NeonUI.GRAU, kx + 84, 104, 80, 30, this::profilUmbenennen).setToolTipText("Profil umbenennen");
-		knopf("KOPIE", NeonUI.GRAU, kx + 168, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
-		knopf("LÖSCHEN", NeonUI.PINK, kx + 252, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
+		knopf("VERSION", NeonUI.CYAN, kx + 168, 104, 80, 30, this::profilVersion)
+				.setToolTipText("Minecraft-Version dieses Profils ändern");
+		knopf("KOPIE", NeonUI.GRAU, kx + 252, 104, 80, 30, this::profilKopieren).setToolTipText("Profil mit allen Mods kopieren");
+		knopf("LÖSCHEN", NeonUI.PINK, kx + 336, 104, 80, 30, this::profilLoeschen).setToolTipText("Profil löschen");
 
 		// ---- linke Hälfte: installiert
 		boost = new BoostKarte();
@@ -164,7 +166,7 @@ final class SeiteMods extends JPanel {
 	}
 
 	/** Öffnet ein Profil: erst jetzt lassen sich seine Mods einstellen. */
-	private void oeffneProfil(String id) {
+	void oeffneProfil(String id) {
 		mods.oeffne(id);
 		baueInstalliert();
 		boost.repaint();
@@ -248,6 +250,49 @@ final class SeiteMods extends JPanel {
 		repaint();
 	}
 
+	/**
+	 * Fragt Name und Minecraft-Version ab. Gibt {name, version} zurück oder null bei Abbruch.
+	 */
+	private String[] frageProfil(String titel, String vorschlagName, String vorschlagVersion) {
+		javax.swing.JTextField feld = new javax.swing.JTextField(vorschlagName, 18);
+		javax.swing.JComboBox<String> wahl = new javax.swing.JComboBox<>();
+		for (int i = Installer.VERSIONEN.length - 1; i >= 0; i--) {   // neueste oben
+			String v = Installer.VERSIONEN[i];
+			wahl.addItem(v + (Installer.MC_VERSION.equals(v) ? "   " + Sprache.t("(mit Bambus Client)") : ""));
+		}
+		for (int i = 0; i < wahl.getItemCount(); i++) {
+			if (wahl.getItemAt(i).startsWith(vorschlagVersion + " ") || wahl.getItemAt(i).equals(vorschlagVersion)) {
+				wahl.setSelectedIndex(i);
+			}
+		}
+		javax.swing.JPanel feldTeil = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 0, 4));
+		feldTeil.add(new javax.swing.JLabel(Sprache.t("Name des Profils:")));
+		feldTeil.add(feld);
+		feldTeil.add(new javax.swing.JLabel(" "));
+		feldTeil.add(new javax.swing.JLabel(Sprache.t("Minecraft-Version:")));
+		feldTeil.add(wahl);
+		javax.swing.JLabel hinweis = new javax.swing.JLabel();
+		feldTeil.add(hinweis);
+		Runnable zeigeHinweis = () -> hinweis.setText(gewaehlteVersion(wahl).equals(Installer.MC_VERSION) ? " "
+				: Sprache.t("Nur Minecraft + Fabric + deine Mods – ohne Bambus Client."));
+		wahl.addActionListener(e -> zeigeHinweis.run());
+		zeigeHinweis.run();
+		if (JOptionPane.showConfirmDialog(l, feldTeil, Sprache.t(titel),
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+			return null;
+		}
+		String name = feld.getText() == null ? "" : feld.getText().trim();
+		if (name.isEmpty()) return null;
+		return new String[]{name, gewaehlteVersion(wahl)};
+	}
+
+	private static String gewaehlteVersion(javax.swing.JComboBox<String> wahl) {
+		Object o = wahl.getSelectedItem();
+		String t = o == null ? Installer.MC_VERSION : o.toString().trim();
+		int leer = t.indexOf(' ');
+		return leer > 0 ? t.substring(0, leer) : t;
+	}
+
 	private String frageName(String titel, String vorschlag) {
 		Object eingabe = JOptionPane.showInputDialog(l, Sprache.t("Name des Profils:"), Sprache.t(titel),
 				JOptionPane.PLAIN_MESSAGE, null, null, vorschlag);
@@ -261,18 +306,46 @@ final class SeiteMods extends JPanel {
 	}
 
 	private void neuesProfil() {
-		String name = frageName("Neues Profil", "Profil " + (mods.profile().size() + 1));
-		if (name != null) {
-			oeffneProfil(mods.neuesProfil(name, null));
+		String[] a = frageProfil("Neues Profil", "Profil " + (mods.profile().size() + 1), Installer.MC_VERSION);
+		if (a != null) {
+			oeffneProfil(mods.neuesProfil(a[0], null, a[1]));
 		}
 	}
 
 	private void profilKopieren() {
 		ModVerwaltung.Profil p = offen();
-		String name = frageName("Profil kopieren", p.name + " 2");
-		if (name != null) {
-			oeffneProfil(mods.neuesProfil(name, p.id));
+		String[] a = frageProfil("Profil kopieren", p.name + " 2", p.version);
+		if (a != null) {
+			oeffneProfil(mods.neuesProfil(a[0], p.id, a[1]));
 		}
+	}
+
+	/** Minecraft-Version eines bestehenden Profils ändern. */
+	private void profilVersion() {
+		ModVerwaltung.Profil p = offen();
+		javax.swing.JComboBox<String> wahl = new javax.swing.JComboBox<>();
+		for (int i = Installer.VERSIONEN.length - 1; i >= 0; i--) {
+			String v = Installer.VERSIONEN[i];
+			wahl.addItem(v + (Installer.MC_VERSION.equals(v) ? "   " + Sprache.t("(mit Bambus Client)") : ""));
+		}
+		for (int i = 0; i < wahl.getItemCount(); i++) {
+			if (wahl.getItemAt(i).startsWith(p.version)) wahl.setSelectedIndex(i);
+		}
+		javax.swing.JPanel teil = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 0, 4));
+		teil.add(new javax.swing.JLabel(Sprache.t("Welche Minecraft-Version soll dieses Profil spielen?")));
+		teil.add(wahl);
+		teil.add(new javax.swing.JLabel(" "));
+		teil.add(new javax.swing.JLabel(Sprache.t("Jede Version hat eigene Mods und eigene Welten.")));
+		if (JOptionPane.showConfirmDialog(l, teil, Sprache.t("Minecraft-Version"),
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+			return;
+		}
+		String neu = gewaehlteVersion(wahl);
+		if (neu.equals(p.version)) return;
+		mods.setzeVersion(p.id, neu);
+		suchStatus = "";
+		aktualisiere();
+		suche();
 	}
 
 	private void profilUmbenennen() {
@@ -314,7 +387,7 @@ final class SeiteMods extends JPanel {
 			String status;
 			try {
 				ergebnis = mods.suche(text, wo);
-				status = ergebnis.isEmpty() ? "Nichts gefunden für Minecraft " + Installer.MC_VERSION + "." : "";
+				status = ergebnis.isEmpty() ? "Nichts gefunden für Minecraft " + mods.versionOffen() + "." : "";
 			} catch (Exception ex) {
 				boolean schluessel = String.valueOf(ex.getMessage()).contains("(403)") || String.valueOf(ex.getMessage()).contains("(401)");
 				status = schluessel ? "CurseForge lehnt den Schlüssel ab – bitte unter SCHLÜSSEL prüfen."
@@ -425,7 +498,7 @@ final class SeiteMods extends JPanel {
 
 	private void dateiHinzufuegen() {
 		JFileChooser wahl = new JFileChooser();
-		wahl.setDialogTitle("Fabric-Mod (.jar) für Minecraft " + Installer.MC_VERSION + " auswählen");
+		wahl.setDialogTitle("Fabric-Mod (.jar) für Minecraft " + mods.versionOffen() + " auswählen");
 		wahl.setFileFilter(new FileNameExtensionFilter("Minecraft-Mod (*.jar)", "jar"));
 		wahl.setMultiSelectionEnabled(true);
 		if (wahl.showOpenDialog(l) != JFileChooser.APPROVE_OPTION) {
@@ -494,11 +567,12 @@ final class SeiteMods extends JPanel {
 		NeonUI.leuchtText(g, titel, X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(aktiv ? NeonUI.NEON : NeonUI.GRAU);
-		g.drawString(aktiv ? "● Aktives Profil – wird beim nächsten SPIELEN eingerichtet."
-				: "○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", X, 84);
+		g.drawString(NeonUI.passend(g, aktiv ? "● Aktives Profil – wird beim nächsten SPIELEN eingerichtet."
+				: "○ Nicht aktiv – mit AKTIVIEREN spielst du mit diesem Profil.", VB - 250), X, 84);
+		versionsSchild(g, p, X + VB - 230, 50);
 		if (aktiv) {
 			g.setFont(NeonUI.mono(11));
-			int ax = X + VB - 4 * 80 - 3 * 4;
+			int ax = X + VB - 5 * 80 - 4 * 4;
 			g.setColor(NeonUI.alpha(NeonUI.NEON, 40));
 			g.fillRect(ax, 104, 80, 30);
 			g.setColor(NeonUI.NEON);
@@ -519,8 +593,26 @@ final class SeiteMods extends JPanel {
 		}
 		g.setFont(NeonUI.mono(10));
 		g.setColor(new Color(0x5C6B80));
-		g.drawString("Fabric-Mods für " + Installer.MC_VERSION + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
+		g.drawString("Fabric-Mods für " + p.version + " · „+“ fügt die Mod zu diesem Profil hinzu", X, 588);
 		g.dispose();
+	}
+
+	/** Schild mit der Minecraft-Version eines Profils. */
+	private static void versionsSchild(Graphics2D g, ModVerwaltung.Profil p, int x, int y) {
+		String text = "MINECRAFT " + p.version;
+		Color farbe = p.mitBambus() ? NeonUI.NEON : NeonUI.CYAN;
+		g.setFont(NeonUI.mono(12));
+		int b = g.getFontMetrics().stringWidth(text) + 20;
+		g.setColor(NeonUI.alpha(farbe, 30));
+		g.fillRect(x, y, b, 24);
+		g.setColor(NeonUI.alpha(farbe, 150));
+		g.drawRect(x, y, b - 1, 23);
+		g.setColor(farbe);
+		NeonUI.zentriert(g, text, x, y, b, 24);
+		g.setFont(NeonUI.normal(11));
+		g.setColor(NeonUI.GRAU);
+		String unten = p.mitBambus() ? "mit Bambus Client" : "ohne Bambus Client";
+		g.drawString(unten, x + b - g.getFontMetrics().stringWidth(unten), y + 40);
 	}
 
 	private static void ueberschrift(Graphics2D g, String text, int x, int y) {
@@ -628,7 +720,8 @@ final class SeiteMods extends JPanel {
 				g.setFont(NeonUI.normal(11));
 				g.setColor(NeonUI.GRAU);
 				g.drawString(info, 58, 44);
-				g.drawString(kuerze(g, wann, b - 24), 12, 66);
+				g.drawString(kuerze(g, wann, b - 70), 12, 66);
+				schild(g, p, b - 12, 54);
 			} else {
 				if (aktiv) {
 					g.setColor(NeonUI.NEON);
@@ -641,6 +734,7 @@ final class SeiteMods extends JPanel {
 				g.setFont(NeonUI.normal(11));
 				g.setColor(NeonUI.GRAU);
 				g.drawString(info + "  ·  " + wann, 62, 44);
+				schild(g, p, b - 246, h / 2 - 9);
 				g.setFont(NeonUI.mono(11));
 				g.setColor(ueber ? NeonUI.CYAN : NeonUI.GRAU);
 				g.drawString("ÖFFNEN →", b - 110, h / 2 + 4);
@@ -661,6 +755,17 @@ final class SeiteMods extends JPanel {
 			}
 			g.dispose();
 		}
+	}
+
+	/** Kleines Schild mit der Minecraft-Version, rechtsbündig ab x. */
+	private static void schild(Graphics2D g, ModVerwaltung.Profil p, int x, int y) {
+		Color farbe = p.mitBambus() ? NeonUI.NEON : NeonUI.CYAN;
+		g.setFont(NeonUI.mono(10));
+		int b = g.getFontMetrics().stringWidth(p.version) + 14;
+		g.setColor(NeonUI.alpha(farbe, 28));
+		g.fillRect(x - b, y, b, 18);
+		g.setColor(farbe);
+		NeonUI.zentriert(g, p.version, x - b, y, b, 18);
 	}
 
 	/** „vor 5 Min.“, „vor 3 Std.“, „vor 2 Tagen“ … */

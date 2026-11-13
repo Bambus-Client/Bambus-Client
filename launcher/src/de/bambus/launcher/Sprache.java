@@ -100,6 +100,16 @@ final class Sprache {
 		g("Shop", "Shop"); g("für", "for"); g("Blätter freischalten?", "leaves – unlock it?"); g("Dafür fehlen dir noch", "You still need");
 		g("Blätter.", "leaves."); g("ist freigeschaltet – du findest es in der GARDEROBE.", "is unlocked – you'll find it in the WARDROBE.");
 		g("Das gibt es im Quest-Shop für", "You can get this in the quest shop for"); g("Noch gesperrt", "Still locked");
+		g("Minecraft-Version", "Minecraft version"); g("Minecraft-Version:", "Minecraft version:");
+		g("(mit Bambus Client)", "(with Bambus Client)"); g("Neues Profil", "New profile");
+		g("Nur Minecraft + Fabric + deine Mods – ohne Bambus Client.", "Just Minecraft + Fabric + your mods – without the Bambus Client.");
+		g("Welche Minecraft-Version soll dieses Profil spielen?", "Which Minecraft version should this profile play?");
+		g("Jede Version hat eigene Mods und eigene Welten.", "Every version has its own mods and its own worlds.");
+		g("VERSION", "VERSION"); g("mit Bambus Client", "with Bambus Client"); g("ohne Bambus Client", "without Bambus Client");
+		g("Mehrere Minecraft-Versionen: jedes Mod-Profil spielt seine eigene (1.21.11 bis 26.3)", "Several Minecraft versions: every mod profile plays its own (1.21.11 to 26.3)");
+		g("Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar", "You pick the version when you create a profile – change it later with VERSION");
+		g("Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät", "Every version gets its own mods and its own worlds, so nothing gets mixed up");
+		g("Der Bambus Client selbst läuft auf 1.21.11 – andere Versionen starten mit Fabric und deinen Mods", "The Bambus Client itself runs on 1.21.11 – other versions start with Fabric and your mods");
 		g("SAISON", "SEASON"); g("Saison-Set", "Season set"); g("Set", "Set"); g("Einzeln", "Separately"); g("du sparst", "you save");
 		g("Frühling", "Spring"); g("Sommer", "Summer"); g("Herbst", "Autumn"); g("Winter", "Winter");
 		g("SET HOLEN →", "GET SET →"); g("✓ KOMPLETT", "✓ COMPLETE"); g("Serie", "Streak"); g("Tage", "days"); g("Stufe", "Level");
