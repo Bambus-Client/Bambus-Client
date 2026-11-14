@@ -1,4 +1,5 @@
 ## Neu in Version 3.4.0
+- Musik-Modul (Spotify): Insel oben in der Mitte mit Cover, Songtext im Karaoke-Stil, Equalizer und Fortschritt; die gesungenen Wörter erscheinen groß in 3D in der Welt. Liest die Windows-Medienwiedergabe (Spotify, Browser) – ohne Anmeldung und ohne Premium; Songtexte von LRCLIB. Tasten für Pause, Weiter und Zurück frei belegbar
 - Menü-Stil wählbar (Mod-Menü → Mehr → DESIGN): Bambus (Neon wie bisher), Clean (schlicht und weich gerundet, ohne Leuchten) oder Kompakt (tiefschwarz und kantig mit kräftigen Akzenten) – gilt für alle Bambus-Menüs, das HUD bleibt unverändert
 - Eigene Module statt Sammel-Anzeigen: FPS, CPS und Bambus-Schriftzug (früher „Info“), Item in der Hand (früher Teil der Rüstungsanzeige) und Ingame-Tag (früher Teil der Spielzeit) – bisherige Einstellungen und Positionen werden übernommen
 - Ping-Modul ist im Einzelspieler ausgeblendet (dort gibt es keinen Ping)

@@ -119,6 +119,8 @@ final class Sprache {
 		g("Haltbarkeit bzw. Anzahl deines Items", "Durability or count of your item"); g("Ingame-Tag", "In-game day");
 		g("Tag in der Welt, auf Wunsch mit Uhrzeit", "Day in the world, optionally with time"); g("Zeit seit dem Betreten der Welt", "Time since joining the world");
 		g("Menü-Stil im Spiel wählbar: Bambus, Clean oder Kompakt", "In-game menu style: Bambus, Clean or Compact");
+		g("Musik-Modul: Song mit Cover, Songtext als Karaoke und große 3D-Wörter in der Welt", "Music module: song with cover, karaoke lyrics and big 3D words in the world");
+		g("Musik (Spotify)", "Music (Spotify)"); g("Song, Songtext und 3D-Wörter wie ein Musikvideo", "Song, lyrics and 3D words like a music video");
 		g("MODS HINZUFÜGEN", "ADD MODS"); g("+  MODS HINZUFÜGEN", "+  ADD MODS"); g("← ZUM PROFIL", "← TO PROFILE");
 		g("INSTALLIERTE MODS", "INSTALLED MODS"); g("PROFIL", "PROFILE"); g("PROFILE VERWALTEN →", "MANAGE PROFILES →");
 		g("▶ SPIELEN", "▶ PLAY"); g("+ DAZU", "+ ADD"); g("✓ DRIN", "✓ ADDED");

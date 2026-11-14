@@ -152,9 +152,13 @@ public abstract class HudModul implements Einstellbar {
 		return Math.round(hoehe(mc, editor) * skala());
 	}
 
+	/** x-Wert für „waagerecht in der Mitte“ (bis das Modul im HUD-Editor verschoben wird). */
+	public static final int MITTE = 20000;
+
 	/** Position, begrenzt auf den sichtbaren Bildschirm. */
 	public int x(Minecraft mc, boolean editor) {
 		int max = mc.getWindow().getGuiScaledWidth() - breiteS(mc, editor);
+		if (pos().x == MITTE) return Math.max(0, max / 2);
 		return Math.max(0, Math.min(pos().x, max));
 	}
 

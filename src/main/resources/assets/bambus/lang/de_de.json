@@ -4,5 +4,8 @@
 	"key.bambus.zoom": "Zoom",
 	"key.bambus.freelook": "Freelook",
 	"key.bambus.hud": "HUD an/aus",
-	"key.bambus.koordinaten": "Koordinaten kopieren"
+	"key.bambus.koordinaten": "Koordinaten kopieren",
+	"key.bambus.musik_pause": "Musik: Pause / Weiter",
+	"key.bambus.musik_weiter": "Musik: Nächstes Lied",
+	"key.bambus.musik_zurueck": "Musik: Vorheriges Lied"
 }

@@ -43,6 +43,7 @@ final class ClientEinstellungen {
 			{"koordinaten", "Koordinaten", "Mit Nether-Umrechnung und Kopier-Taste", "4", "190", "false"},
 			{"spielzeit", "Spielzeit", "Zeit seit dem Betreten der Welt", "4", "245", "false"},
 			{"ingametag", "Ingame-Tag", "Tag in der Welt, auf Wunsch mit Uhrzeit", "4", "350", "false"},
+			{"musik", "Musik (Spotify)", "Song, Songtext und 3D-Wörter wie ein Musikvideo", "20000", "3", "false"},
 	};
 
 	/** {Schlüssel, Name, Beschreibung, Standard, Warnung} */

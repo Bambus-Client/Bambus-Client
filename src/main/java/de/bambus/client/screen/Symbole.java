@@ -85,7 +85,7 @@ public final class Symbole {
 		if (BILDER.containsKey(idOderName)) return idOderName;
 		String n = idOderName.toLowerCase(Locale.ROOT);
 		String[][] regeln = {
-				{"cps", "tasten"}, {"titel", "stern"}, {"ingametag", "uhr"}, {"hand", "pvp"},
+				{"musik", "update"}, {"cps", "tasten"}, {"titel", "stern"}, {"ingametag", "uhr"}, {"hand", "pvp"},
 				{"kompass", "richtung"}, {"koordinaten", "karte"}, {"spielzeit", "uhr"}, {"ping", "signal"}, {"server", "server"},
 				{"sprint", "status"}, {"schleich", "schleichen"}, {"sneak", "schleichen"}, {"zoom", "zoom"},
 				{"freelook", "auge"}, {"fullbright", "sonne"}, {"hell", "sonne"}, {"fadenkreuz", "fadenkreuz"},

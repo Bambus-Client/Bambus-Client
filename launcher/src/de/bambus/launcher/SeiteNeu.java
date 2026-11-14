@@ -30,6 +30,7 @@ final class SeiteNeu extends JPanel {
 					"Ping und Toggle Sprint als eigene Module – Toggle Sneak und HUD-Anzeige einzeln schaltbar",
 					"Neue Einzel-Module: FPS, CPS, Bambus-Schriftzug, Item in der Hand und Ingame-Tag",
 					"Menü-Stil im Spiel wählbar: Bambus, Clean oder Kompakt",
+					"Musik-Modul: Song mit Cover, Songtext als Karaoke und große 3D-Wörter in der Welt",
 					"Mehrere Minecraft-Versionen: jedes Mod-Profil spielt seine eigene (1.21.11 bis 26.3)",
 					"Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar",
 					"Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät",
