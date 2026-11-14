@@ -170,3 +170,7 @@ gradlew.bat build        (Windows)
 Danach in `build/libs`: `BambusLauncher.jar` (Launcher mit eingebauter Mod) und `bambus-client-3.3.0.jar` (nur die Mod).
 
 `gradlew.bat runClient` startet Minecraft direkt zum Testen.
+
+## Code-Signierung
+
+Die Windows-Dateien werden kostenlos über SignPath signiert: Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). Details: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md)

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SignPath: Artefakt-Konfiguration „programm“ – der Ordner „Bambus Launcher“ aus jpackage (als ZIP hochgeladen).
+     Signiert wird nur unser eigenes Programm; das eingebaute Java bringt seine eigenen Signaturen mit. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="Bambus Launcher.exe">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

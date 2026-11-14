@@ -1,6 +1,10 @@
 # Baut den Bambus Launcher als Windows-Programm (Java eingebaut) und das Installationsprogramm.
 # Start: von Hand unter „Actions → Windows-Launcher bauen → Run workflow“ oder automatisch bei einem Tag v*.
 # Bei einem Tag werden die Dateien zusätzlich an das GitHub-Release gehängt.
+#
+# Signieren (SignPath Foundation, kostenlos für Open Source): läuft automatisch, sobald unter
+# Settings → Secrets and variables → Actions die Variable SIGNPATH_ORGANIZATION_ID und das Secret
+# SIGNPATH_API_TOKEN eingetragen sind. Ohne diese Einträge wird wie bisher unsigniert gebaut.
 name: Windows-Launcher bauen
 
 on:
@@ -14,6 +18,10 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
+    env:
+      SIGNIEREN: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+      SIGNPATH_PROJEKT: ${{ vars.SIGNPATH_PROJECT_SLUG || 'bambus-client' }}
+      SIGNPATH_RICHTLINIE: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +57,37 @@ jobs:
             --add-modules java.se,jdk.crypto.ec,jdk.charsets,jdk.localedata,jdk.unsupported,jdk.zipfs,jdk.accessibility \
             --dest ausgabe
 
+      # ---- Signieren 1: das Launcher-Programm samt eingebautem Java (alle .exe und .dll im Ordner)
+      - name: Programm zum Signieren hochladen
+        if: env.SIGNIEREN == 'true'
+        id: unsigniert
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigniert-programm
+          path: ausgabe/Bambus Launcher
+
+      - name: Programm bei SignPath signieren
+        if: env.SIGNIEREN == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJEKT }}
+          signing-policy-slug: ${{ env.SIGNPATH_RICHTLINIE }}
+          artifact-configuration-slug: programm
+          github-artifact-id: ${{ steps.unsigniert.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signiert/programm
+
+      - name: Signiertes Programm übernehmen
+        if: env.SIGNIEREN == 'true'
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force "ausgabe\Bambus Launcher"
+          Copy-Item -Recurse "signiert\programm" "ausgabe\Bambus Launcher"
+          Get-AuthenticodeSignature "ausgabe\Bambus Launcher\Bambus Launcher.exe" | Format-List Status, SignerCertificate
+
       - name: Installationsprogramm (Inno Setup)
         shell: pwsh
         run: |
@@ -56,6 +95,36 @@ jobs:
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
           & $iscc "/DAppVersion=${{ steps.version.outputs.nummer }}" "/O$PWD\ausgabe" "launcher\packaging\windows\bambus.iss"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # ---- Signieren 2: das Installationsprogramm
+      - name: Setup zum Signieren hochladen
+        if: env.SIGNIEREN == 'true'
+        id: setupunsigniert
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigniert-setup
+          path: ausgabe/Bambus-Launcher-Setup.exe
+
+      - name: Setup bei SignPath signieren
+        if: env.SIGNIEREN == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJEKT }}
+          signing-policy-slug: ${{ env.SIGNPATH_RICHTLINIE }}
+          artifact-configuration-slug: setup
+          github-artifact-id: ${{ steps.setupunsigniert.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signiert/setup
+
+      - name: Signiertes Setup übernehmen
+        if: env.SIGNIEREN == 'true'
+        shell: pwsh
+        run: |
+          Copy-Item -Force "signiert\setup\Bambus-Launcher-Setup.exe" "ausgabe\Bambus-Launcher-Setup.exe"
+          Get-AuthenticodeSignature "ausgabe\Bambus-Launcher-Setup.exe" | Format-List Status, SignerCertificate
 
       - name: Zip ohne Installation
         shell: pwsh
