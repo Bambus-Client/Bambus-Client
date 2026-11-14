@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.BambusClient;
+import de.bambus.client.Einstellung;
 import de.bambus.client.Farben;
 import de.bambus.client.Musik;
 import de.bambus.client.Songtext;
@@ -8,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,6 +28,7 @@ public class MusikModul extends HudModul {
 	private final Option cover = option("cover", "Album-Cover", true);
 	private final Option songtext = option("songtext", "Songtext in der Insel (Karaoke)", true);
 	private final Option woerter = option("woerter", "Songtext-Wörter groß in der Welt", true);
+	private final Option seiten = option("seiten", "Wörter nur an den Seiten (Mitte frei für PvP)", true);
 	private final Option fortschritt = option("fortschritt", "Fortschritt", true);
 	private final Option equalizer = option("equalizer", "Equalizer", true);
 	private final Option nurSpotify = option("spotify", "Nur Spotify (keine Videos im Browser)", false);
@@ -45,8 +49,29 @@ public class MusikModul extends HudModul {
 
 	/** Für das HUD: 3D-Wörter zeichnen, wenn das Modul und die Option an sind. */
 	public void welt(GuiGraphics g, Minecraft mc) {
-		if (pos().an && woerter.an()) SongtextWelt.zeichne(g, mc);
+		if (pos().an && woerter.an()) SongtextWelt.zeichne(g, mc, seiten.an());
 		else SongtextWelt.leeren();
+	}
+
+	/** Einstellungsfenster: alle Schalter plus die Durchsichtigkeit der Insel. */
+	@Override
+	public List<Einstellung> einstellungen() {
+		List<Einstellung> liste = new ArrayList<>(super.einstellungen());
+		liste.add(new Einstellung.Stufe("Insel durchsichtig", () -> BambusClient.config.musikDurchsicht,
+				w -> BambusClient.config.musikDurchsicht = w, 0, 90, 10, "%d %%", hintergrund::an));
+		return liste;
+	}
+
+	@Override
+	public void standard() {
+		super.standard();
+		BambusClient.config.musikDurchsicht = 70;
+	}
+
+	/** Deckkraft des Insel-Hintergrunds (0–1) aus der Einstellung „durchsichtig“. */
+	private static float deckend() {
+		int d = Math.max(0, Math.min(90, BambusClient.config.musikDurchsicht));
+		return 1f - d / 100f;
 	}
 
 	private float sichtbar(boolean editor) {
@@ -82,9 +107,11 @@ public class MusikModul extends HudModul {
 		Font font = mc.font;
 
 		// Pille mit feinem Rand
+		float deck = deckend();
+		boolean schatten = deck < 0.6f;   // durchsichtig: Schrift mit Schatten, damit sie lesbar bleibt
 		if (hintergrund.an()) {
-			pille(g, x, y, b, h, Farben.alpha(0x60FFFFFF, (int) (0x60 * a)));
-			pille(g, x + 1, y + 1, b - 2, h - 2, Farben.alpha(0xE00C0D12, (int) (0xE0 * a)));
+			pille(g, x, y, b, h, Farben.alpha(0x60FFFFFF, (int) (0x60 * a * Math.max(0.5f, deck))));
+			pille(g, x + 1, y + 1, b - 2, h - 2, Farben.alpha(0xFF0C0D12, (int) (255 * a * deck)));
 		}
 
 		// Cover links (mit abgerundeten Ecken)
@@ -93,7 +120,7 @@ public class MusikModul extends HudModul {
 			int cs = 12, cx = x + 4, cy = y + 3;
 			if (!beispiel && Musik.coverDa()) {
 				g.blit(RenderPipelines.GUI_TEXTURED, Musik.COVER, cx, cy, 0f, 0f, cs, cs, cs, cs, Farben.alpha(0xFFFFFFFF, (int) (255 * a)));
-				int ecke = Farben.alpha(0xE00C0D12, (int) (0xE0 * a));
+				int ecke = Farben.alpha(0xFF0C0D12, (int) (255 * a * deck));
 				g.fill(cx, cy, cx + 1, cy + 1, ecke);
 				g.fill(cx + cs - 1, cy, cx + cs, cy + 1, ecke);
 				g.fill(cx, cy + cs - 1, cx + 1, cy + cs, ecke);
@@ -111,7 +138,7 @@ public class MusikModul extends HudModul {
 		double zeit = beispiel ? 0 : Musik.positionJetzt();
 		Songtext.Zeile zeile = !beispiel && songtext.an() ? Songtext.aktuelleZeile(zeit) : null;
 		if (zeile != null) {
-			karaoke(g, font, zeile, zeit, tx, y + 5, textB, a);
+			karaoke(g, font, zeile, zeit, tx, y + 5, textB, a, schatten);
 		} else {
 			String titel = beispiel ? "Song-Titel" : Musik.titel, kuenstler = beispiel ? "Künstler" : Musik.kuenstler;
 			String text = titel + (kuenstler.isEmpty() ? "" : "  ·  " + kuenstler);
@@ -121,7 +148,7 @@ public class MusikModul extends HudModul {
 				text = font.plainSubstrByWidth(text, (int) (textB / s) - font.width("…")) + "…";
 			}
 			int w = (int) (font.width(text) * s);
-			klein(g, font, text, tx + (textB - w) / 2, y + 5 + (int) ((1 - s) * 4), s, Farben.alpha(Farben.WEISS, (int) (255 * a)));
+			klein(g, font, text, tx + (textB - w) / 2, y + 5 + (int) ((1 - s) * 4), s, Farben.alpha(Farben.WEISS, (int) (255 * a)), schatten);
 		}
 
 		// Equalizer rechts
@@ -146,7 +173,8 @@ public class MusikModul extends HudModul {
 	}
 
 	/** Songtext-Zeile: gesungene Wörter weiß, das aktuelle lila hinterlegt, kommende grau. */
-	private static void karaoke(GuiGraphics g, Font font, Songtext.Zeile zeile, double zeit, int x, int y, int breite, float a) {
+	private static void karaoke(GuiGraphics g, Font font, Songtext.Zeile zeile, double zeit, int x, int y, int breite, float a,
+								boolean schatten) {
 		List<Songtext.Wort> woerter = zeile.woerter();
 		int gesamt = font.width(zeile.text());
 		float s = Math.min(1f, breite / (float) Math.max(1, gesamt));
@@ -165,8 +193,8 @@ public class MusikModul extends HudModul {
 			if (aktuell) {
 				g.fill((int) cx - 2, ty - 2, (int) cx + ww + 2, ty + (int) (8 * s) + 1, Farben.alpha(AKZENT, (int) (90 * a)));
 			}
-			int farbe = gesungen ? Farben.WEISS : 0xFF7E8492;
-			klein(g, font, w.text(), (int) cx, ty, s, Farben.alpha(farbe, (int) (255 * a)));
+			int farbe = gesungen ? Farben.WEISS : schatten ? 0xFFB4BAC6 : 0xFF7E8492;
+			klein(g, font, w.text(), (int) cx, ty, s, Farben.alpha(farbe, (int) (255 * a)), schatten);
 			cx += ww + raum * s;
 		}
 	}
@@ -181,11 +209,11 @@ public class MusikModul extends HudModul {
 		}
 	}
 
-	private static void klein(GuiGraphics g, Font font, String text, int x, int y, float groesse, int farbe) {
+	private static void klein(GuiGraphics g, Font font, String text, int x, int y, float groesse, int farbe, boolean schatten) {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(groesse, groesse);
-		g.drawString(font, text, 0, 0, farbe, false);
+		g.drawString(font, text, 0, 0, farbe, schatten);
 		g.pose().popMatrix();
 	}
 }
