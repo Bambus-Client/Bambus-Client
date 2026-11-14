@@ -4,11 +4,13 @@ import de.bambus.client.BambusClient;
 import de.bambus.client.Einstellung;
 import de.bambus.client.Farben;
 import de.bambus.client.Musik;
+import de.bambus.client.Schriften;
 import de.bambus.client.Songtext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +28,13 @@ public class MusikModul extends HudModul {
 	private static final long EINBLENDEN_MS = 6000, AUSBLENDEN_MS = 400;
 
 	private final Option cover = option("cover", "Album-Cover", true);
-	private final Option songtext = option("songtext", "Songtext in der Insel (Karaoke)", true);
-	private final Option woerter = option("woerter", "Songtext-Wörter groß in der Welt", true);
-	private final Option seiten = option("seiten", "Wörter nur an den Seiten (Mitte frei für PvP)", true);
+	private final Option songtext = option("songtext", "Songtext (Karaoke)", true);
+	private final Option woerter = option("woerter", "3D-Wörter", true);
+	private final Option seiten = option("seiten", "Wörter nur an den Seiten", true);
 	private final Option fortschritt = option("fortschritt", "Fortschritt", true);
 	private final Option equalizer = option("equalizer", "Equalizer", true);
-	private final Option nurSpotify = option("spotify", "Nur Spotify (keine Videos im Browser)", false);
-	private final Option nurWechsel = option("wechsel", "Nur beim Songwechsel einblenden", false);
+	private final Option nurSpotify = option("spotify", "Nur Spotify", false);
+	private final Option nurWechsel = option("wechsel", "Nur beim Songwechsel", false);
 
 	public MusikModul() {
 		super("musik", "Musik (Spotify)", MITTE, 3, false, "Song, Songtext und 3D-Wörter wie ein Musikvideo", "HUD");
@@ -59,6 +61,10 @@ public class MusikModul extends HudModul {
 		List<Einstellung> liste = new ArrayList<>(super.einstellungen());
 		liste.add(new Einstellung.Stufe("Insel durchsichtig", () -> BambusClient.config.musikDurchsicht,
 				w -> BambusClient.config.musikDurchsicht = w, 0, 90, 10, "%d %%", hintergrund::an));
+		liste.add(Einstellung.Stufe.auswahl("Schrift Insel", Schriften.NAMEN, () -> BambusClient.config.musikSchriftInsel,
+				w -> BambusClient.config.musikSchriftInsel = w, () -> true));
+		liste.add(Einstellung.Stufe.auswahl("Schrift Wörter", Schriften.NAMEN, () -> BambusClient.config.musikSchriftWoerter,
+				w -> BambusClient.config.musikSchriftWoerter = w, woerter::an));
 		return liste;
 	}
 
@@ -66,6 +72,8 @@ public class MusikModul extends HudModul {
 	public void standard() {
 		super.standard();
 		BambusClient.config.musikDurchsicht = 70;
+		BambusClient.config.musikSchriftInsel = 1;
+		BambusClient.config.musikSchriftWoerter = 2;
 	}
 
 	/** Deckkraft des Insel-Hintergrunds (0–1) aus der Einstellung „durchsichtig“. */
@@ -142,13 +150,18 @@ public class MusikModul extends HudModul {
 		} else {
 			String titel = beispiel ? "Song-Titel" : Musik.titel, kuenstler = beispiel ? "Künstler" : Musik.kuenstler;
 			String text = titel + (kuenstler.isEmpty() ? "" : "  ·  " + kuenstler);
-			float s = Math.min(1f, textB / (float) Math.max(1, font.width(text)));
+			int schrift = BambusClient.config.musikSchriftInsel;
+			float s = Math.min(1f, textB / (float) Math.max(1, font.width(Schriften.text(text, schrift, false))));
 			if (s < 0.75f) {   // zu lang: kürzen statt winzig
 				s = 0.75f;
-				text = font.plainSubstrByWidth(text, (int) (textB / s) - font.width("…")) + "…";
+				while (text.length() > 1 && font.width(Schriften.text(text + "…", schrift, false)) > textB / s) {
+					text = text.substring(0, text.length() - 1);
+				}
+				text = text.stripTrailing() + "…";
 			}
-			int w = (int) (font.width(text) * s);
-			klein(g, font, text, tx + (textB - w) / 2, y + 5 + (int) ((1 - s) * 4), s, Farben.alpha(Farben.WEISS, (int) (255 * a)), schatten);
+			Component c = Schriften.text(text, schrift, false);
+			int w = (int) (font.width(c) * s);
+			klein(g, font, c, tx + (textB - w) / 2, y + 5 + (int) ((1 - s) * 4), s, Farben.alpha(Farben.WEISS, (int) (255 * a)), schatten);
 		}
 
 		// Equalizer rechts
@@ -176,25 +189,29 @@ public class MusikModul extends HudModul {
 	private static void karaoke(GuiGraphics g, Font font, Songtext.Zeile zeile, double zeit, int x, int y, int breite, float a,
 								boolean schatten) {
 		List<Songtext.Wort> woerter = zeile.woerter();
-		int gesamt = font.width(zeile.text());
+		int schrift = BambusClient.config.musikSchriftInsel;
+		int raum = font.width(Schriften.text(" ", schrift, false));
+		// Breite genauso messen wie gezeichnet wird: Wort für Wort plus Leerzeichen
+		int gesamt = raum * Math.max(0, woerter.size() - 1);
+		for (Songtext.Wort w : woerter) gesamt += font.width(Schriften.text(w.text(), schrift, false));
 		float s = Math.min(1f, breite / (float) Math.max(1, gesamt));
 		s = Math.max(0.6f, s);
-		int start = x + (int) Math.max(0, (breite - gesamt * s) / 2);
+		float start = x + Math.max(0, (breite - gesamt * s) / 2);
 		int ty = y + (int) ((1 - s) * 4);
 		float cx = start;
-		int raum = font.width(" ");
 		for (int i = 0; i < woerter.size(); i++) {
 			Songtext.Wort w = woerter.get(i);
 			double naechstes = i + 1 < woerter.size() ? woerter.get(i + 1).start() : w.start() + 0.6;
 			boolean gesungen = zeit >= w.start();
 			boolean aktuell = gesungen && zeit < naechstes;
-			int ww = (int) (font.width(w.text()) * s);
-			if (cx + ww > x + breite + 2) break;   // passt nicht mehr
+			Component wort = Schriften.text(w.text(), schrift, false);
+			float ww = font.width(wort) * s;
+			if (cx + ww > x + breite + 4) break;   // passt auch verkleinert nicht mehr
 			if (aktuell) {
-				g.fill((int) cx - 2, ty - 2, (int) cx + ww + 2, ty + (int) (8 * s) + 1, Farben.alpha(AKZENT, (int) (90 * a)));
+				g.fill((int) cx - 2, ty - 2, (int) (cx + ww) + 2, ty + (int) (8 * s) + 1, Farben.alpha(AKZENT, (int) (90 * a)));
 			}
 			int farbe = gesungen ? Farben.WEISS : schatten ? 0xFFB4BAC6 : 0xFF7E8492;
-			klein(g, font, w.text(), (int) cx, ty, s, Farben.alpha(farbe, (int) (255 * a)), schatten);
+			klein(g, font, wort, (int) cx, ty, s, Farben.alpha(farbe, (int) (255 * a)), schatten);
 			cx += ww + raum * s;
 		}
 	}
@@ -209,7 +226,7 @@ public class MusikModul extends HudModul {
 		}
 	}
 
-	private static void klein(GuiGraphics g, Font font, String text, int x, int y, float groesse, int farbe, boolean schatten) {
+	private static void klein(GuiGraphics g, Font font, Component text, int x, int y, float groesse, int farbe, boolean schatten) {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(groesse, groesse);

@@ -36,7 +36,7 @@ public final class EinstellungsTransfer {
 			"hudAn", "module", "favoriten",
 			"toggleSprint", "toggleSneak", "scrollZoom", "freelook", "fullbright", "capeAn", "bambusHauptmenue",
 			"scoreboardAn", "scoreboardGroesse", "bossbarAn", "bossbarGroesse", "tablisteGroesse", "chatGroesse",
-			"thema", "menueStil", "musikDurchsicht", "verlauf", "menueAnimation", "hinweise", "ladebildschirm", "menueHintergrund", "serverMenue",
+			"thema", "menueStil", "musikDurchsicht", "musikSchriftInsel", "musikSchriftWoerter", "verlauf", "menueAnimation", "hinweise", "ladebildschirm", "menueHintergrund", "serverMenue",
 			"autoScreenshot", "helferAn",
 			"texturenAn", "lowFire", "lowFireStaerke", "lowShield", "lowShieldStaerke", "sideShield", "sideShieldDrehung",
 			"shortSword", "shortSwordGroesse", "keinKuerbisOverlay", "klaresWasser",

@@ -2,7 +2,6 @@ package de.bambus.client.hud;
 
 import de.bambus.client.Musik;
 import de.bambus.client.Songtext;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -145,7 +144,8 @@ public final class SongtextWelt {
 		float neigung = (float) Math.toRadians((zufall.nextDouble() - 0.5) * 24);
 		float groesse = 0.45f + zufall.nextFloat() * 0.45f + (sauber.length() <= 3 ? -0.1f : 0f);
 		if (seiten) groesse *= 0.8f;   // am Rand etwas kleiner
-		Component c = Component.literal(sauber.toUpperCase(java.util.Locale.ROOT)).withStyle(ChatFormatting.BOLD);
+		Component c = de.bambus.client.Schriften.text(sauber.toUpperCase(java.util.Locale.ROOT),
+				de.bambus.client.BambusClient.config.musikSchriftWoerter, true);
 		// frei in der Welt: fester Weltpunkt; an den Seiten: nur die Blick-Koordinaten (ort = null)
 		Vec3 ort = seiten ? null : kamera.position()
 				.add(vor.x() * abstand, vor.y() * abstand, vor.z() * abstand)
