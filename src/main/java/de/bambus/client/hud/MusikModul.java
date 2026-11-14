@@ -98,7 +98,12 @@ public class MusikModul extends HudModul {
 	}
 
 	private boolean zeigen(boolean editor) {
-		return editor || (Musik.laeuftEtwas && sichtbar(false) > 0f);
+		return editor || (Musik.laeuftEtwas && sichtbar(false) > 0f) || fehlerZeigen();
+	}
+
+	/** Läuft nichts, aber die Abfrage hat einen Fehler gemeldet: kurz in der Insel anzeigen (hilft beim Finden). */
+	private boolean fehlerZeigen() {
+		return !Musik.laeuftEtwas && !Musik.fehler().isEmpty();
 	}
 
 	@Override
@@ -148,8 +153,15 @@ public class MusikModul extends HudModul {
 		int rechts = x + b - (equalizer.an() ? 20 : 8);
 		int textB = rechts - tx;
 
-		// Text: Songtext (Karaoke) oder „Titel · Künstler“
+		// Text: Songtext (Karaoke) oder „Titel · Künstler“ – oder eine Fehlermeldung der Abfrage
 		double zeit = beispiel ? 0 : Musik.positionJetzt();
+		if (!editor && fehlerZeigen()) {
+			String meldung = "⚠ " + Musik.fehler();
+			float fs = 0.6f;
+			while (meldung.length() > 4 && font.width(meldung) * fs > textB) meldung = meldung.substring(0, meldung.length() - 2) + "…";
+			klein(g, font, Component.literal(meldung), tx, y + 6, fs, Farben.alpha(0xFFFF9A9A, (int) (255 * a)), true);
+			return;
+		}
 		Songtext.Zeile zeile = !beispiel && songtext.an() ? Songtext.aktuelleZeile(zeit) : null;
 		if (zeile != null) {
 			karaoke(g, font, zeile, zeit, tx, y + 5, textB, a, schatten);

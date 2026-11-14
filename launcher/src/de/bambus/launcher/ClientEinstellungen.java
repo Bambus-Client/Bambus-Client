@@ -244,6 +244,19 @@ final class ClientEinstellungen {
 		return aus;
 	}
 
+	/** Mit ★ markierte Server (Adressen, klein geschrieben) – dieselbe Liste wie im Spiel. */
+	java.util.List<String> serverSterne() {
+		java.util.List<Object> l = Json.liste(daten.get("serverSterne"));
+		java.util.List<String> aus = new java.util.ArrayList<>();
+		if (l != null) for (Object o : l) if (o instanceof String) aus.add((String) o);
+		return aus;
+	}
+
+	void setzeServerSterne(java.util.List<String> liste) {
+		daten.put("serverSterne", new java.util.ArrayList<Object>(liste));
+		speichern();
+	}
+
 	void setzeServerFavoriten(java.util.List<String> liste) {
 		daten.put("serverFavoriten", new java.util.ArrayList<Object>(liste));
 		speichern();

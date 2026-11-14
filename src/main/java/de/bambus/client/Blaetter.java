@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -228,12 +229,41 @@ public final class Blaetter {
 		ticks = 0;
 		BambusConfig c = BambusClient.config;
 		c.spielminuten++;
+		verlaufPlusEins(c);
 		if (c.spielminuten % MINUTEN_PRO_BONUS == 0 && c.spielBonusHeute < BONUS_MAX_PRO_TAG) {
 			c.spielBonusHeute += BONUS;
 			gib(BONUS);
 			Hinweise.zeige("stern", "+" + BONUS + " Blätter", c.spielminuten + " Minuten gespielt", rangFarbe());
 		}
 		c.speichern();
+	}
+
+	/**
+	 * Schreibt eine Minute auf das heutige Datum. Format: „2026-11-14:35,2026-11-13:120“,
+	 * höchstens 30 Tage – der Launcher zeigt daraus die Spielzeit pro Tag.
+	 */
+	private static void verlaufPlusEins(BambusConfig c) {
+		String heute = LocalDate.now().toString();
+		Map<String, Integer> tage = new LinkedHashMap<>();
+		for (String t : c.spielVerlauf.split(",")) {
+			int d = t.lastIndexOf(':');
+			if (d <= 0) continue;
+			try {
+				tage.put(t.substring(0, d).trim(), Integer.parseInt(t.substring(d + 1).trim()));
+			} catch (NumberFormatException ignoriert) {
+				// kaputter Eintrag
+			}
+		}
+		tage.put(heute, tage.getOrDefault(heute, 0) + 1);
+		List<String> schluessel = new ArrayList<>(tage.keySet());
+		Collections.sort(schluessel);
+		Collections.reverse(schluessel);
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < schluessel.size() && i < 30; i++) {
+			if (sb.length() > 0) sb.append(',');
+			sb.append(schluessel.get(i)).append(':').append(tage.get(schluessel.get(i)));
+		}
+		c.spielVerlauf = sb.toString();
 	}
 
 	private static void herausforderungen(Minecraft mc, LocalPlayer p) {

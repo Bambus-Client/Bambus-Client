@@ -123,6 +123,7 @@ public class BambusConfig {
 	public int spielminuten = 0;        // zählt die Mod hoch
 	public String spielTag = "";
 	public int spielBonusHeute = 0;     // schon vergebene Spiel-Blätter von heute
+	public String spielVerlauf = "";    // Spielzeit je Tag, z. B. „2026-11-14:35,2026-11-13:120“ (30 Tage)
 	public String hartTag = "";         // Tag der aktuellen Herausforderungen
 	public String hartFertig = "";      // heute geschaffte Herausforderungen
 	public String hartStand = "";       // Zwischenstände, z. B. "kills5:2,sprint1000:640"

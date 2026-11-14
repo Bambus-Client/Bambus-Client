@@ -37,7 +37,9 @@ final class NeonUI {
 	static Color PINK = new Color(0xFF2BD6);
 
 	/** Farbthemen wie im Spiel (Farben.THEMEN der Mod): {Name, Haupt, Akzent, Zweitakzent}. */
-	static final String[] THEMEN = {"NEON", "OZEAN", "SAKURA", "GOLD", "LILA", "EIS", "RGB"};
+	static final String[] THEMEN = {"NEON", "OZEAN", "SAKURA", "GOLD", "LILA", "EIS", "RGB", "EIGEN"};
+	/** Nummer des selbst gemischten Themas. */
+	static final int EIGEN = THEMEN.length - 1;
 	private static final int[][] THEMA_FARBEN = {
 			{0x3DFF8A, 0x00E5FF, 0xFF2BD6},
 			{0x00E5FF, 0x2B6BFF, 0x7DF9FF},
@@ -46,8 +48,21 @@ final class NeonUI {
 			{0xB06BFF, 0xFF2BD6, 0x00E5FF},
 			{0xAEEBFF, 0xFFFFFF, 0x5AE6FF},
 			{0x3DFF8A, 0x00E5FF, 0xFF2BD6},
+			{0x3DFF8A, 0x00E5FF, 0xFF2BD6},   // EIGEN – wird aus den Einstellungen überschrieben
 	};
 	private static int thema;
+
+	/** Setzt die selbst gemischten Farben (Haupt, Akzent, Zweitakzent). */
+	static void eigeneFarben(int haupt, int akzent, int zweit) {
+		THEMA_FARBEN[EIGEN][0] = haupt;
+		THEMA_FARBEN[EIGEN][1] = akzent;
+		THEMA_FARBEN[EIGEN][2] = zweit;
+		if (thema == EIGEN) themaAnwenden(EIGEN);
+	}
+
+	static int eigeneFarbe(int i) {
+		return THEMA_FARBEN[EIGEN][i];
+	}
 
 	static int thema() { return thema; }
 
@@ -96,14 +111,28 @@ final class NeonUI {
 	}
 
 	/** Gewünschte Größe (wie früher bei der normalen Schrift) → Pixelschrift-Größe. */
+	/** Schriftgröße-Faktor aus den Einstellungen (0,85 bis 1,3). */
+	private static float textFaktor = 1f;
+
+	static void setzeTextFaktor(float f) {
+		textFaktor = Math.max(0.85f, Math.min(1.3f, f));
+	}
+
+	static float textFaktor() {
+		return textFaktor;
+	}
+
 	static float pixelGroesse(int groesse) {
-		if (groesse <= 11) return 9f;
-		if (groesse <= 14) return 12f;
-		if (groesse <= 17) return 13.5f;
-		if (groesse <= 22) return 18f;
-		if (groesse <= 28) return 27f;
-		if (groesse <= 40) return 36f;
-		return 45f;
+		float g = groesse <= 11 ? 9f
+				: groesse <= 14 ? 12f
+				: groesse <= 17 ? 13.5f
+				: groesse <= 22 ? 18f
+				: groesse <= 28 ? 27f
+				: groesse <= 40 ? 36f
+				: 45f;
+		// Überschriften wachsen nur zur Hälfte mit, sonst stoßen sie an die Knöpfe daneben
+		float f = groesse >= 28 ? 1f + (textFaktor - 1f) * 0.45f : textFaktor;
+		return g * f;
 	}
 
 	private static Font schrift(int stil, int groesse) {
@@ -122,6 +151,19 @@ final class NeonUI {
 
 	static Font mono(int groesse) {
 		return schrift(Font.BOLD, groesse);
+	}
+
+	/**
+	 * Verkleinert die Schrift so weit, dass der Text in die Breite passt – damit bei großer
+	 * Schriftgröße nichts aus den Knöpfen läuft. Kleiner als 8 Pixel wird nicht.
+	 */
+	static Font passendeSchrift(Graphics2D g, Font f, String text, int breite) {
+		if (text == null || text.isEmpty() || breite <= 0) return f;
+		Font aktuell = f;
+		while (aktuell.getSize2D() > 8f && g.getFontMetrics(aktuell).stringWidth(text) > breite) {
+			aktuell = aktuell.deriveFont(aktuell.getSize2D() - 1f);
+		}
+		return aktuell;
 	}
 
 	/** Text (schon übersetzt) so kürzen, dass er in die Breite passt – mit „…“ am Ende. */
@@ -397,7 +439,7 @@ final class NeonUI {
 				g.draw(form);
 			}
 			g.setColor(ueber ? TEXT : farbe);
-			g.setFont(getFont());
+			g.setFont(passendeSchrift(g, getFont(), Sprache.t(getText()), getWidth() - 12));
 			zentriert(g, getText(), 0, 0, getWidth(), getHeight());
 			g.dispose();
 		}

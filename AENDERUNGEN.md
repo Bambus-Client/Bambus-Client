@@ -17,6 +17,12 @@
 - Bambus-Helfer kennt jetzt alle 697 Crafting-Rezepte (mit Bild, im Spiel mit echten Icons), versteht Deutsch besser (Wortformen, zusammengesetzte Wörter, Tippfehler) und antwortet in der Sprache der Frage
 - Bambus-Helfer erklärt viele PvP-Taktiken: Krits, Abklingzeit, Strafen, Jump Reset, Schild und Axt, Angel, Bogen, Combos, Clutches, Bridgen, Crystal-PvP, Streitkolben und mehr
 - Side Shield: Beim Blocken gleitet der Schild in die normale Block-Position und danach wieder zur Seite
+- Neue Seite MEIN SPIEL mit vier Bereichen: BILDER (Screenshots aus dem Spiel mit Vorschau), SPIELZEIT (heute, letzte 7 Tage, insgesamt und Balken der letzten 14 Tage), TASTEN (Tastenbelegung ändern, schreibt in Minecrafts options.txt) und PROBLEME (letzter Absturz in klaren Sätzen erklärt)
+- Server: ★ heftet einen Server oben an – dieselbe Liste wie die Serverauswahl im Spiel; Ziehen am linken Rand ändert die Reihenfolge
+- Schriftgröße im Launcher einstellbar (A− / A / A+); Knopftexte verkleinern sich automatisch, damit nichts herausläuft
+- Eigene Farben mischen: Haupt-, Akzent- und zweite Akzentfarbe selbst wählen, als achtes Farbthema „EIGEN“ – gilt auch im Spiel
+- Startbildschirm mit Logo und Ladebalken, solange der Launcher hochfährt
+- Mod zählt die Spielzeit jetzt auch pro Tag mit (Feld `spielVerlauf`, letzte 30 Tage)
 - Mehrere Minecraft-Versionen: Jedes Mod-Profil hat seine eigene Version, wählbar beim Anlegen und später über den Knopf VERSION. Zur Auswahl stehen 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 und 26.3
 - Jede Version bekommt einen eigenen Spielordner mit eigenen Mods und eigenen Welten – eine neuere Version baut dadurch keine alten Welten um
 - Mod-Suche bei Modrinth und CurseForge zeigt nur Mods, die zur Version des geöffneten Profils passen
