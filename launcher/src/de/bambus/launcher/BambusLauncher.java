@@ -95,6 +95,10 @@ public final class BambusLauncher extends JFrame {
 	final Fortschritt fortschritt = new Fortschritt(client);
 
 	public static void main(String[] args) {
+		// Selbst-Update: Ist schon eine neuere Version geladen, startet sie hier statt dieser
+		if (Selbststart.uebergeben(args)) {
+			return;
+		}
 		// Linux: Der XRender-Weg von Java zeichnet gedrehte, teils durchsichtige Bilder fehlerhaft
 		// (weiße Flächen in der 3D-Vorschau) – daher den Software-Weg benutzen.
 		if ("linux".equals(Installer.betriebssystem()) && System.getProperty("sun.java2d.xrender") == null) {
@@ -113,6 +117,7 @@ public final class BambusLauncher extends JFrame {
 			Startbild.melde("Fertig", 100);
 			l.setVisible(true);
 			Startbild.schliesse();
+			Selbststart.gestartet();   // die geladene Version läuft – Sicherheitsnetz zurücksetzen
 			if (args.length > 0) {
 				l.zeige(args[0]); // für Screenshots: start, module, kosmetik, einstellungen
 			}
@@ -239,8 +244,11 @@ public final class BambusLauncher extends JFrame {
 		pruefeEntwickler();
 
 		zeige("start");
-		if (autoUpdate && Updater.aktiv()) {
-			pruefeUpdates(false);
+		if (Updater.aktiv()) {
+			if (autoUpdate) pruefeUpdates(false);
+			// alle 30 Minuten noch mal nachsehen, solange der Launcher offen ist
+			Timer updateTimer = new Timer(30 * 60 * 1000, e -> { if (autoUpdate && update == null) pruefeUpdates(false); });
+			updateTimer.start();
 		}
 	}
 
@@ -594,7 +602,7 @@ public final class BambusLauncher extends JFrame {
 
 	// ================================================================== Updates
 
-	/** Sucht im Hintergrund nach einem neuen Release und lädt das Client-Update gleich mit. */
+	/** Sucht im Hintergrund im Branch auto-update nach einer neueren Version und lädt sie gleich. */
 	void pruefeUpdates(boolean manuell) {
 		updateStatus = "Suche nach Updates …";
 		if (einstellungen != null) einstellungen.repaint();
@@ -602,16 +610,17 @@ public final class BambusLauncher extends JFrame {
 			try {
 				Updater.Release r = Updater.pruefe();
 				if (!Updater.neuer(r)) {
-					updateStatus = "Du hast die neueste Version (" + VERSION + ").";
-					if (manuell) SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, Sprache.t("Du hast schon die neueste Version (" + VERSION + ")."), Sprache.t("Updates"), JOptionPane.INFORMATION_MESSAGE));
+					updateStatus = "Du hast die neueste Version.";
+					if (manuell) SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, Sprache.t("Du hast schon die neueste Version") + " (" + Updater.versionText() + ").", Sprache.t("Updates"), JOptionPane.INFORMATION_MESSAGE));
 				} else {
+					Updater.ladeLauncher(r, text -> updateStatus = text);
 					update = r;
-					SwingUtilities.invokeLater(() -> { updateChip.setVisible(true); updateChip.repaint(); });
-					boolean neu = Updater.ladeMod(r, text -> updateStatus = text);
-					updateStatus = (neu || Updater.neuereMod() != null)
-							? "Client-Update " + r.version + " ist geladen – kommt beim nächsten SPIELEN automatisch rein."
-							: "Version " + r.version + " ist da.";
-					if (manuell) SwingUtilities.invokeLater(() -> new UpdateDialog(this).setVisible(true));
+					updateStatus = "Update ist geladen.";
+					SwingUtilities.invokeLater(() -> {
+						updateChip.setVisible(true);
+						updateChip.repaint();
+						if (manuell) new UpdateDialog(this).setVisible(true);
+					});
 				}
 			} catch (Exception ex) {
 				updateStatus = "Update-Suche: " + (ex.getMessage() == null ? "keine Verbindung" : ex.getMessage());
@@ -621,6 +630,15 @@ public final class BambusLauncher extends JFrame {
 		}, "Bambus-Updates");
 		t.setDaemon(true);
 		t.start();
+	}
+
+	/** Startet den Launcher mit der geladenen Version neu. false = bitte selbst neu öffnen. */
+	boolean jetztNeuStarten() {
+		if (start.istBeschaeftigt()) return false;   // nicht mitten in der Einrichtung
+		speichereLauncherEinstellungen();
+		if (!Updater.neuStarten()) return false;
+		System.exit(0);
+		return true;
 	}
 
 	// ================================================================ Bauteile
@@ -649,7 +667,7 @@ public final class BambusLauncher extends JFrame {
 			g.setFont(NeonUI.mono(11));
 			g.setColor(NeonUI.NEON);
 			Updater.Release r = update;
-			g.drawString("▲  UPDATE " + (r == null ? "" : r.version), 12, getHeight() / 2 + 4);
+			g.drawString(r == null ? "▲  UPDATE" : "▲  UPDATE  #" + r.build, 12, getHeight() / 2 + 4);
 			g.dispose();
 		}
 	}

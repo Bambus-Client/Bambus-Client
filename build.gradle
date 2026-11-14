@@ -49,8 +49,29 @@ dependencies {
 	launcherImplementation "com.twelvemonkeys.imageio:imageio-webp:3.12.0"
 }
 
+// Bau-Nummer für das Selbst-Update des Launchers: Anzahl der Commits (auf GitHub per BAMBUS_BUILD gesetzt)
+def bauNummer = providers.environmentVariable('BAMBUS_BUILD').orElse(providers.exec {
+	commandLine 'git', 'rev-list', '--count', 'HEAD'
+	ignoreExitValue = true
+}.standardOutput.asText.map { it.trim() ?: '0' })
+def bauCommit = providers.environmentVariable('GITHUB_SHA').orElse(providers.exec {
+	commandLine 'git', 'rev-parse', 'HEAD'
+	ignoreExitValue = true
+}.standardOutput.asText.map { it.trim() })
+
+def bauInfo = tasks.register('bauInfo') {
+	def ziel = layout.buildDirectory.file('bauinfo/bambus-build.properties')
+	inputs.property 'build', bauNummer
+	inputs.property 'commit', bauCommit
+	outputs.file ziel
+	doLast {
+		ziel.get().asFile.text = "build=${inputs.properties.build}\ncommit=${inputs.properties.commit}\n"
+	}
+}
+
 // Die Cape-Bilder aus der Mod auch im Launcher anzeigen (Kosmetik-Vorschau)
 tasks.named('processLauncherResources', ProcessResources) {
+	from(bauInfo)
 	from('src/main/resources/assets/bambus/textures/cape') {
 		into 'capes'
 	}

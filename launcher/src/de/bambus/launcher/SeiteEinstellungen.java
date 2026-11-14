@@ -169,9 +169,7 @@ final class SeiteEinstellungen extends JPanel {
 		// Update-Zeile ganz unten
 		g.setFont(NeonUI.normal(11));
 		g.setColor(NeonUI.GRAU);
-		String st = Updater.aktiv()
-				? "Version " + BambusLauncher.VERSION + (l.updateStatus.isEmpty() ? "" : "  ·  " + l.updateStatus)
-				: "Version " + BambusLauncher.VERSION + "  ·  Automatische Updates gibt es, sobald der Client über GitHub gebaut wird.";
+		String st = "Version " + Updater.versionText() + (l.updateStatus.isEmpty() ? "" : "  ·  " + l.updateStatus);
 		g.drawString(st, X, 592);
 
 		ueberschrift(g, "ARBEITSSPEICHER", 112);
