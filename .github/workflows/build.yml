@@ -16,6 +16,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # für die Bau-Nummer (Selbst-Update)
 
       - uses: actions/setup-java@v4
         with:

@@ -517,6 +517,17 @@ final class Sprache {
 		teil("Du hast schon die neueste Version (", "You already have the newest version ("); teil("Du hast die neueste Version (", "You have the newest version (");
 		teil("Client-Update ", "Client update "); teil(" ist geladen – kommt beim nächsten SPIELEN automatisch rein.", " is downloaded – it's installed automatically the next time you PLAY.");
 		teil(" ist da.", " is here."); teil("Update-Suche: ", "Update check: "); teil("Du hast ", "You have "); teil(" wird geladen …", " is downloading …");
+		g("JETZT NEU STARTEN", "RESTART NOW"); g("ALLE ÄNDERUNGEN", "ALL CHANGES"); g("Update ist geladen.", "Update downloaded.");
+		g("Kommt beim nächsten Öffnen von selbst – oder gleich:", "Installs itself next time you open it – or right now:");
+		g("Gerade wird eingerichtet – das Update kommt beim nächsten Öffnen.", "Setup is running – the update arrives next time you open it.");
+		g("Bitte den Launcher schließen und neu öffnen.", "Please close and reopen the launcher.");
+		g("Keine Verbindung zum Update-Server.", "No connection to the update server."); g("Die Update-Daten sind unlesbar.", "The update data is unreadable.");
+		g("Die Update-Daten sind unvollständig.", "The update data is incomplete.");
+		g("Das Update ist noch nicht vollständig auf dem Server – es wird später noch mal versucht.", "The update isn't fully on the server yet – trying again later.");
+		g("Die heruntergeladene Datei ist kein gültiger Launcher.", "The downloaded file is not a valid launcher.");
+		g("Du hast schon die neueste Version", "You already have the newest version"); g("Du hast die neueste Version.", "You have the newest version.");
+		teil("Du hast die neueste Version.", "You have the newest version."); teil("Keine Verbindung zum Update-Server.", "No connection to the update server."); teil("JETZT NEU STARTEN", "RESTART NOW"); teil("Update ist geladen.", "Update downloaded.");
+		teil(" · Build ", " · Build "); teil("Update ", "Update "); teil(" (Build ", " (build ");
 		teil("Das Update konnte nicht geladen werden:", "The update could not be downloaded:"); teil("GitHub antwortet gerade nicht (", "GitHub isn't responding right now (");
 
 		// ---------------------------------------------------------------- Microsoft

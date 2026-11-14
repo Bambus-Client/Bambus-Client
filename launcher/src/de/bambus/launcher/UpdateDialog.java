@@ -1,9 +1,7 @@
 package de.bambus.launcher;
 
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import java.awt.Desktop;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -19,7 +17,7 @@ final class UpdateDialog extends JDialog {
 	private static final int B = 640, H = 480;
 
 	private final BambusLauncher l;
-	private final NeonUI.SpielKnopf launcherKnopf = new NeonUI.SpielKnopf("LAUNCHER AKTUALISIEREN");
+	private final NeonUI.SpielKnopf launcherKnopf = new NeonUI.SpielKnopf("JETZT NEU STARTEN");
 	private volatile String meldung = "";
 
 	UpdateDialog(BambusLauncher l) {
@@ -41,11 +39,11 @@ final class UpdateDialog extends JDialog {
 		Updater.Release r = l.update;
 		launcherKnopf.setFont(NeonUI.titel(15));
 		launcherKnopf.setBounds(40, H - 92, 330, 54);
-		launcherKnopf.setVisible(r != null && r.installerUrl != null);
+		launcherKnopf.setVisible(r != null && Updater.bereitBuild() >= r.build);
 		launcherKnopf.addActionListener(e -> launcherAktualisieren());
 		p.add(launcherKnopf);
 
-		NeonUI.UmrissKnopf seite = new NeonUI.UmrissKnopf("ALLE DETAILS", NeonUI.CYAN);
+		NeonUI.UmrissKnopf seite = new NeonUI.UmrissKnopf("ALLE ÄNDERUNGEN", NeonUI.CYAN);
 		seite.setBounds(386, H - 84, 150, 38);
 		seite.setVisible(r != null && !r.seite.isEmpty());
 		seite.addActionListener(e -> {
@@ -55,26 +53,12 @@ final class UpdateDialog extends JDialog {
 	}
 
 	private void launcherAktualisieren() {
-		Updater.Release r = l.update;
-		launcherKnopf.setEnabled(false);
-		meldung = "Wird geladen …";
-		repaint();
-		Thread t = new Thread(() -> {
-			try {
-				boolean beenden = Updater.starteLauncherUpdate(r, text -> { meldung = text; repaint(); });
-				if (beenden) {
-					SwingUtilities.invokeLater(() -> System.exit(0));   // das Setup ersetzt den Launcher und öffnet ihn neu
-				} else {
-					meldung = "Die neue Version ist geöffnet: Bambus Launcher in „Programme“ ziehen und ersetzen.";
-				}
-			} catch (Exception ex) {
-				meldung = "";
-				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, Sprache.t("Das Update konnte nicht geladen werden:\n" + ex.getMessage()), Sprache.t("Update"), JOptionPane.WARNING_MESSAGE));
-			}
-			SwingUtilities.invokeLater(() -> { launcherKnopf.setEnabled(true); repaint(); });
-		}, "Launcher-Update");
-		t.setDaemon(true);
-		t.start();
+		if (!l.jetztNeuStarten()) {
+			meldung = l.start.istBeschaeftigt()
+					? "Gerade wird eingerichtet – das Update kommt beim nächsten Öffnen."
+					: "Bitte den Launcher schließen und neu öffnen.";
+			repaint();
+		}
 	}
 
 	private void zeichne(Graphics2D g) {
@@ -87,10 +71,10 @@ final class UpdateDialog extends JDialog {
 		g.setColor(NeonUI.NEON);
 		g.drawString("● NEUE VERSION", 40, 44);
 		g.setFont(NeonUI.titel(30));
-		NeonUI.leuchtText(g, "BAMBUS " + (r == null ? "" : r.version), 40, 84, NeonUI.TEXT, 1);
+		NeonUI.leuchtText(g, "BAMBUS " + (r == null ? "" : r.version + "  #" + r.build), 40, 84, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(12));
 		g.setColor(NeonUI.GRAU);
-		g.drawString("Du hast " + BambusLauncher.VERSION + ".  " + l.updateStatus, 40, 108);
+		g.drawString("Du hast " + Updater.versionText() + ".  " + l.updateStatus, 40, 108);
 
 		g.setFont(NeonUI.mono(11));
 		g.setColor(NeonUI.GRAU);
@@ -113,10 +97,8 @@ final class UpdateDialog extends JDialog {
 		if (!meldung.isEmpty()) {
 			g.setColor(NeonUI.NEON);
 			g.drawString(meldung, 40, H - 108);
-		} else if (r != null && r.installerUrl != null) {
-			g.drawString("Neue Funktionen im Spiel kommen automatisch. Für den neuen Launcher einmal hier klicken:", 40, H - 108);
 		} else {
-			g.drawString("Neue Funktionen im Spiel kommen automatisch – du musst nichts weiter tun.", 40, H - 108);
+			g.drawString("Kommt beim nächsten Öffnen von selbst – oder gleich:", 40, H - 108);
 		}
 		g.dispose();
 	}

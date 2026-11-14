@@ -168,7 +168,10 @@ final class Installer {
 	/** Sucht eine bambus-client-*.jar im selben Ordner wie der Launcher. */
 	static Path modNebenLauncher() {
 		try {
-			Path launcher = Paths.get(Installer.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			Path launcher = Updater.startProgramm();   // auch wenn gerade eine geladene neuere Version läuft
+			if (launcher == null) {
+				return null;
+			}
 			Path ordner = Files.isDirectory(launcher) ? launcher : launcher.getParent();
 			if (ordner == null) {
 				return null;
@@ -196,7 +199,7 @@ final class Installer {
 		if (mods != null && !MC_VERSION.equals(mods.versionDesProfils(mods.aktivesProfil()))) {
 			return false;   // dieses Profil spielt eine andere Minecraft-Version, ganz ohne Bambus-Mod
 		}
-		return Updater.neuereMod() == null && !modEingebaut() && modNebenLauncher() == null && !modSchonInstalliert();
+		return !modEingebaut() && modNebenLauncher() == null && !modSchonInstalliert();
 	}
 
 	// ---------------------------------------------------------- Installation
@@ -292,11 +295,7 @@ final class Installer {
 	void bambusMod(Path vomNutzer) throws IOException {
 		Path ziel = modsOrdner.resolve(MOD_DATEI);
 		Path tmp = modsOrdner.resolve(MOD_DATEI + ".download");
-		Path update = Updater.neuereMod();
-		if (update != null) {
-			// automatisch geladenes Client-Update hat Vorrang vor der eingebauten Version
-			Files.copy(update, tmp, StandardCopyOption.REPLACE_EXISTING);
-		} else if (modEingebaut()) {
+		if (modEingebaut()) {   // beim Selbst-Update kommt die Mod mit dem neuen Launcher
 			try (InputStream in = Installer.class.getResourceAsStream("/" + MOD_DATEI)) {
 				Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
 			}
@@ -441,16 +440,8 @@ final class Installer {
 
 	/** Pfad zum laufenden Programm: die .exe (mit eingebautem Java) oder die .jar. */
 	static Path eigenesProgramm() {
-		String exe = System.getProperty("jpackage.app-path");
-		if (exe != null) {
-			return Paths.get(exe);
-		}
-		try {
-			Path p = Paths.get(Installer.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			return Files.isRegularFile(p) ? p : null;
-		} catch (Exception e) {
-			return null;
-		}
+		Path p = Updater.startProgramm();   // die installierte Datei, nicht die geladene Update-Version
+		return p != null && Files.isRegularFile(p) ? p : null;
 	}
 
 	/**

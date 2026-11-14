@@ -1,0 +1,89 @@
+# Selbst-Update: Bei jedem Push auf main werden Launcher und Mod gebaut und in den Branch „auto-update“ gelegt.
+# Der Launcher liest dort die version.json und holt sich neuere Versionen von selbst – ohne Neuinstallation.
+# Schlägt der Bau fehl, bleibt im Branch die letzte funktionierende Version.
+name: Auto-Update verteilen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-update
+  cancel-in-progress: true
+
+jobs:
+  verteilen:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # ganze Geschichte – die Bau-Nummer ist die Anzahl der Commits
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Bau-Nummer
+        run: echo "BAMBUS_BUILD=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
+
+      - name: Mod und Launcher bauen
+        run: bash ./gradlew build --no-daemon
+
+      - name: Dateien für den Branch zusammenstellen
+        run: |
+          set -euo pipefail
+          mkdir verteilen
+          cp build/libs/BambusLauncher.jar verteilen/BambusLauncher.jar
+          mod=$(ls build/libs/bambus-client-*.jar | grep -v -e sources -e '-dev' | head -n 1)
+          cp "$mod" verteilen/bambus-client.jar
+          git log -12 --no-merges --format=%s > aenderungen.txt
+          python3 - <<'PY'
+          import hashlib, json, os, re
+          def info(datei):
+              pfad = os.path.join("verteilen", datei)
+              with open(pfad, "rb") as f:
+                  daten = f.read()
+              return {"datei": datei, "sha256": hashlib.sha256(daten).hexdigest(), "groesse": len(daten)}
+          version = re.search(r"^mod_version=(.+)$", open("gradle.properties").read(), re.M).group(1).strip()
+          with open("aenderungen.txt", encoding="utf-8") as f:
+              aenderungen = [z.strip() for z in f if z.strip()]
+          daten = {
+              "version": version,
+              "build": int(os.environ["BAMBUS_BUILD"]),
+              "commit": os.environ["GITHUB_SHA"],
+              "aenderungen": aenderungen,
+              "launcher": info("BambusLauncher.jar"),
+              "mod": info("bambus-client.jar"),
+          }
+          with open("verteilen/version.json", "w", encoding="utf-8") as f:
+              json.dump(daten, f, ensure_ascii=False, indent=2)
+          print(json.dumps(daten, ensure_ascii=False, indent=2))
+          PY
+          cat > verteilen/README.md <<TEXT
+          # Auto-Update
+
+          Wird automatisch von GitHub Actions gefüllt (Workflow „Auto-Update verteilen“) – bitte nichts von Hand ändern.
+          Der Bambus Launcher liest hier die \`version.json\` und lädt neuere Versionen von selbst.
+          TEXT
+
+      - name: In den Branch auto-update legen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd verteilen
+          git init -q -b auto-update
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Build ${BAMBUS_BUILD} (${GITHUB_SHA::7})"
+          # nur ein Commit im Branch, damit das Projekt nicht mit alten jar-Dateien zuwächst
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" auto-update

@@ -2,188 +2,257 @@ package de.bambus.launcher;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Automatische Updates über die Releases-Seite des GitHub-Projekts.
+ * Selbst-Update über den Branch „auto-update“ des GitHub-Projekts.
  *
  * So funktioniert's:
- *  1. Ein neuer Tag (z. B. v3.4.0) auf GitHub baut alles und legt ein Release an.
- *  2. Der Launcher fragt beim Start die öffentliche GitHub-Schnittstelle nach dem neuesten Release.
- *  3. Ist es neuer, lädt er die Client-Mod (bambus-client-….jar) leise herunter, prüft die
- *     SHA-256-Prüfsumme und spielt sie beim nächsten SPIELEN ein – ohne neue Installation.
- *  4. Hat sich auch der Launcher geändert, bietet er das neue Installationsprogramm an
- *     (Windows: läuft von selbst durch, Mac: die .dmg öffnet sich).
+ *  1. Bei jedem Push auf main baut GitHub Actions Launcher und Mod und legt sie mit einer version.json
+ *     in den Branch auto-update (siehe .github/workflows/auto-update.yml).
+ *  2. Der Launcher schaut beim Start und alle 30 Minuten in die version.json. Hat sie eine höhere
+ *     Bau-Nummer als er selbst, lädt er die neue BambusLauncher.jar nach ~/.bambus-launcher/updates
+ *     und prüft die SHA-256-Prüfsumme.
+ *  3. Beim nächsten Öffnen startet der installierte Launcher direkt die neue Version ({@link Selbststart}) –
+ *     die Mod steckt darin, kommt also automatisch mit. Nichts muss neu installiert werden.
  *
- * Es wird nur öffentlich lesbar bei GitHub nachgefragt – kein Konto, keine persönlichen Daten.
- * Das GitHub-Projekt trägt der Build automatisch ein (Datei update-quelle.txt im Launcher).
+ * Es werden nur öffentliche Dateien von GitHub gelesen – kein Konto, keine persönlichen Daten.
  */
 final class Updater {
 
 	static final class Release {
 		String version = "";
+		int build;
+		String commit = "";
 		String text = "";
 		String seite = "";
-		String modUrl, modSha;
-		String installerUrl, installerName;
+		String launcherUrl, launcherSha;
 	}
 
 	interface Fortschritt { void melde(String text); }
 
-	private static final Path ORDNER = Paths.get(System.getProperty("user.home"), ".bambus-launcher", "updates");
-	private static final Path STAND = ORDNER.resolve("stand.json");
-	static final Path MOD = ORDNER.resolve("bambus-client.jar");
+	static final String PROJEKT = "Bambus-Client/Bambus-Client";
+	private static final String STANDARD_QUELLE = "https://raw.githubusercontent.com/" + PROJEKT + "/auto-update";
+	static final Path ORDNER = Paths.get(System.getProperty("user.home"), ".bambus-launcher", "updates");
+	private static final Pattern DATEI = Pattern.compile("BambusLauncher-(\\d+)\\.jar");
+
+	private static Properties bauInfo;
 
 	private Updater() {}
 
-	/** "besitzer/projekt" aus dem Build – leer, solange es nicht auf GitHub gebaut wurde. */
+	/** Adresse des Update-Branches (zum Testen mit -Dbambus.updatequelle=… änderbar). */
 	static String quelle() {
-		String s = System.getProperty("bambus.updatequelle");
-		if (s == null) {
-			try (InputStream in = Updater.class.getResourceAsStream("/update-quelle.txt")) {
-				s = in == null ? "" : new String(Installer.liesAlles(in), StandardCharsets.UTF_8);
-			} catch (IOException ex) {
-				s = "";
-			}
-		}
-		s = s.trim();
-		return s.matches("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+") ? s : "";
+		String s = System.getProperty("bambus.updatequelle", STANDARD_QUELLE).trim();
+		return s.endsWith("/") ? s.substring(0, s.length() - 1) : s;
 	}
 
-	static boolean aktiv() { return !quelle().isEmpty(); }
+	/** Abschaltbar mit -Dbambus.selbstupdate=false (z. B. beim Entwickeln). */
+	static boolean aktiv() { return !"false".equals(System.getProperty("bambus.selbstupdate")); }
 
-	/** Fragt GitHub nach dem neuesten Release. */
-	static Release pruefe() throws IOException {
-		String q = quelle();
-		if (q.isEmpty()) throw new IOException("Für diesen Launcher ist keine Update-Quelle eingetragen.");
-		HttpURLConnection c = (HttpURLConnection) new URL(System.getProperty("bambus.updateapi", "https://api.github.com") + "/repos/" + q + "/releases/latest").openConnection();
-		c.setRequestProperty("User-Agent", Installer.USER_AGENT);
-		c.setRequestProperty("Accept", "application/vnd.github+json");
-		c.setConnectTimeout(10000);
-		c.setReadTimeout(20000);
-		int code = c.getResponseCode();
-		if (code == 404) throw new IOException("Es gibt noch kein veröffentlichtes Update.");
-		if (code != 200) throw new IOException("GitHub antwortet gerade nicht (" + code + ").");
-		String json;
-		try (InputStream in = c.getInputStream()) {
-			json = new String(Installer.liesAlles(in), StandardCharsets.UTF_8);
-		}
-		Map<String, Object> o = Json.objekt(Json.parse(json));
-		Release r = new Release();
-		r.version = text(o.get("tag_name")).replaceFirst("^[vV]", "");
-		r.text = text(o.get("body"));
-		r.seite = text(o.get("html_url"));
-		String os = Installer.betriebssystem();
-		boolean arm = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT).contains("aarch64")
-				|| System.getProperty("os.arch", "").toLowerCase(Locale.ROOT).contains("arm");
-		List<Object> assets = Json.liste(o.get("assets"));
-		if (assets != null) {
-			for (Object a : assets) {
-				Map<String, Object> m = Json.objekt(a);
-				String name = text(m.get("name"));
-				String url = text(m.get("browser_download_url"));
-				String digest = text(m.get("digest"));
-				String n = name.toLowerCase(Locale.ROOT);
-				if (n.startsWith("bambus-client") && n.endsWith(".jar") && !n.contains("sources")) {
-					r.modUrl = url;
-					r.modSha = digest.startsWith("sha256:") ? digest.substring(7) : null;
-				} else if ("windows".equals(os) && n.endsWith("setup.exe")) {
-					r.installerUrl = url; r.installerName = name;
-				} else if ("mac".equals(os) && n.endsWith(".dmg") && (arm ? n.contains("applesilicon") : n.contains("intel"))) {
-					r.installerUrl = url; r.installerName = name;
-				}
+	// ---------------------------------------------------------- eigene Version
+
+	private static synchronized Properties bauInfo() {
+		if (bauInfo == null) {
+			bauInfo = new Properties();
+			try (InputStream in = Updater.class.getResourceAsStream("/bambus-build.properties")) {
+				if (in != null) bauInfo.load(in);
+			} catch (IOException ignoriert) {
+				// dann Bau 0
 			}
+		}
+		return bauInfo;
+	}
+
+	/** Bau-Nummer dieses Launchers (Anzahl der Commits auf main) – 0 bei einem Entwickler-Bau ohne Git. */
+	static int build() { return zahl(bauInfo().getProperty("build", "0")); }
+
+	static String commit() { return bauInfo().getProperty("commit", ""); }
+
+	/** „3.4.0 · Build 45“ */
+	static String versionText() {
+		return BambusLauncher.VERSION + (build() > 0 ? " · Build " + build() : "");
+	}
+
+	// ---------------------------------------------------------- nachfragen
+
+	/** Liest die version.json aus dem Branch auto-update. */
+	static Release pruefe() throws IOException {
+		// kleiner Zusatz an der Adresse, damit kein veralteter Zwischenspeicher antwortet
+		byte[] daten;
+		try {
+			daten = Installer.lade(quelle() + "/version.json?t=" + System.currentTimeMillis() / 60000);
+		} catch (IOException ex) {
+			throw new IOException("Keine Verbindung zum Update-Server.");
+		}
+		Map<String, Object> o = Json.objekt(Json.parse(new String(daten, StandardCharsets.UTF_8)));
+		if (o == null) throw new IOException("Die Update-Daten sind unlesbar.");
+		Release r = new Release();
+		r.version = text(o.get("version"));
+		r.build = zahl(text(o.get("build")));
+		r.commit = text(o.get("commit"));
+		r.seite = "https://github.com/" + PROJEKT + "/commits/main";
+		List<Object> neu = Json.liste(o.get("aenderungen"));
+		if (neu != null) {
+			StringBuilder b = new StringBuilder();
+			for (Object z : neu) b.append("- ").append(text(z)).append('\n');
+			r.text = b.toString();
+		}
+		Map<String, Object> launcher = Json.objekt(o.get("launcher"));
+		if (launcher != null) {
+			String datei = text(launcher.get("datei"));
+			if (datei.matches("[A-Za-z0-9_.-]+\\.jar")) {
+				r.launcherUrl = quelle() + "/" + datei + "?b=" + r.build;
+				r.launcherSha = text(launcher.get("sha256"));
+			}
+		}
+		if (r.build <= 0 || r.launcherUrl == null || !r.launcherSha.matches("[0-9a-fA-F]{64}")) {
+			throw new IOException("Die Update-Daten sind unvollständig.");
 		}
 		return r;
 	}
 
-	/** Vergleicht Versionen wie 3.2.0 und 3.10.1 (negativ = a älter). */
-	static int vergleiche(String a, String b) {
-		String[] x = a.split("[.-]"), y = b.split("[.-]");
-		for (int i = 0; i < Math.max(x.length, y.length); i++) {
-			int u = i < x.length ? zahl(x[i]) : 0, v = i < y.length ? zahl(y[i]) : 0;
-			if (u != v) return Integer.compare(u, v);
+	/** Neuer als der laufende Launcher? (Entwickler-Bauten ohne Nummer aktualisieren sich nie.) */
+	static boolean neuer(Release r) { return r != null && build() > 0 && r.build > build(); }
+
+	// ---------------------------------------------------------- laden
+
+	/** Lädt die neue Launcher-Version nach updates/ (mit Prüfsumme). Gibt die Datei zurück. */
+	static Path ladeLauncher(Release r, Fortschritt f) throws IOException {
+		Path ziel = ORDNER.resolve("BambusLauncher-" + r.build + ".jar");
+		if (Files.isRegularFile(ziel) && r.launcherSha.equalsIgnoreCase(sha256(Files.readAllBytes(ziel)))) {
+			return ziel;   // schon da
 		}
-		return 0;
-	}
-
-	static boolean neuer(Release r) { return r != null && vergleiche(r.version, BambusLauncher.VERSION) > 0; }
-
-	/** Version der zuletzt geladenen Client-Mod (oder die eingebaute). */
-	static String modVersion() {
-		try {
-			if (Files.isRegularFile(STAND) && Files.isRegularFile(MOD)) {
-				String v = text(Json.objekt(Json.parse(new String(Files.readAllBytes(STAND), StandardCharsets.UTF_8))).get("mod"));
-				if (!v.isEmpty()) return v;
-			}
-		} catch (Exception ignoriert) {
-			// dann die eingebaute
-		}
-		return BambusLauncher.VERSION;
-	}
-
-	/** Die heruntergeladene Mod, falls sie neuer ist als die im Launcher eingebaute – sonst null. */
-	static Path neuereMod() {
-		return Files.isRegularFile(MOD) && vergleiche(modVersion(), BambusLauncher.VERSION) > 0 ? MOD : null;
-	}
-
-	/** Lädt die Client-Mod des Releases (mit Prüfsumme). Gibt true zurück, wenn etwas Neues geladen wurde. */
-	static boolean ladeMod(Release r, Fortschritt f) throws IOException {
-		if (r.modUrl == null || vergleiche(r.version, modVersion()) <= 0) return false;
-		if (f != null) f.melde("Client-Update " + r.version + " wird geladen …");
-		byte[] daten = Installer.lade(r.modUrl);
-		if (r.modSha != null && !r.modSha.equalsIgnoreCase(sha256(daten))) {
-			throw new IOException("Die heruntergeladene Datei ist beschädigt (Prüfsumme stimmt nicht). Bitte später noch mal versuchen.");
+		if (f != null) f.melde("Update " + r.version + " (Build " + r.build + ") wird geladen …");
+		byte[] daten = Installer.lade(r.launcherUrl);
+		if (!r.launcherSha.equalsIgnoreCase(sha256(daten))) {
+			throw new IOException("Das Update ist noch nicht vollständig auf dem Server – es wird später noch mal versucht.");
 		}
 		if (daten.length < 4 || daten[0] != 'P' || daten[1] != 'K') {
-			throw new IOException("Die heruntergeladene Datei ist keine gültige Mod.");
+			throw new IOException("Die heruntergeladene Datei ist kein gültiger Launcher.");
 		}
 		Files.createDirectories(ORDNER);
-		Path tmp = ORDNER.resolve("bambus-client.jar.download");
+		Path tmp = ORDNER.resolve(ziel.getFileName() + ".download");
 		Files.write(tmp, daten);
-		Files.move(tmp, MOD, StandardCopyOption.REPLACE_EXISTING);
-		Map<String, Object> stand = new LinkedHashMap<>();
-		stand.put("mod", r.version);
-		Files.write(STAND, Json.write(stand).getBytes(StandardCharsets.UTF_8));
-		return true;
-	}
-
-	/** Lädt das neue Installationsprogramm und startet es. true = der Launcher soll sich beenden. */
-	static boolean starteLauncherUpdate(Release r, Fortschritt f) throws IOException {
-		if (r.installerUrl == null) return false;
-		if (f != null) f.melde(r.installerName + " wird geladen …");
-		Path ziel;
-		if ("mac".equals(Installer.betriebssystem())) {
-			Path downloads = Paths.get(System.getProperty("user.home"), "Downloads");
-			ziel = (Files.isDirectory(downloads) ? downloads : ORDNER).resolve(r.installerName);
-		} else {
-			Files.createDirectories(ORDNER);
-			ziel = ORDNER.resolve(r.installerName);
-		}
-		Path tmp = ziel.resolveSibling(r.installerName + ".download");
-		Files.write(tmp, Installer.lade(r.installerUrl));
 		Files.move(tmp, ziel, StandardCopyOption.REPLACE_EXISTING);
-		if ("windows".equals(Installer.betriebssystem())) {
-			// Inno Setup: ohne Fragen durchlaufen, Launcher schließen und danach wieder öffnen
-			new ProcessBuilder(ziel.toString(), "/SILENT", "/SP-", "/CLOSEAPPLICATIONS", "/NORESTART").start();
-			return true;
-		}
-		new ProcessBuilder("open", ziel.toString()).start();   // Mac: .dmg öffnet sich, App in „Programme“ ziehen
-		return false;
+		aufraeumen(r.build);
+		return ziel;
 	}
 
-	private static String sha256(byte[] d) {
+	/** Bau-Nummer der neuesten geladenen Version, die neuer als dieser Launcher ist – sonst 0. */
+	static int bereitBuild() {
+		Path p = bereit();
+		return p == null ? 0 : nummer(p);
+	}
+
+	/** Die neueste geladene Launcher-Version, falls sie neuer ist als die laufende – sonst null. */
+	static Path bereit() {
+		Path beste = null;
+		for (Path p : geladene()) {
+			if (nummer(p) > build() && (beste == null || nummer(p) > nummer(beste))) beste = p;
+		}
+		return beste;
+	}
+
+	/** Alte geladene Versionen löschen (die laufende ist unter Windows gesperrt – dann eben beim nächsten Mal). */
+	static void aufraeumen(int behalten) {
+		for (Path p : geladene()) {
+			if (nummer(p) != behalten) {
+				try {
+					Files.deleteIfExists(p);
+					Files.deleteIfExists(ORDNER.resolve("versuch-" + nummer(p)));
+					Files.deleteIfExists(ORDNER.resolve("ok-" + nummer(p)));
+				} catch (IOException ignoriert) {
+					// wird gerade benutzt
+				}
+			}
+		}
+		if (Files.isDirectory(ORDNER)) {
+			try (DirectoryStream<Path> d = Files.newDirectoryStream(ORDNER, "*.kaputt")) {
+				for (Path p : d) Files.deleteIfExists(p);
+			} catch (IOException ignoriert) {
+				// egal
+			}
+		}
+		try {
+			Files.deleteIfExists(ORDNER.resolve("bambus-client.jar"));   // aus dem alten Update-Weg
+			Files.deleteIfExists(ORDNER.resolve("stand.json"));
+		} catch (IOException ignoriert) {
+			// egal
+		}
+	}
+
+	static List<Path> geladene() {
+		List<Path> l = new ArrayList<>();
+		if (!Files.isDirectory(ORDNER)) return l;
+		try (DirectoryStream<Path> d = Files.newDirectoryStream(ORDNER, "BambusLauncher-*.jar")) {
+			for (Path p : d) if (nummer(p) > 0) l.add(p);
+		} catch (IOException ignoriert) {
+			// leer
+		}
+		return l;
+	}
+
+	static int nummer(Path p) {
+		Matcher m = DATEI.matcher(p.getFileName().toString());
+		return m.matches() ? zahl(m.group(1)) : 0;
+	}
+
+	// ---------------------------------------------------------- neu starten
+
+	/** Datei, mit der der Launcher gestartet wurde (.exe oder .jar) – auch wenn gerade eine geladene Version läuft. */
+	static Path startProgramm() {
+		String exe = System.getProperty("jpackage.app-path");
+		if (exe != null) return Paths.get(exe);
+		String start = System.getProperty(Selbststart.START);
+		try {
+			Path p = start != null ? Paths.get(start)
+					: Paths.get(Updater.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			return Files.exists(p) ? p : null;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/** Startet den Launcher neu (er nimmt dabei die neueste Version). false = geht hier nicht. */
+	static boolean neuStarten() {
+		List<String> befehl = new ArrayList<>();
+		String exe = System.getProperty("jpackage.app-path");
+		if (exe != null) {
+			befehl.add(exe);
+		} else {
+			Path p = startProgramm();
+			if (p == null || !Files.isRegularFile(p) || !p.toString().toLowerCase(Locale.ROOT).endsWith(".jar")) return false;
+			boolean win = "windows".equals(Installer.betriebssystem());
+			Path java = Paths.get(System.getProperty("java.home"), "bin", win ? "javaw.exe" : "java");
+			if (!Files.isRegularFile(java)) java = Paths.get(System.getProperty("java.home"), "bin", win ? "java.exe" : "java");
+			befehl.add(java.toString());
+			befehl.add("-jar");
+			befehl.add(p.toString());
+		}
+		try {
+			new ProcessBuilder(befehl).start();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	// ---------------------------------------------------------- Helfer
+
+	static String sha256(byte[] d) {
 		try {
 			StringBuilder b = new StringBuilder();
 			for (byte x : MessageDigest.getInstance("SHA-256").digest(d)) b.append(String.format("%02x", x));
@@ -194,7 +263,7 @@ final class Updater {
 	}
 
 	private static int zahl(String s) {
-		try { return Integer.parseInt(s.replaceAll("\\D.*", "")); } catch (Exception ex) { return 0; }
+		try { return Integer.parseInt(s.trim().replaceAll("\\.0$", "")); } catch (Exception ex) { return 0; }
 	}
 
 	private static String text(Object o) { return o == null ? "" : o.toString(); }
