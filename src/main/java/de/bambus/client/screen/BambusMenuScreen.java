@@ -707,7 +707,9 @@ public class BambusMenuScreen extends Screen {
 		g.drawString(font, "‹", wx + 4, y + 5, hl ? Farben.NEON : grau, false);
 		g.drawString(font, "›", wx + wb - 9, y + 5, hr ? Farben.NEON : grau, false);
 		String wert = st.text();
-		g.drawString(font, wert, wx + (wb - font.width(wert)) / 2, y + 5, aktiv ? Farben.WEISS : 0xFF4A5A6E, false);
+		float ws = Math.min(1f, (wb - 30) / (float) Math.max(1, font.width(wert)));   // lange Namen kleiner
+		int wTextB = (int) (font.width(wert) * ws);
+		Neon.text(g, font, wert, wx + (wb - wTextB) / 2, y + 5 + (int) ((1 - ws) * 4), ws, aktiv ? Farben.WEISS : 0xFF4A5A6E, false);
 		if (aktiv && klickbar) {
 			klick(wx, y + 2, 14, h - 4, () -> {
 				st.aendern(-1);
