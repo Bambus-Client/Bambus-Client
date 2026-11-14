@@ -1,5 +1,5 @@
-BAMBUS – UPDATE HOCHLADEN (10 Dateien): mehrere Minecraft-Versionen
-===================================================================
+BAMBUS – UPDATE HOCHLADEN (15 Dateien): MEIN SPIEL, Server, Aussehen
+=====================================================================
 
 WICHTIG: Lade NICHT die ZIP-Datei hoch! Erst entpacken (Doppelklick),
 dann den INHALT des Ordners "Hochladen" hochladen.
@@ -8,25 +8,25 @@ SO GEHT'S (ein einziger Schritt)
   1. Im Repo Bambus-Client oben auf "Add file" -> "Upload files".
   2. Auf dem Mac den Ordner "Hochladen" OEFFNEN.
   3. Cmd + A druecken (alles markieren) und alles ins Browser-Fenster ziehen.
-     Du ziehst also: AENDERUNGEN.md, gemeinsam, launcher
+     Du ziehst also: AENDERUNGEN.md, gemeinsam, launcher, src
   4. Warten, bis GitHub alles aufgelistet hat -> unten "Commit changes".
 
-BITTE AUFRAEUMEN (liegt faelschlich im Repo und gehoert da nicht hin)
-  Diese Dateien im Repo anklicken -> Papierkorb-Symbol -> "Commit changes":
-    - Bambus-Update (1).zip
-    - Update-Texte.zip
-    - Update-Hintergrundbilder.zip
-    - SO GEHT'S – zuerst lesen.txt   (die alte im Repo, nicht diese hier)
-  Sie stoeren den Bau nicht, machen das Repo aber unuebersichtlich.
-
 WAS IN DIESEM UPDATE STECKT
-  - Jedes Mod-Profil hat jetzt eine eigene Minecraft-Version
-  - Auswahl: 1.21.11, 26.1, 26.1.1, 26.1.2, 26.2, 26.3
-  - Version waehlst du beim Anlegen des Profils, aenderbar ueber VERSION
-  - Jede Version bekommt eigene Mods UND eigene Welten
-  - Mod-Suche zeigt nur Mods, die zur Version des Profils passen
-  - Der Bambus Client selbst laeuft auf 1.21.11; andere Versionen starten
-    Minecraft mit Fabric und den gewaehlten Mods
+  Neue Seite MEIN SPIEL (links in der Navigation) mit vier Bereichen:
+    - BILDER     : deine Screenshots mit Vorschau, Klick oeffnet sie gross
+    - SPIELZEIT  : heute, letzte 7 Tage, insgesamt + Balken der letzten 14 Tage
+    - TASTEN     : Tastenbelegung aendern, ohne ins Spiel zu gehen
+    - PROBLEME   : letzter Absturz in klaren Saetzen erklaert
+  Server:
+    - Stern heftet einen Server oben an (gilt auch im Spiel)
+    - Ziehen am linken Rand aendert die Reihenfolge
+  Aussehen:
+    - Schriftgroesse A- / A / A+ in den EINSTELLUNGEN
+    - Eigene Farben mischen (achtes Farbthema EIGEN) - gilt auch im Spiel
+    - Startbildschirm mit Logo und Ladebalken beim Oeffnen
+
+  Diesmal ist auch die Mod dabei (zwei Dateien): sie zaehlt die Spielzeit
+  jetzt pro Tag mit, damit der Launcher die Balken zeigen kann.
 
 DANACH
   Oben auf "Actions" klicken. Der Bau laeuft 10-15 Minuten.

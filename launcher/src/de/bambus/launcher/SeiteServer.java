@@ -84,6 +84,17 @@ final class SeiteServer extends JPanel {
 		new Timer(30_000, e -> { if (isShowing()) abfragen(); }).start();
 	}
 
+	// nur für Tests im Bauordner
+	java.awt.Component karteFuerTest(int i) {
+		return karten.get(i);
+	}
+
+	List<String> reihenfolgeFuerTest() {
+		List<String> aus = new ArrayList<>();
+		for (ServerKarte k : karten) aus.add(k.eintrag);
+		return aus;
+	}
+
 	/** Beim Öffnen der Seite. */
 	void aktualisiere() {
 		if (System.currentTimeMillis() - zuletzt > 10_000) abfragen();
@@ -133,12 +144,65 @@ final class SeiteServer extends JPanel {
 		return n.isEmpty() ? adresse : Character.toUpperCase(n.charAt(0)) + n.substring(1);
 	}
 
+	/** Adresse eines Eintrags klein geschrieben – so merkt sich auch das Spiel die Sterne. */
+	private static String schluessel(String eintrag) {
+		return adresse(eintrag).toLowerCase(java.util.Locale.ROOT);
+	}
+
+	private boolean hatStern(String eintrag) {
+		return l.client.serverSterne().contains(schluessel(eintrag));
+	}
+
+	/** Reihenfolge auf dem Bildschirm: angeheftete Server zuerst, sonst wie gespeichert. */
+	private List<String> reihenfolge() {
+		List<String> fav = l.client.serverFavoriten();
+		List<String> aus = new ArrayList<>();
+		for (String f : fav) if (hatStern(f)) aus.add(f);
+		for (String f : fav) if (!hatStern(f)) aus.add(f);
+		return aus;
+	}
+
+	/** Stern an oder aus – dieselbe Liste benutzt die Serverauswahl im Spiel. */
+	private void stern(String eintrag) {
+		List<String> sterne = l.client.serverSterne();
+		String k = schluessel(eintrag);
+		if (!sterne.remove(k)) {
+			sterne.add(k);
+			hinweis = adresse(eintrag) + " angeheftet – steht jetzt oben, auch im Spiel.";
+		} else {
+			hinweis = adresse(eintrag) + " ist nicht mehr angeheftet.";
+		}
+		l.client.setzeServerSterne(sterne);
+		neuAufbauen();
+		abfragen();
+	}
+
+	/**
+	 * Schiebt einen Eintrag an eine neue Stelle. Angeheftete Server bleiben oben,
+	 * deshalb wird das Ziel auf die eigene Gruppe begrenzt.
+	 */
+	private void verschiebe(String eintrag, int zielAnzeige) {
+		List<String> anzeige = reihenfolge();
+		int angeheftet = 0;
+		for (String f : anzeige) if (hatStern(f)) angeheftet++;
+		int von = anzeige.indexOf(eintrag);
+		if (von < 0) return;
+		int min = hatStern(eintrag) ? 0 : angeheftet;
+		int max = hatStern(eintrag) ? angeheftet - 1 : anzeige.size() - 1;
+		int ziel = Math.max(min, Math.min(max, zielAnzeige));
+		if (ziel == von) return;
+		anzeige.remove(von);
+		anzeige.add(ziel, eintrag);
+		l.client.setzeServerFavoriten(anzeige);
+		neuAufbauen();
+	}
+
 	private void neuAufbauen() {
 		liste.removeAll();
 		karten.clear();
-		List<String> fav = l.client.serverFavoriten();
+		List<String> fav = reihenfolge();
 		for (int i = 0; i < fav.size(); i++) {
-			ServerKarte k = new ServerKarte(fav.get(i));
+			ServerKarte k = new ServerKarte(fav.get(i), i);
 			k.setBounds(4, i * (KARTE_H + 10), B, KARTE_H);
 			karten.add(k);
 			liste.add(k);
@@ -167,7 +231,7 @@ final class SeiteServer extends JPanel {
 		NeonUI.leuchtText(g, "SERVER", X, 62, NeonUI.TEXT, 1);
 		g.setFont(NeonUI.normal(13));
 		g.setColor(NeonUI.GRAU);
-		g.drawString("Deine Lieblingsserver mit Live-Status. Im Spiel findest du sie unter Mehrspieler.", X, 86);
+		g.drawString("Live-Status, ★ heftet oben an, Ziehen am linken Rand ändert die Reihenfolge.", X, 86);
 		g.setFont(NeonUI.normal(11));
 		g.setColor(hinweis.startsWith("Das sieht") ? new Color(0xFFB0C4) : NeonUI.NEON);
 		g.drawString(hinweis, X, 154);
@@ -180,31 +244,73 @@ final class SeiteServer extends JPanel {
 
 	private final class ServerKarte extends JComponent {
 		final String eintrag;
+		final int platz;
 		volatile ServerStatus.Ergebnis status;
 		volatile boolean laedt;
-		private boolean ueber, ueberX;
+		private boolean ueber, ueberX, ueberStern;
+		private int greifY = -1;      // y beim Anfassen; -1 = wird nicht gezogen
+		private int ruheY;
 
-		ServerKarte(String eintrag) {
+		ServerKarte(String eintrag, int platz) {
 			this.eintrag = eintrag;
+			this.platz = platz;
 			addMouseListener(new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
-				@Override public void mouseExited(MouseEvent e) { ueber = false; ueberX = false; repaint(); }
-				@Override public void mouseClicked(MouseEvent e) { if (aufX(e.getX(), e.getY())) entfernen(eintrag); }
+				@Override public void mouseExited(MouseEvent e) {
+					ueber = false;
+					ueberX = false;
+					ueberStern = false;
+					repaint();
+				}
+
+				@Override public void mousePressed(MouseEvent e) {
+					if (aufX(e.getX(), e.getY()) || aufStern(e.getX(), e.getY())) return;
+					greifY = e.getY();
+					ruheY = getY();
+					liste.setComponentZOrder(ServerKarte.this, 0);   // beim Ziehen nach vorn
+				}
+
+				@Override public void mouseReleased(MouseEvent e) {
+					if (greifY < 0) return;
+					greifY = -1;
+					int ziel = Math.round(getY() / (float) (KARTE_H + 10));
+					setLocation(getX(), ruheY);
+					verschiebe(eintrag, ziel);
+				}
+
+				@Override public void mouseClicked(MouseEvent e) {
+					if (aufX(e.getX(), e.getY())) entfernen(eintrag);
+					else if (aufStern(e.getX(), e.getY())) stern(eintrag);
+				}
 			});
 			addMouseMotionListener(new MouseAdapter() {
 				@Override public void mouseMoved(MouseEvent e) {
 					boolean x = aufX(e.getX(), e.getY());
-					if (x != ueberX) {
+					boolean st = aufStern(e.getX(), e.getY());
+					if (x != ueberX || st != ueberStern) {
 						ueberX = x;
-						setCursor(Cursor.getPredefinedCursor(x ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+						ueberStern = st;
+						setCursor(Cursor.getPredefinedCursor(x || st ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
 						repaint();
 					}
+				}
+
+				@Override public void mouseDragged(MouseEvent e) {
+					if (greifY < 0) return;
+					int neu = getY() + e.getY() - greifY;
+					int hoechstens = Math.max(0, (karten.size() - 1) * (KARTE_H + 10));
+					setLocation(getX(), Math.max(0, Math.min(hoechstens, neu)));
+					liste.repaint();
 				}
 			});
 		}
 
 		private boolean aufX(int x, int y) {
 			return x > getWidth() - 34 && y < 30;
+		}
+
+		private boolean aufStern(int x, int y) {
+			return x > getWidth() - 62 && x <= getWidth() - 34 && y < 30;
 		}
 
 		@Override
@@ -214,10 +320,11 @@ final class SeiteServer extends JPanel {
 			ServerStatus.Ergebnis s = status;
 			boolean online = s != null && s.online;
 			RoundRectangle2D form = new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 14, 14);
-			g.setColor(ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
+			g.setColor(greifY >= 0 ? NeonUI.KARTE_HOVER : ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
 			g.fill(form);
-			g.setStroke(new BasicStroke(1.2f));
-			g.setColor(online ? NeonUI.alpha(NeonUI.NEON, ueber ? 160 : 90) : NeonUI.LINIE);
+			g.setStroke(new BasicStroke(greifY >= 0 ? 2f : 1.2f));
+			g.setColor(greifY >= 0 ? NeonUI.CYAN
+					: online ? NeonUI.alpha(NeonUI.NEON, ueber ? 160 : 90) : NeonUI.LINIE);
 			g.draw(form);
 
 			// Symbol des Servers (oder Platzhalter)
@@ -286,10 +393,24 @@ final class SeiteServer extends JPanel {
 			String ps = laedt ? "…" : ping >= 0 ? ping + " ms" : "–";
 			g.drawString(ps, b - 64, 66);
 
+			// Anheften
+			boolean fest = hatStern(eintrag);
+			g.setFont(NeonUI.normal(14));
+			g.setColor(fest ? new Color(0xFFD54A) : NeonUI.alpha(NeonUI.GRAU, ueberStern ? 230 : ueber ? 150 : 70));
+			g.drawString(fest ? "★" : "☆", b - 54, 23);
+
 			// Entfernen
 			g.setFont(NeonUI.normal(13));
 			g.setColor(ueberX ? new Color(0xFF4D6D) : NeonUI.alpha(NeonUI.GRAU, ueber ? 220 : 90));
 			g.drawString("✕", b - 24, 22);
+
+			// Griff zum Ziehen
+			if (ueber || greifY >= 0) {
+				g.setColor(NeonUI.alpha(NeonUI.GRAU, greifY >= 0 ? 220 : 120));
+				for (int r = 0; r < 3; r++) {
+					for (int c = 0; c < 2; c++) g.fillRect(4 + c * 4, h / 2 - 6 + r * 5, 2, 2);
+				}
+			}
 			g.dispose();
 		}
 	}

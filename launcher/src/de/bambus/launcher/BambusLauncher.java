@@ -57,6 +57,7 @@ public final class BambusLauncher extends JFrame {
 			{"server", "SERVER", "server"},
 			{"neu", "NEUIGKEITEN", "update"},
 			{"quests", "QUESTS", "stern"},
+			{"meinspiel", "MEIN SPIEL", "kamera"},
 			{"helfer", "HELFER", "helfer"},
 			{"einstellungen", "EINSTELLUNGEN", "zahnrad"},
 	};
@@ -88,6 +89,7 @@ public final class BambusLauncher extends JFrame {
 	final SeiteEinstellungen einstellungen;
 	final SeiteMods modsSeite;
 	final SeiteServer serverSeite;
+	SeiteMeinSpiel meinSpielSeite;
 	final SeiteHelfer helferSeite;
 	SeiteQuests questsSeite;
 	final Fortschritt fortschritt = new Fortschritt(client);
@@ -106,8 +108,11 @@ public final class BambusLauncher extends JFrame {
 		UIManager.put("ToolTip.background", NeonUI.KARTE);
 		UIManager.put("ToolTip.foreground", NeonUI.TEXT);
 		SwingUtilities.invokeLater(() -> {
+			if (args.length == 0) Startbild.zeige();   // bei Screenshot-Aufrufen stört es nur
 			BambusLauncher l = new BambusLauncher();
+			Startbild.melde("Fertig", 100);
 			l.setVisible(true);
+			Startbild.schliesse();
 			if (args.length > 0) {
 				l.zeige(args[0]); // für Screenshots: start, module, kosmetik, einstellungen
 			}
@@ -139,10 +144,13 @@ public final class BambusLauncher extends JFrame {
 		setResizable(false);
 		setIconImages(symbole());
 		dockSymbol();
+		Startbild.melde("Einstellungen werden geladen …", 15);
 		ladeLauncherEinstellungen();
 		Hintergruende.ladeBild(installer.spielOrdner);   // eigenes Hintergrundbild, falls vorhanden
+		ladeEigeneFarben();
 		NeonUI.themaAnwenden(client.zahl("thema", 0));   // gleiche Farben wie im Spiel
 
+		Startbild.melde("Oberfläche wird aufgebaut …", 35);
 		Hintergrund wurzel = new Hintergrund();
 		wurzel.setLayout(null);
 		wurzel.setPreferredSize(new Dimension(BREITE, HOEHE));
@@ -151,7 +159,7 @@ public final class BambusLauncher extends JFrame {
 		// Seitenleiste
 		for (int i = 0; i < SEITEN.length; i++) {
 			NavPunkt p = new NavPunkt(SEITEN[i][0], SEITEN[i][1], SEITEN[i][2]);
-			p.setBounds(14, 140 + i * 40, LEISTE - 28, 36);
+			p.setBounds(14, 138 + i * 37, LEISTE - 28, 34);
 			nav.add(p);
 			wurzel.add(p);
 		}
@@ -176,6 +184,7 @@ public final class BambusLauncher extends JFrame {
 		wurzel.add(zu);
 
 		// Seiten
+		Startbild.melde("Seiten werden vorbereitet …", 55);
 		inhalt.setOpaque(false);
 		inhalt.setBounds(LEISTE, KOPF, BREITE - LEISTE, HOEHE - KOPF);
 		start = new SeiteStart(this);
@@ -190,6 +199,8 @@ public final class BambusLauncher extends JFrame {
 		inhalt.add(new SeiteNeu(this), "neu");
 		questsSeite = new SeiteQuests(this);
 		inhalt.add(questsSeite, "quests");
+		meinSpielSeite = new SeiteMeinSpiel(this);
+		inhalt.add(meinSpielSeite, "meinspiel");
 		helferSeite = new SeiteHelfer(this);
 		inhalt.add(helferSeite, "helfer");
 		inhalt.add(start, "start");
@@ -224,6 +235,7 @@ public final class BambusLauncher extends JFrame {
 		animation = new Timer(BILD_MS, e -> animationsSchritt());
 		animation.start();
 
+		Startbild.melde("Letzte Handgriffe …", 85);
 		pruefeEntwickler();
 
 		zeige("start");
@@ -358,6 +370,9 @@ public final class BambusLauncher extends JFrame {
 		if ("quests".equals(id)) {
 			questsSeite.aktualisiere();
 		}
+		if ("meinspiel".equals(id)) {
+			meinSpielSeite.aktualisiere();
+		}
 		belohne(id.equals("kosmetik") ? "garderobe" : id);
 		for (NavPunkt p : nav) {
 			p.repaint();
@@ -485,8 +500,22 @@ public final class BambusLauncher extends JFrame {
 			hintergrund = p.getProperty("hintergrund", "partikel");
 			eingerichtet = Boolean.parseBoolean(p.getProperty("eingerichtet", "false"));
 			if (p.getProperty("sprache") != null) Sprache.setze(p.getProperty("sprache"));
+			NeonUI.setzeTextFaktor(Float.parseFloat(p.getProperty("schriftgroesse", "1.0")));
 		} catch (Exception ignoriert) {
 			ramGb = 4;
+		}
+	}
+
+	/** Selbst gemischte Farben aus der bambus.json holen (Format „3DFF8A,00E5FF,FF2BD6“). */
+	private void ladeEigeneFarben() {
+		try {
+			String[] t = client.text("themaEigen", "").split(",");
+			if (t.length == 3) {
+				NeonUI.eigeneFarben(Integer.parseInt(t[0].trim(), 16),
+						Integer.parseInt(t[1].trim(), 16), Integer.parseInt(t[2].trim(), 16));
+			}
+		} catch (Exception ignoriert) {
+			// dann bleiben die Standardfarben
 		}
 	}
 
@@ -501,6 +530,7 @@ public final class BambusLauncher extends JFrame {
 				p.setProperty("hintergrund", hintergrund);
 				p.setProperty("eingerichtet", String.valueOf(eingerichtet));
 				p.setProperty("sprache", Sprache.code());
+				p.setProperty("schriftgroesse", String.valueOf(NeonUI.textFaktor()));
 				p.store(w, "Bambus Launcher");
 			}
 		} catch (Exception ignoriert) {

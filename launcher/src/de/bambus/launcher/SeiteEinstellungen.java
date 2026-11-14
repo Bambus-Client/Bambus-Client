@@ -18,6 +18,7 @@ import java.nio.file.Path;
 final class SeiteEinstellungen extends JPanel {
 
 	private final java.util.List<NeonUI.UmrissKnopf> hgKnoepfe = new java.util.ArrayList<>();
+	private final java.util.List<NeonUI.UmrissKnopf> schriftKnoepfe = new java.util.ArrayList<>();
 
 	private static final int X = 40;
 	private static final int[] RAM = {2, 3, 4, 6, 8, 12, 16};
@@ -53,6 +54,26 @@ final class SeiteEinstellungen extends JPanel {
 			startmenue.setBounds(X + 180, 494, 170, 30);
 			startmenue.addActionListener(e -> verknuepfung("Programs", "im Startmenü"));
 			add(startmenue);
+		}
+
+		// Schriftgröße – gut, wenn man kleine Schrift schlecht lesen kann
+		float[] stufen = {0.85f, 1f, 1.15f};
+		String[] zeichen = {"A−", "A", "A+"};
+		for (int i = 0; i < stufen.length; i++) {
+			final float f = stufen[i];
+			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(zeichen[i],
+					Math.abs(NeonUI.textFaktor() - f) < 0.01f ? NeonUI.NEON : NeonUI.GRAU);
+			k.setBounds(X + 560 + i * 34, 136, 32, 30);
+			k.setToolTipText("Schriftgröße im Launcher");
+			k.addActionListener(e -> {
+				NeonUI.setzeTextFaktor(f);
+				l.speichereLauncherEinstellungen();
+				for (NeonUI.UmrissKnopf o : schriftKnoepfe) o.setzeFarbe(NeonUI.GRAU);
+				((NeonUI.UmrissKnopf) e.getSource()).setzeFarbe(NeonUI.NEON);
+				l.repaint();
+			});
+			schriftKnoepfe.add(k);
+			add(k);
 		}
 
 		NeonUI.UmrissKnopf zuruecksetzen = new NeonUI.UmrissKnopf("CLIENT-EINSTELLUNGEN ZURÜCKSETZEN", NeonUI.PINK);
@@ -154,9 +175,12 @@ final class SeiteEinstellungen extends JPanel {
 		g.drawString(st, X, 592);
 
 		ueberschrift(g, "ARBEITSSPEICHER", 112);
+		g.setFont(NeonUI.mono(10));
+		g.setColor(NeonUI.NEON);
+		g.drawString(Sprache.t("SCHRIFTGRÖSSE"), X + 560, 126);
 		g.setFont(NeonUI.normal(12));
 		g.setColor(NeonUI.GRAU);
-		g.drawString("4–6 GB reichen für die meisten Computer. Nicht mehr als die Hälfte deines RAMs wählen.", X, 190);
+		g.drawString(NeonUI.passend(g, "4–6 GB reichen für die meisten Computer. Nicht mehr als die Hälfte deines RAMs wählen.", 696), X, 190);
 
 		ueberschrift(g, "ORDNER", 216);
 		String[] namen = {"Minecraft", "Bambus-Spielordner", "Mods"};
@@ -230,8 +254,46 @@ final class SeiteEinstellungen extends JPanel {
 	}
 
 	/** Sieben Farbfelder: Neon, Ozean, Sakura, Gold, Lila, Eis, RGB. */
+	/**
+	 * Dialog zum Selbermischen: drei Farben (Haupt, Akzent, zweiter Akzent).
+	 * Die Farben gelten auch im Spiel, weil sie mit in die bambus.json geschrieben werden.
+	 */
+	private boolean mischen() {
+		final int[] farben = {NeonUI.eigeneFarbe(0), NeonUI.eigeneFarbe(1), NeonUI.eigeneFarbe(2)};
+		String[] namen = {"Hauptfarbe", "Akzentfarbe", "Zweite Akzentfarbe"};
+		javax.swing.JPanel teil = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 0, 8));
+		final javax.swing.JButton[] knoepfe = new javax.swing.JButton[3];
+		for (int i = 0; i < 3; i++) {
+			final int nr = i;
+			javax.swing.JButton k = new javax.swing.JButton(Sprache.t(namen[i]));
+			k.setOpaque(true);
+			k.setBackground(new java.awt.Color(farben[i]));
+			k.setForeground(java.awt.Color.BLACK);
+			k.setFocusPainted(false);
+			k.addActionListener(e -> {
+				java.awt.Color neu = javax.swing.JColorChooser.showDialog(l,
+						Sprache.t(namen[nr]), new java.awt.Color(farben[nr]));
+				if (neu != null) {
+					farben[nr] = neu.getRGB() & 0xFFFFFF;
+					knoepfe[nr].setBackground(neu);
+				}
+			});
+			knoepfe[i] = k;
+			teil.add(k);
+		}
+		teil.add(new javax.swing.JLabel(Sprache.t("Die Farben gelten auch im Spiel.")));
+		if (javax.swing.JOptionPane.showConfirmDialog(l, teil, Sprache.t("Eigene Farben mischen"),
+				javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE)
+				!= javax.swing.JOptionPane.OK_OPTION) {
+			return false;
+		}
+		NeonUI.eigeneFarben(farben[0], farben[1], farben[2]);
+		l.client.setze("themaEigen", String.format("%06X,%06X,%06X", farben[0], farben[1], farben[2]));
+		return true;
+	}
+
 	private final class Farbwahl extends javax.swing.JComponent {
-		private static final int FB = 92, ABSTAND = 8;
+		private static final int FB = 79, ABSTAND = 8;
 		private int ueber = -1;
 
 		Farbwahl() {
@@ -242,6 +304,7 @@ final class SeiteEinstellungen extends JPanel {
 				@Override public void mouseClicked(java.awt.event.MouseEvent e) {
 					int i = bei(e.getX());
 					if (i < 0) return;
+					if (i == NeonUI.EIGEN && !mischen()) return;
 					l.client.setze("thema", i);
 					NeonUI.themaAnwenden(i);
 					l.fortschritt.farbeGesehen(i);
