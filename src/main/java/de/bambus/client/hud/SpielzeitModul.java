@@ -6,16 +6,15 @@ import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Wie lange du schon spielst – und welcher Tag in der Welt gerade ist. */
+/** Wie lange du schon spielst (der Ingame-Tag ist ein eigenes Modul, siehe {@link IngameTagModul}). */
 public class SpielzeitModul extends TextModul {
 
 	private static long sitzungSeit = 0;
 
-	private final Option tagZeile = option("tag", "Ingame-Tag", true);
 	private final Option pause = option("pause", "Gelb nach 2 Stunden (Pause!)", true);
 
 	public SpielzeitModul() {
-		super("spielzeit", "Spielzeit", 4, 245, false, "Zeit seit dem Betreten und Ingame-Tag", "INFO");
+		super("spielzeit", "Spielzeit", 4, 245, false, "Zeit seit dem Betreten der Welt", "INFO");
 	}
 
 	/** Jeden Tick: Start der Sitzung merken. */
@@ -39,10 +38,6 @@ public class SpielzeitModul extends TextModul {
 		long ms = sitzungSeit == 0 ? 42 * 60_000L + 7_000L : System.currentTimeMillis() - sitzungSeit;
 		int farbe = pause.an() && ms > 2 * 3_600_000L ? Farben.GELB : Farben.WEISS;   // nach 2 Stunden: kleine Pausen-Erinnerung per Farbe
 		z.add(new Zeile("Spielzeit: " + dauer(ms), farbe));
-		if (tagZeile.an()) {
-			long tag = mc.level != null ? mc.level.getDayTime() / 24000L + 1 : 12;
-			z.add(new Zeile("Tag " + tag + " in dieser Welt", Farben.GRAU));
-		}
 		return z;
 	}
 }

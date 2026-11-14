@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Rüstung und Item in der Hand mit Haltbarkeit. */
+/** Rüstung mit Haltbarkeit (das Item in der Hand ist ein eigenes Modul, siehe {@link HandModul}). */
 public class RuestungModul extends HudModul {
 
 	private static final int ZEILE = 17;
@@ -17,8 +17,6 @@ public class RuestungModul extends HudModul {
 			EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
 	};
 
-	private final Option ruestung = option("ruestung", "Rüstung", true);
-	private final Option hand = option("hand", "Item in der Hand", true);
 	private final Option haltbarkeit = option("haltbarkeit", "Haltbarkeit als Zahl", true);
 
 	public RuestungModul() {
@@ -31,15 +29,11 @@ public class RuestungModul extends HudModul {
 		if (mc.player == null) {
 			return liste;
 		}
-		for (EquipmentSlot slot : ruestung.an() ? SLOTS : new EquipmentSlot[0]) {
+		for (EquipmentSlot slot : SLOTS) {
 			ItemStack s = mc.player.getItemBySlot(slot);
 			if (!s.isEmpty()) {
 				liste.add(s);
 			}
-		}
-		ItemStack inHand = mc.player.getMainHandItem();
-		if (hand.an() && !inHand.isEmpty()) {
-			liste.add(inHand);
 		}
 		return liste;
 	}
@@ -54,7 +48,7 @@ public class RuestungModul extends HudModul {
 		return s.getCount() > 1 ? String.valueOf(s.getCount()) : "";
 	}
 
-	private static int farbe(ItemStack s) {
+	static int farbe(ItemStack s) {
 		if (!s.isDamageableItem()) {
 			return Farben.WEISS;
 		}

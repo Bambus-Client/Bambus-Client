@@ -78,7 +78,7 @@ public class BambusMenuScreen extends Screen {
 	private record Bereich(int x, int y, int b, int h, Runnable aktion, boolean imInhalt, Runnable rechts) {}
 
 	private static final Map<String, String> MODUL_TEXT = Map.of(
-			"info", "FPS, Koordinaten und CPS",
+			"fps", "Bilder pro Sekunde",
 			"tasten", "W A S D, Maus und Leertaste",
 			"server", "Adresse des Servers",
 			"ping", "Ping mit Signalbalken",
