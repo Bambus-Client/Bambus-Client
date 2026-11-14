@@ -118,6 +118,7 @@ final class Sprache {
 		g("Klicks pro Sekunde, links und rechts", "Clicks per second, left and right"); g("Item in der Hand", "Item in hand");
 		g("Haltbarkeit bzw. Anzahl deines Items", "Durability or count of your item"); g("Ingame-Tag", "In-game day");
 		g("Tag in der Welt, auf Wunsch mit Uhrzeit", "Day in the world, optionally with time"); g("Zeit seit dem Betreten der Welt", "Time since joining the world");
+		g("Menü-Stil im Spiel wählbar: Bambus, Clean oder Kompakt", "In-game menu style: Bambus, Clean or Compact");
 		g("MODS HINZUFÜGEN", "ADD MODS"); g("+  MODS HINZUFÜGEN", "+  ADD MODS"); g("← ZUM PROFIL", "← TO PROFILE");
 		g("INSTALLIERTE MODS", "INSTALLED MODS"); g("PROFIL", "PROFILE"); g("PROFILE VERWALTEN →", "MANAGE PROFILES →");
 		g("▶ SPIELEN", "▶ PLAY"); g("+ DAZU", "+ ADD"); g("✓ DRIN", "✓ ADDED");

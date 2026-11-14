@@ -283,7 +283,7 @@ public class BambusServerScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		int b = width, h = height;
 		boolean eng = h < 280;
 

@@ -46,7 +46,7 @@ public class QuestScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		pb = Math.min(width - 20, 460);
 		ph = Math.min(height - 20, 320);
 		px = (width - pb) / 2;

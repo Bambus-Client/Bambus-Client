@@ -93,7 +93,7 @@ public class EinstellungsCodeScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		int b = Math.min(340, width - 20), h = Math.min(250, height - 16);
 		int x = (width - b) / 2, y = (height - h) / 2;
 		g.fill(0, 0, width, height, 0xB0020407);

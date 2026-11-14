@@ -61,6 +61,7 @@ public class BambusConfig {
 	public boolean menueAnimation = true;
 	public boolean hinweise = true;        // Neon-Benachrichtigungen
 	public boolean ladebildschirm = true;  // eigener Ladebildschirm
+	public String menueStil = "bambus";     // Aussehen der Menüs: bambus, clean, kompakt (screen.MenueStil)
 	public String menueHintergrund = "synthwave";   // Bambus-Hauptmenü: synthwave, partikel, aurora, datenregen, gitter
 	public String letzteVersion = "";      // für „Bambus wurde aktualisiert“
 	/** Server-Favoriten aus dem Launcher, je „Name|Adresse“ – landen beim Start in der Mehrspieler-Liste. */

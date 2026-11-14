@@ -73,7 +73,7 @@ public class BambusAuswahlScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		super.render(g, mx, my, delta);
 
 		// Kopf: Logo + Schriftzug, mittig über den Karten
