@@ -469,9 +469,10 @@ final class Installer {
 		String argumente = "";
 		String symbol;
 		if (programm.toString().toLowerCase(Locale.ROOT).endsWith(".jar")) {
+			// Start über das signierte javaw.exe von Java – das lässt Windows (Smart App Control) zu
 			ziel = Paths.get(System.getProperty("java.home"), "bin", "javaw.exe").toString();
 			argumente = "-jar \"" + programm + "\"";
-			symbol = ziel;
+			symbol = bambusSymbol(ziel);
 		} else {
 			ziel = programm.toString();
 			symbol = ziel;
@@ -494,6 +495,19 @@ final class Installer {
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IOException("Abgebrochen.");
+		}
+	}
+
+	/** Bambus-Symbol für die Verknüpfung (aus dem Launcher nach .bambus-launcher kopiert); sonst das Java-Symbol. */
+	private static String bambusSymbol(String ersatz) {
+		try (InputStream in = Installer.class.getResourceAsStream("/bambus.ico")) {
+			if (in == null) return ersatz;
+			Path ico = Paths.get(System.getProperty("user.home"), ".bambus-launcher", "bambus.ico");
+			Files.createDirectories(ico.getParent());
+			Files.copy(in, ico, StandardCopyOption.REPLACE_EXISTING);
+			return ico.toString();
+		} catch (IOException e) {
+			return ersatz;
 		}
 	}
 
