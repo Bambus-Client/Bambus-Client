@@ -17,11 +17,14 @@ final class ClientEinstellungen {
 
 	/** HUD-Module mit ihren Standardpositionen (wie in der Mod). */
 	static final String[][] MODULE = {   // {id, Name, Beschreibung, x, y, Standard an}
-			{"info", "Info", "FPS, Koordinaten und CPS", "4", "4", "true"},
+			{"titel", "Bambus-Schriftzug", "„Bambus Client“ im HUD", "4", "4", "true"},
+			{"fps", "FPS", "Bilder pro Sekunde", "4", "19", "true"},
+			{"cps", "CPS", "Klicks pro Sekunde, links und rechts", "4", "34", "true"},
 			{"tasten", "Keystrokes", "W A S D, Maus und Leertaste", "4", "54", "true"},
 			{"server", "Server", "Adresse des Servers", "4", "158", "true"},
 			{"ping", "Ping", "Dein Ping mit Signalbalken", "4", "172", "true"},
 			{"ruestung", "Rüstungsanzeige", "Rüstung mit Haltbarkeit", "10000", "4", "true"},
+			{"hand", "Item in der Hand", "Haltbarkeit bzw. Anzahl deines Items", "10000", "74", "true"},
 			{"effekte", "Trank-Effekte", "Aktive Tränke mit Restzeit", "10000", "100", "true"},
 			{"ziel", "Target-HUD", "Name, Leben und Abstand deines Ziels", "10000", "60", "true"},
 			{"combo", "Combo-Zähler", "Treffer in Folge", "4", "120", "true"},
@@ -38,7 +41,8 @@ final class ClientEinstellungen {
 			{"tnt", "TNT-Timer", "Restzeit von gezündetem TNT", "10000", "260", "true"},
 			{"kompass", "Kompass-Balken", "Himmelsrichtungen gleiten vorbei", "10000", "2", "false"},
 			{"koordinaten", "Koordinaten", "Mit Nether-Umrechnung und Kopier-Taste", "4", "190", "false"},
-			{"spielzeit", "Spielzeit", "Zeit seit dem Betreten, Ingame-Tag", "4", "214", "false"},
+			{"spielzeit", "Spielzeit", "Zeit seit dem Betreten der Welt", "4", "245", "false"},
+			{"ingametag", "Ingame-Tag", "Tag in der Welt, auf Wunsch mit Uhrzeit", "4", "350", "false"},
 	};
 
 	/** {Schlüssel, Name, Beschreibung, Standard, Warnung} */

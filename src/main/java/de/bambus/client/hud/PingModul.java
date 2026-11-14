@@ -44,6 +44,7 @@ public class PingModul extends HudModul {
 
 	@Override
 	public int breite(Minecraft mc, boolean editor) {
+		if (!editor && mc.hasSingleplayerServer()) return 0;   // im Einzelspieler gibt es keinen Ping
 		if (!verlauf.an()) {   // ohne Verlauf so breit wie der Text
 			return (signal.an() ? 26 : 6) + mc.font.width(text(mc, wert(mc, editor))) + 6;
 		}
@@ -60,11 +61,13 @@ public class PingModul extends HudModul {
 
 	@Override
 	public int hoehe(Minecraft mc, boolean editor) {
+		if (!editor && mc.hasSingleplayerServer()) return 0;
 		return verlauf.an() ? HOEHE : 18;   // ohne Verlauf nur die Zeile mit dem Ping
 	}
 
 	@Override
 	public void zeichne(GuiGraphics g, Minecraft mc, int x, int y, boolean editor) {
+		if (!editor && mc.hasSingleplayerServer()) return;
 		panel(g, x, y, breite(mc, editor), hoehe(mc, editor));
 		int ms = wert(mc, editor);
 		int f = farbe(ms);

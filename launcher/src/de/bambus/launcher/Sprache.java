@@ -113,6 +113,11 @@ final class Sprache {
 		g("Serverauswahl, Einstellungs-Code & mehrere Versionen", "Server list, settings code & multiple versions");
 		g("Profil-Menü: jedes Profil direkt spielen, Mods hinzufügen auf eigener Seite mit Suche und Icons", "Profile menu: play any profile directly, add mods on their own page with search and icons");
 		g("Neben SPIELEN: ▾-Pfeil zur Profilauswahl – das aktive Profil steht über dem Knopf", "Next to PLAY: ▾ arrow to pick a profile – the active profile is shown above the button");
+		g("Neue Einzel-Module: FPS, CPS, Bambus-Schriftzug, Item in der Hand und Ingame-Tag", "New single modules: FPS, CPS, Bambus logo text, item in hand and in-game day");
+		g("Bambus-Schriftzug", "Bambus logo text"); g("„Bambus Client“ im HUD", "“Bambus Client” in the HUD"); g("Bilder pro Sekunde", "Frames per second");
+		g("Klicks pro Sekunde, links und rechts", "Clicks per second, left and right"); g("Item in der Hand", "Item in hand");
+		g("Haltbarkeit bzw. Anzahl deines Items", "Durability or count of your item"); g("Ingame-Tag", "In-game day");
+		g("Tag in der Welt, auf Wunsch mit Uhrzeit", "Day in the world, optionally with time"); g("Zeit seit dem Betreten der Welt", "Time since joining the world");
 		g("MODS HINZUFÜGEN", "ADD MODS"); g("+  MODS HINZUFÜGEN", "+  ADD MODS"); g("← ZUM PROFIL", "← TO PROFILE");
 		g("INSTALLIERTE MODS", "INSTALLED MODS"); g("PROFIL", "PROFILE"); g("PROFILE VERWALTEN →", "MANAGE PROFILES →");
 		g("▶ SPIELEN", "▶ PLAY"); g("+ DAZU", "+ ADD"); g("✓ DRIN", "✓ ADDED");

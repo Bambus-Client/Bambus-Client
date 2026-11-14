@@ -64,12 +64,15 @@ public class BambusClient implements ClientModInitializer {
 	private static int screenshotIn = 0;
 
 	public static final List<HudModul> MODULE = List.of(
-			new InfoModul(),
+			new TitelModul(),
+			new FpsModul(),
+			new CpsModul(),
 			new TastenModul(),
 			new ServerModul(),
 			new PingModul(),
 			new ToggleSprintModul(),
 			new RuestungModul(),
+			new HandModul(),
 			new EffekteModul(),
 			new ZielModul(),
 			new ComboModul(),
@@ -86,7 +89,8 @@ public class BambusClient implements ClientModInitializer {
 			new TntModul(),
 			new KompassModul(),
 			new KoordinatenModul(),
-			new SpielzeitModul()
+			new SpielzeitModul(),
+			new IngameTagModul()
 	);
 
 	private static KeyMapping menuTaste;
@@ -100,6 +104,7 @@ public class BambusClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		config = BambusConfig.laden();
+		ModulAufteilung.uebernehmen(config);
 
 		KeyMapping.Category kategorie = KeyMapping.Category.register(
 				Identifier.fromNamespaceAndPath(MOD_ID, "bambus"));
