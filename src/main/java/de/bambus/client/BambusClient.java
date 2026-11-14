@@ -90,7 +90,8 @@ public class BambusClient implements ClientModInitializer {
 			new KompassModul(),
 			new KoordinatenModul(),
 			new SpielzeitModul(),
-			new IngameTagModul()
+			new IngameTagModul(),
+			new MusikModul()
 	);
 
 	private static KeyMapping menuTaste;
@@ -98,6 +99,7 @@ public class BambusClient implements ClientModInitializer {
 	private static KeyMapping freelookTaste;
 	private static KeyMapping hudTaste;
 	private static KeyMapping koordinatenTaste;
+	private static KeyMapping musikPause, musikWeiter, musikZurueck;
 
 	private static boolean ersterTick = true;
 
@@ -113,6 +115,9 @@ public class BambusClient implements ClientModInitializer {
 		freelookTaste = taste("freelook", InputConstants.KEY_LALT, kategorie);
 		hudTaste = taste("hud", InputConstants.KEY_H, kategorie);
 		koordinatenTaste = taste("koordinaten", InputConstants.UNKNOWN.getValue(), kategorie);   // frei belegbar
+		musikPause = taste("musik_pause", InputConstants.UNKNOWN.getValue(), kategorie);
+		musikWeiter = taste("musik_weiter", InputConstants.UNKNOWN.getValue(), kategorie);
+		musikZurueck = taste("musik_zurueck", InputConstants.UNKNOWN.getValue(), kategorie);
 
 		ClientTickEvents.END_CLIENT_TICK.register(BambusClient::tick);
 
@@ -138,6 +143,7 @@ public class BambusClient implements ClientModInitializer {
 			return InteractionResult.PASS;
 		});
 		// Eigene Capes/Flügel aus config/bambus-kosmetik/ laden, sobald die Texturen bereit sind
+		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Musik.stoppe());
 		ClientLifecycleEvents.CLIENT_STARTED.register(mc -> {
 			EigeneKosmetik.neuLaden();
 			Hinweise.versionPruefen();
@@ -293,6 +299,12 @@ public class BambusClient implements ClientModInitializer {
 		WeltModul.tick(mc);
 		SpielzeitModul.tick(mc);
 		PingModul.tick(mc);
+		for (HudModul m : MODULE) {
+			if (m instanceof MusikModul musik) musik.tick();
+		}
+		while (musikPause.consumeClick()) Musik.pause();
+		while (musikWeiter.consumeClick()) Musik.weiter();
+		while (musikZurueck.consumeClick()) Musik.zurueck();
 		while (koordinatenTaste.consumeClick()) {
 			String k = KoordinatenModul.alsText(mc);
 			if (!k.isEmpty()) {
@@ -323,6 +335,9 @@ public class BambusClient implements ClientModInitializer {
 		}
 		if (!config.hudAn || mc.player == null || mc.options.hideGui || mc.screen instanceof HudEditorScreen) {
 			return;
+		}
+		for (HudModul m : MODULE) {   // Songtext-Wörter liegen hinter allen Anzeigen
+			if (m instanceof MusikModul musik) musik.welt(g, mc);
 		}
 		for (HudModul m : MODULE) {
 			if (m.pos().an) {
