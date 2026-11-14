@@ -60,11 +60,12 @@ public enum MenueStil {
 				Farben.NEON_CYAN = Farben.mische(thema, 0xFFFFFFFF, 0.35f);   // Thema nur als sanfter Akzent
 				Farben.NEON_PINK = Farben.mische(Farben.NEON_PINK, 0xFFFFFFFF, 0.35f);
 				Farben.GRUEN = Farben.NEON;
-				Farben.HINTERGRUND = 0x8C000000;
-				Farben.PANEL = 0xE6141619;
-				Farben.KARTE = 0xFF1D2024;
-				Farben.KARTE_HOVER = 0xFF282C32;
-				Farben.LINIE = 0x26FFFFFF;
+				// durchsichtig wie Glas: das Spiel scheint durch
+				Farben.HINTERGRUND = 0x4D000000;
+				Farben.PANEL = 0xB3141619;
+				Farben.KARTE = 0x99262A30;
+				Farben.KARTE_HOVER = 0xB3343941;
+				Farben.LINIE = 0x2EFFFFFF;
 			}
 			case KOMPAKT -> {
 				Farben.HINTERGRUND = 0xD0000000;

@@ -612,7 +612,7 @@ public class BambusMenuScreen extends Screen {
 		int fx = px + (pb - fb) / 2;
 		int fy = py + (ph - fh) / 2;
 		Neon.flaeche(g, px, py, pb, ph, MenueStil.bambus() ? 0xB0020407 : 0xA0000000);
-		Neon.flaeche(g, fx, fy, fb, fh, MenueStil.bambus() ? 0xF20A0F17 : Farben.alpha(Farben.PANEL, 250));
+		Neon.flaeche(g, fx, fy, fb, fh, MenueStil.bambus() ? 0xF20A0F17 : Farben.alpha(Farben.PANEL, MenueStil.clean() ? 225 : 250));
 		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
 		Neon.ecken(g, fx - 3, fy - 3, fb + 6, fh + 6, 8, Farben.NEON_CYAN);
 

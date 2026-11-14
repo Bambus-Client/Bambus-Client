@@ -67,7 +67,8 @@ public class BambusAuswahlScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mx, int my, float delta) {
-		g.fill(0, 0, width, height, 0xC0020407);
+		MenueStil.anwenden();
+		g.fill(0, 0, width, height, MenueStil.bambus() ? 0xC0020407 : Farben.HINTERGRUND);
 		Neon.gitter(g, 0, 0, width, height, 24, Farben.alpha(Farben.NEON, 7));
 	}
 
