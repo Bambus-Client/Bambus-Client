@@ -141,8 +141,9 @@ public final class Musik {
 			leser.setDaemon(true);
 			leser.start();
 			fehler = "";
+			BambusClient.LOGGER.info("[Musik] Hintergrund-Abfrage gestartet");
 		} catch (Exception e) {
-			fehler = "Musik-Anzeige konnte nicht starten";
+			fehler = "Musik-Anzeige konnte nicht starten: " + e.getMessage();
 			BambusClient.LOGGER.warn("Musik-Anzeige nicht gestartet: {}", e.toString());
 			prozess = null;
 			eingabe = null;
@@ -162,26 +163,48 @@ public final class Musik {
 	}
 
 	private static void lies(Process p) {
+		int meldungen = 0;
+		String letzteMeldung = "";
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
 			String zeile;
 			while ((zeile = r.readLine()) != null) {
 				zeile = zeile.trim();
-				if (!zeile.startsWith("{")) continue;   // Meldungen von PowerShell überspringen
+				if (zeile.isEmpty()) continue;
+				if (!zeile.startsWith("{")) {   // Meldung von PowerShell (meist ein Fehler) – ins Log
+					letzteMeldung = zeile;
+					if (meldungen++ < 20) BambusClient.LOGGER.warn("[Musik] {}", zeile);
+					continue;
+				}
 				try {
 					verarbeite(JsonParser.parseString(zeile).getAsJsonObject());
 				} catch (Exception e) {
-					// kaputte Zeile – nächste
+					BambusClient.LOGGER.warn("[Musik] Unlesbare Zeile: {}", zeile);
 				}
 			}
 		} catch (Exception ignoriert) {
 			// Prozess beendet
 		}
 		laeuftEtwas = false;
+		try {
+			int code = p.waitFor();
+			if (code != 0 && fehler.isEmpty()) {
+				fehler = letzteMeldung.isEmpty() ? "Musik-Skript beendet (Code " + code + ")" : letzteMeldung;
+			}
+			BambusClient.LOGGER.info("[Musik] Skript beendet mit Code {}{}", code, fehler.isEmpty() ? "" : " – " + fehler);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	private static void verarbeite(JsonObject o) {
+		if (o.has("bereit")) {
+			fehler = "";
+			BambusClient.LOGGER.info("[Musik] Windows-Medienwiedergabe verbunden");
+			return;
+		}
 		if (o.has("fehler")) {
 			fehler = text(o, "fehler");
+			BambusClient.LOGGER.warn("[Musik] {}", fehler);
 			return;
 		}
 		if (o.has("leer")) {

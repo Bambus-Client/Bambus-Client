@@ -3,7 +3,23 @@
 # Befehle über die Eingabe (eine Zeile): pause, weiter, zurueck, modus spotify, modus alle.
 # Endet von selbst, sobald Minecraft die Eingabe schließt.
 $ErrorActionPreference = 'Stop'
-[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
+# Minecraft läuft ohne Konsolenfenster (javaw) – deshalb nicht über die Konsole, sondern direkt über
+# die Ein- und Ausgabe-Ströme lesen und schreiben (sonst: „Das Handle ist ungültig“ und das Skript endet sofort).
+$utf8 = New-Object System.Text.UTF8Encoding $false
+$ausgabe = New-Object System.IO.StreamWriter ([Console]::OpenStandardOutput(), $utf8)
+$ausgabe.AutoFlush = $true
+$eingabe = New-Object System.IO.StreamReader ([Console]::OpenStandardInput(), $utf8)
+
+function Schreibe($objekt) {
+	$ausgabe.WriteLine(($objekt | ConvertTo-Json -Compress))
+}
+
+# Jeder Fehler beim Einrichten wird an Minecraft gemeldet, statt still abzubrechen.
+trap {
+	try { Schreibe @{ fehler = "Musik-Skript: " + [string]$_.Exception.Message } } catch { }
+	exit 1
+}
+
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 Add-Type -AssemblyName System.Drawing
 $null = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
@@ -16,11 +32,6 @@ function Warte($vorgang, [Type]$typ) {
 	$aufgabe = $asTask.MakeGenericMethod($typ).Invoke($null, @($vorgang))
 	$null = $aufgabe.Wait(-1)
 	$aufgabe.Result
-}
-
-function Schreibe($objekt) {
-	[Console]::Out.WriteLine(($objekt | ConvertTo-Json -Compress))
-	[Console]::Out.Flush()
 }
 
 function Cover($eigenschaften) {
@@ -48,8 +59,8 @@ $manager = Warte ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessi
 $nurSpotify = $false
 $letztesLied = $null
 $coverNochmal = $null   # Spotify meldet das neue Cover oft erst kurz nach dem neuen Titel
-$eingabe = [Console]::In
 $naechsteZeile = $eingabe.ReadLineAsync()
+Schreibe @{ bereit = $true }
 
 while ($true) {
 	# Befehle von Minecraft
