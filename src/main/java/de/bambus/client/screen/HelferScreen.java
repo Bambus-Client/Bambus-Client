@@ -131,7 +131,7 @@ public class HelferScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		pb = Math.min(width - 20, 440);
 		ph = Math.min(height - 20, 300);
 		px = (width - pb) / 2;

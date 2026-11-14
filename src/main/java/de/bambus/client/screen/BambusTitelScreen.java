@@ -89,7 +89,7 @@ public class BambusTitelScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mx, int my, float delta) {
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 		float t = zeit();
 		if (MenueHintergrund.zeichne(g, font, BambusClient.config.menueHintergrund, width, height, t)) {
 			g.fillGradient(0, 0, width, height / 5, 0x90000000, 0x00000000);

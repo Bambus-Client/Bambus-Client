@@ -29,6 +29,7 @@ final class SeiteNeu extends JPanel {
 					"Neues Hauptmenü im Spiel: große Karten für Einzel- und Mehrspieler",
 					"Ping und Toggle Sprint als eigene Module – Toggle Sneak und HUD-Anzeige einzeln schaltbar",
 					"Neue Einzel-Module: FPS, CPS, Bambus-Schriftzug, Item in der Hand und Ingame-Tag",
+					"Menü-Stil im Spiel wählbar: Bambus, Clean oder Kompakt",
 					"Mehrere Minecraft-Versionen: jedes Mod-Profil spielt seine eigene (1.21.11 bis 26.3)",
 					"Beim Anlegen eines Profils wählst du die Version gleich mit – später über VERSION änderbar",
 					"Jede Version bekommt eigene Mods und eigene Welten, damit nichts durcheinandergerät",

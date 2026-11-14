@@ -13,11 +13,12 @@ public final class Farben {
 	public static final int GRUEN_GEDRUECKT = 0xC03DFF8A;
 
 	// Flächen
-	public static final int HINTERGRUND = 0xA0060B10;
-	public static final int PANEL = 0xE00A0F17;
-	public static final int KARTE = 0xFF101824;
-	public static final int KARTE_HOVER = 0xFF152233;
-	public static final int LINIE = 0xFF1E2C3D;
+	// Flächen – nicht final, weil der Menü-Stil (screen.MenueStil) sie ändern kann
+	public static int HINTERGRUND = 0xA0060B10;
+	public static int PANEL = 0xE00A0F17;
+	public static int KARTE = 0xFF101824;
+	public static int KARTE_HOVER = 0xFF152233;
+	public static int LINIE = 0xFF1E2C3D;
 
 	// Text
 	public static final int WEISS = 0xFFFFFFFF;
@@ -71,6 +72,20 @@ public final class Farben {
 			NEON_PINK = THEMA_FARBEN[t][2];
 		}
 		GRUEN = NEON;
+		// Bambus-Flächen (der Menü-Stil setzt danach eigene)
+		HINTERGRUND = 0xA0060B10;
+		PANEL = 0xE00A0F17;
+		KARTE = 0xFF101824;
+		KARTE_HOVER = 0xFF152233;
+		LINIE = 0xFF1E2C3D;
+	}
+
+	/** Zwei Farben mischen (t = 0 → a, t = 1 → b), Deckkraft von a. */
+	public static int mische(int a, int b, float t) {
+		int r = (int) (((a >> 16) & 0xFF) * (1 - t) + ((b >> 16) & 0xFF) * t);
+		int g = (int) (((a >> 8) & 0xFF) * (1 - t) + ((b >> 8) & 0xFF) * t);
+		int bl = (int) ((a & 0xFF) * (1 - t) + (b & 0xFF) * t);
+		return (a & 0xFF000000) | (r << 16) | (g << 8) | bl;
 	}
 
 	/** Gleiche Farbe mit anderer Deckkraft (0–255). */

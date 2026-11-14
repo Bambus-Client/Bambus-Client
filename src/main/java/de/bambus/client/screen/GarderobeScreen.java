@@ -82,7 +82,7 @@ public class GarderobeScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		Farben.themaAnwenden(BambusClient.config.thema);
+		MenueStil.anwenden();
 
 		// Seitenleiste gleitet von links herein
 		float k = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS)) : 1f;
