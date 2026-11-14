@@ -30,7 +30,6 @@ public class MusikModul extends HudModul {
 	private final Option cover = option("cover", "Album-Cover", true);
 	private final Option songtext = option("songtext", "Songtext (Karaoke)", true);
 	private final Option woerter = option("woerter", "3D-Wörter", true);
-	private final Option seiten = option("seiten", "Wörter nur an den Seiten", true);
 	private final Option fortschritt = option("fortschritt", "Fortschritt", true);
 	private final Option equalizer = option("equalizer", "Equalizer", true);
 	private final Option nurSpotify = option("spotify", "Nur Spotify", false);
@@ -42,6 +41,10 @@ public class MusikModul extends HudModul {
 
 	/** Jeden Tick: Abfrage nur, solange das Modul an ist; Songtext zum aktuellen Lied laden. */
 	public void tick() {
+		// früher ein Schalter „nur an den Seiten“ – aus hieß: frei in der Welt
+		if (pos().optionen != null && pos().optionen.containsKey("seiten")) {
+			if (Boolean.FALSE.equals(pos().optionen.remove("seiten"))) BambusClient.config.musikWoerterOrt = SongtextWelt.UEBERALL;
+		}
 		Musik.nurSpotify(nurSpotify.an());
 		Musik.tick(pos().an);
 		if (pos().an && (songtext.an() || woerter.an()) && Musik.laeuftEtwas) {
@@ -51,7 +54,7 @@ public class MusikModul extends HudModul {
 
 	/** Für das HUD: 3D-Wörter zeichnen, wenn das Modul und die Option an sind. */
 	public void welt(GuiGraphics g, Minecraft mc) {
-		if (pos().an && woerter.an()) SongtextWelt.zeichne(g, mc, seiten.an());
+		if (pos().an && woerter.an()) SongtextWelt.zeichne(g, mc, BambusClient.config.musikWoerterOrt);
 		else SongtextWelt.leeren();
 	}
 
@@ -63,6 +66,8 @@ public class MusikModul extends HudModul {
 				w -> BambusClient.config.musikDurchsicht = w, 0, 90, 10, "%d %%", hintergrund::an));
 		liste.add(Einstellung.Stufe.auswahl("Schrift Insel", Schriften.NAMEN, () -> BambusClient.config.musikSchriftInsel,
 				w -> BambusClient.config.musikSchriftInsel = w, () -> true));
+		liste.add(Einstellung.Stufe.auswahl("Wörter-Ort", SongtextWelt.ORTE, () -> BambusClient.config.musikWoerterOrt,
+				w -> BambusClient.config.musikWoerterOrt = w, woerter::an));
 		liste.add(Einstellung.Stufe.auswahl("Schrift Wörter", Schriften.NAMEN, () -> BambusClient.config.musikSchriftWoerter,
 				w -> BambusClient.config.musikSchriftWoerter = w, woerter::an));
 		return liste;
@@ -74,6 +79,7 @@ public class MusikModul extends HudModul {
 		BambusClient.config.musikDurchsicht = 70;
 		BambusClient.config.musikSchriftInsel = 1;
 		BambusClient.config.musikSchriftWoerter = 2;
+		BambusClient.config.musikWoerterOrt = 0;
 	}
 
 	/** Deckkraft des Insel-Hintergrunds (0–1) aus der Einstellung „durchsichtig“. */

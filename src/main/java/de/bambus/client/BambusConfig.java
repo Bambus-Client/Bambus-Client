@@ -64,7 +64,8 @@ public class BambusConfig {
 	public String menueStil = "bambus";
 	public int musikDurchsicht = 70;       // Musik-Insel: Durchsichtigkeit in Prozent
 	public int musikSchriftInsel = 1;      // Schriften.NAMEN: 0 Minecraft, 1 Poppins, 2 Montserrat, 3 Pixel
-	public int musikSchriftWoerter = 2;     // Aussehen der Menüs: bambus, clean, kompakt (screen.MenueStil)
+	public int musikSchriftWoerter = 2;
+	public int musikWoerterOrt = 0;        // SongtextWelt.ORTE: Seiten, Links, Rechts, Oben, Unten, Überall     // Aussehen der Menüs: bambus, clean, kompakt (screen.MenueStil)
 	public String menueHintergrund = "synthwave";   // Bambus-Hauptmenü: synthwave, partikel, aurora, datenregen, gitter
 	public String letzteVersion = "";      // für „Bambus wurde aktualisiert“
 	/** Server-Favoriten aus dem Launcher, je „Name|Adresse“ – landen beim Start in der Mehrspieler-Liste. */

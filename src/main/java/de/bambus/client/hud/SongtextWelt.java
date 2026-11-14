@@ -22,12 +22,15 @@ import java.util.Set;
  * vor dir auf, bleibt dort stehen (auch wenn du dich umdrehst), fliegt dann auf dich zu und verblasst.
  * Gezeichnet im HUD: Der Weltpunkt wird jedes Bild mit Blickrichtung und Sichtfeld auf den Bildschirm umgerechnet.
  *
- * Modus „nur an den Seiten“ (Standard, für PvP): Die Wörter hängen am Blick, links oder rechts am Rand –
- * die Bildmitte bleibt immer frei, auch beim Umdrehen.
+ * Wo die Wörter erscheinen, ist einstellbar ({@link #ORTE}). Außer bei „Überall“ hängen sie am Blick –
+ * die Bildmitte mit dem Fadenkreuz bleibt frei, auch beim Umdrehen (wichtig fürs PvP).
  */
 public final class SongtextWelt {
 
 	private SongtextWelt() {}
+
+	public static final String[] ORTE = {"Seiten", "Links", "Rechts", "Oben", "Unten", "Überall"};
+	public static final int SEITEN = 0, LINKS = 1, RECHTS = 2, OBEN = 3, UNTEN = 4, UEBERALL = 5;
 
 	private static final long AUFTAUCHEN = 180, STEHEN = 1500, WEGFLIEGEN = 650;
 	private static final int MAX = 14;
@@ -50,7 +53,7 @@ public final class SongtextWelt {
 		schonGezeigt.clear();
 	}
 
-	public static void zeichne(GuiGraphics g, Minecraft mc, boolean seiten) {
+	public static void zeichne(GuiGraphics g, Minecraft mc, int bereich) {
 		if (mc.player == null || mc.level == null || mc.options.hideGui) {
 			woerter.clear();
 			return;
@@ -58,7 +61,7 @@ public final class SongtextWelt {
 		Camera kamera = mc.gameRenderer.getMainCamera();
 		int bw0 = mc.getWindow().getGuiScaledWidth(), bh0 = mc.getWindow().getGuiScaledHeight();
 		double tanV = Math.tan(Math.toRadians(mc.options.fov().get()) / 2);
-		neueWoerter(kamera, seiten, tanV * bw0 / (double) bh0, tanV);
+		neueWoerter(kamera, Math.floorMod(bereich, ORTE.length), tanV * bw0 / (double) bh0, tanV);
 		if (woerter.isEmpty()) return;
 
 		int bw = mc.getWindow().getGuiScaledWidth(), bh = mc.getWindow().getGuiScaledHeight();
@@ -103,7 +106,7 @@ public final class SongtextWelt {
 	}
 
 	/** Gesungene Wörter der aktuellen Zeile in die Welt setzen (jedes nur einmal). */
-	private static void neueWoerter(Camera kamera, boolean seiten, double tanH, double tanV) {
+	private static void neueWoerter(Camera kamera, int bereich, double tanH, double tanV) {
 		if (!Musik.laeuftEtwas || !Musik.spielt || !Songtext.vorhanden()) return;
 		String jetztLied = Musik.titel + "|" + Musik.kuenstler;
 		double zeit = Musik.positionJetzt();
@@ -120,34 +123,37 @@ public final class SongtextWelt {
 			if (wort.start() > zeit || schonGezeigt.contains(schluessel)) continue;
 			schonGezeigt.add(schluessel);
 			if (zeit - wort.start() > 0.5) continue;   // nach dem Vorspulen nicht alles auf einmal
-			setze(kamera, wort.text(), seiten, tanH, tanV);
+			setze(kamera, wort.text(), bereich, tanH, tanV);
 		}
 		while (woerter.size() > MAX) woerter.remove(0);
 	}
 
-	private static void setze(Camera kamera, String text, boolean seiten, double tanH, double tanV) {
+	private static void setze(Camera kamera, String text, int bereich, double tanH, double tanV) {
 		String sauber = text.replaceAll("^[\\p{Punct}„“”‚‘’»«]+|[\\p{Punct}„“”‚‘’»«]+$", "");
 		if (sauber.isEmpty()) return;
 		Vector3fc vor = kamera.forwardVector(), links = kamera.leftVector();
 		Vector3f hoch = new Vector3f(vor).cross(links);
 		double abstand = 7 + zufall.nextDouble() * 4;
-		double seite, oben;
-		if (seiten) {
-			// links oder rechts, im äußeren Drittel des Bildes (Anteil 0,55–0,9 der halben Bildbreite)
-			double anteil = 0.55 + zufall.nextDouble() * 0.35;
-			seite = (zufall.nextBoolean() ? 1 : -1) * anteil * tanH * abstand;
-			oben = (-0.25 + zufall.nextDouble() * 0.75) * tanV * abstand;
-		} else {
-			seite = (zufall.nextDouble() - 0.5) * 7;
-			oben = -0.8 + zufall.nextDouble() * 3.2;
+		// Anteile der halben Bildbreite (waagerecht) bzw. halben Bildhöhe (senkrecht); 0 = Bildmitte
+		double waag, senk;
+		switch (bereich) {
+			case LINKS -> { waag = -(0.5 + zufall.nextDouble() * 0.4); senk = -0.35 + zufall.nextDouble() * 0.85; }
+			case RECHTS -> { waag = 0.5 + zufall.nextDouble() * 0.4; senk = -0.35 + zufall.nextDouble() * 0.85; }
+			case OBEN -> { waag = (zufall.nextDouble() - 0.5) * 1.5; senk = 0.4 + zufall.nextDouble() * 0.35; }
+			case UNTEN -> { waag = (zufall.nextDouble() - 0.5) * 1.3; senk = -(0.3 + zufall.nextDouble() * 0.3); }
+			case SEITEN -> { waag = (zufall.nextBoolean() ? 1 : -1) * (0.55 + zufall.nextDouble() * 0.35); senk = -0.25 + zufall.nextDouble() * 0.75; }
+			default -> { waag = 0; senk = 0; }
 		}
+		boolean frei = bereich == UEBERALL;
+		double seite = frei ? (zufall.nextDouble() - 0.5) * 7 : waag * tanH * abstand;
+		double oben = frei ? -0.8 + zufall.nextDouble() * 3.2 : senk * tanV * abstand;
 		float neigung = (float) Math.toRadians((zufall.nextDouble() - 0.5) * 24);
 		float groesse = 0.45f + zufall.nextFloat() * 0.45f + (sauber.length() <= 3 ? -0.1f : 0f);
-		if (seiten) groesse *= 0.8f;   // am Rand etwas kleiner
+		if (!frei) groesse *= 0.8f;   // am Rand etwas kleiner
 		Component c = de.bambus.client.Schriften.text(sauber.toUpperCase(java.util.Locale.ROOT),
 				de.bambus.client.BambusClient.config.musikSchriftWoerter, true);
 		// frei in der Welt: fester Weltpunkt; an den Seiten: nur die Blick-Koordinaten (ort = null)
-		Vec3 ort = seiten ? null : kamera.position()
+		Vec3 ort = !frei ? null : kamera.position()
 				.add(vor.x() * abstand, vor.y() * abstand, vor.z() * abstand)
 				.add(-links.x() * seite, -links.y() * seite, -links.z() * seite)
 				.add(hoch.x() * oben, hoch.y() * oben, hoch.z() * oben);
