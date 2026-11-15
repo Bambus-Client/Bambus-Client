@@ -73,7 +73,10 @@ final class ServerStatus {
 
 			liesVarInt(ein);                      // Länge
 			if (liesVarInt(ein) != 0x00) throw new IOException("Unerwartete Antwort");
-			byte[] json = new byte[liesVarInt(ein)];
+			int laenge = liesVarInt(ein);
+			// Grenze: eine Statusantwort ist ein paar KB groß – ein kaputter Server darf nicht 2 GB anfordern
+			if (laenge < 0 || laenge > 1 << 20) throw new IOException("Ungültige Antwort vom Server");
+			byte[] json = new byte[laenge];
 			ein.readFully(json);
 			auswerten(e, new String(json, StandardCharsets.UTF_8));
 

@@ -181,34 +181,97 @@ public class BambusConfig {
 		return FabricLoader.getInstance().getConfigDir().resolve("bambus.json");
 	}
 
+	/**
+	 * Änderungszeit der Datei nach dem letzten eigenen Laden oder Speichern. Ändert sie sich danach,
+	 * hat der Launcher gespeichert (z. B. Kosmetik gekauft) – dann lädt die Mod neu, statt es zu überschreiben.
+	 */
+	private static volatile long bekannteAenderung = Long.MIN_VALUE;
+	private static final Object SCHLOSS = new Object();
+
 	public static BambusConfig laden() {
 		Path p = datei();
-		if (Files.exists(p)) {
-			try (Reader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
-				BambusConfig c = GSON.fromJson(r, BambusConfig.class);
-				if (c != null) {
-					if (c.module == null) {
-						c.module = new LinkedHashMap<>();
-					}
-					if (c.favoriten == null) c.favoriten = new java.util.ArrayList<>();
-					if (c.freunde == null) c.freunde = new java.util.ArrayList<>();
-					return c;
-				}
-			} catch (Exception e) {
-				System.err.println("[Bambus] Einstellungen konnten nicht gelesen werden: " + e);
+		if (!Files.exists(p)) {
+			return new BambusConfig();
+		}
+		for (int versuch = 0; versuch < 4; versuch++) {
+			BambusConfig c = lesen(p);
+			if (c != null) return c;
+			try {
+				Thread.sleep(40);   // vielleicht schreibt der Launcher gerade
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				break;
 			}
+		}
+		// kaputte Datei aufheben, bevor mit Standardwerten weitergemacht wird – nichts geht unbemerkt verloren
+		try {
+			Path sicherung = p.resolveSibling("bambus.json.kaputt-" + java.time.LocalDateTime.now()
+					.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")));
+			Files.copy(p, sicherung, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			System.err.println("[Bambus] bambus.json war unlesbar – gesichert als " + sicherung.getFileName());
+		} catch (Exception e) {
+			System.err.println("[Bambus] Einstellungen konnten nicht gelesen werden: " + e);
 		}
 		return new BambusConfig();
 	}
 
-	public void speichern() {
-		try {
-			Files.createDirectories(datei().getParent());
-			try (Writer w = Files.newBufferedWriter(datei(), StandardCharsets.UTF_8)) {
-				GSON.toJson(this, w);
+	/** Liest die Datei; null, wenn sie fehlt oder unlesbar ist. */
+	private static BambusConfig lesen(Path p) {
+		synchronized (SCHLOSS) {
+			try {
+				long zeit = aenderungszeit();
+				BambusConfig c;
+				try (Reader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
+					c = GSON.fromJson(r, BambusConfig.class);
+				}
+				if (c == null) return null;
+				if (c.module == null) c.module = new LinkedHashMap<>();
+				if (c.favoriten == null) c.favoriten = new java.util.ArrayList<>();
+				if (c.freunde == null) c.freunde = new java.util.ArrayList<>();
+				bekannteAenderung = zeit;
+				return c;
+			} catch (Exception e) {
+				return null;
 			}
+		}
+	}
+
+	/** Hat jemand anderes (der Launcher) die Datei seit dem letzten Laden/Speichern geändert? Dann der neue Stand, sonst null. */
+	public static BambusConfig vonAussenGeaendert() {
+		long t = aenderungszeit();
+		if (t == -1 || t == bekannteAenderung) return null;
+		BambusConfig neu = lesen(datei());
+		if (neu == null) bekannteAenderung = t;   // unlesbar: nicht jede Sekunde neu versuchen, eigener Stand bleibt
+		return neu;
+	}
+
+	private static long aenderungszeit() {
+		try {
+			return Files.getLastModifiedTime(datei()).toMillis() * 31 + Files.size(datei());
 		} catch (Exception e) {
-			System.err.println("[Bambus] Einstellungen konnten nicht gespeichert werden: " + e);
+			return -1;
+		}
+	}
+
+	/** Speichert sicher: erst in eine Zwischendatei, dann in einem Schritt austauschen – nie eine halbe Datei. */
+	public void speichern() {
+		synchronized (SCHLOSS) {
+			try {
+				Path ziel = datei();
+				Files.createDirectories(ziel.getParent());
+				Path tmp = ziel.resolveSibling("bambus.json.speichern");
+				try (Writer w = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+					GSON.toJson(this, w);
+				}
+				try {
+					Files.move(tmp, ziel, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+				} catch (java.io.IOException e) {
+					Files.move(tmp, ziel, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				}
+				bekannteAenderung = aenderungszeit();
+			} catch (Exception e) {
+				System.err.println("[Bambus] Einstellungen konnten nicht gespeichert werden: " + e);
+			}
 		}
 	}
 }

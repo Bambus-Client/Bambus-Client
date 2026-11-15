@@ -63,6 +63,8 @@ public class BambusServerScreen extends Screen {
 
 	private final Screen eltern;
 	private final ServerStatusPinger pinger = new ServerStatusPinger();
+	/** removed() hat laufende Pings abgebrochen – beim nächsten init() neu anstoßen. */
+	private boolean pingsAbgebrochen;
 	private final Map<ServerData, FaviconTexture> icons = new HashMap<>();
 	private final Map<ServerData, byte[]> hochgeladen = new HashMap<>();
 	private final List<Bereich> bereiche = new ArrayList<>();
@@ -98,6 +100,12 @@ public class BambusServerScreen extends Screen {
 			liste = new ServerList(minecraft);
 			liste.load();
 			pingeAlle();
+		} else if (pingsAbgebrochen) {
+			// zurück aus einem Unter-Fenster (Bearbeiten, Löschen …): removed() hat laufende Pings abgebrochen
+			pingsAbgebrochen = false;
+			for (int i = 0; i < liste.size(); i++) {
+				if (liste.get(i).state() == ServerData.State.PINGING) pinge(liste.get(i));
+			}
 		}
 		String alt = suche == null ? "" : suche.getValue();
 		suche = new EditBox(font, 0, 0, 140, 16, Component.literal("Suche"));
@@ -174,6 +182,7 @@ public class BambusServerScreen extends Screen {
 	@Override
 	public void removed() {
 		pinger.removeAll();
+		pingsAbgebrochen = true;
 		for (FaviconTexture f : icons.values()) f.close();
 		icons.clear();
 		hochgeladen.clear();

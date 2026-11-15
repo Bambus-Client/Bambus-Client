@@ -92,7 +92,8 @@ final class Tastenbelegung {
 			}
 		}
 		if (!ersetzt) zeilen.add(neu);
-		Files.write(d, zeilen, StandardCharsets.UTF_8);
+		// sicher schreiben: erst Zwischendatei, dann austauschen – options.txt darf nie halb geschrieben sein
+		Installer.schreibeSicher(d, (String.join(System.lineSeparator(), zeilen) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
 	}
 
 	// ------------------------------------------------------- Namen und Umrechnen

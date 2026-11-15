@@ -28,7 +28,16 @@ public class ScreenshotScreen extends Screen {
 
 	private final Screen eltern;
 	private final List<Path> dateien = new ArrayList<>();
+	/** Bilder der aktuellen Seite – null, solange eines noch im Hintergrund geladen wird. */
 	private final List<Bild> geladen = new ArrayList<>();
+	/** Jede neue Seite bekommt eine Nummer; Ergebnisse, die erst nach dem Blättern fertig werden, werden verworfen. */
+	private int ladeNummer;
+	/** Screenshots im Hintergrund lesen – große PNGs zu entpacken würde das Spiel sonst kurz anhalten. */
+	private static final java.util.concurrent.ExecutorService LADER = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+		Thread t = new Thread(r, "Bambus-Screenshots");
+		t.setDaemon(true);
+		return t;
+	});
 	private final List<int[]> flaechen = new ArrayList<>();
 	private int seite = 0;
 	private Bild gross = null;
@@ -58,8 +67,9 @@ public class ScreenshotScreen extends Screen {
 	}
 
 	private void freigeben() {
+		ladeNummer++;   // noch laufende Ladevorgänge gehören zu nichts mehr
 		for (Bild b : geladen) {
-			minecraft.getTextureManager().release(b.id());
+			if (b != null) minecraft.getTextureManager().release(b.id());
 		}
 		geladen.clear();
 	}
@@ -68,17 +78,30 @@ public class ScreenshotScreen extends Screen {
 		freigeben();
 		gross = null;
 		int start = seite * PRO_SEITE;
+		int nummer = ladeNummer;
 		for (int i = start; i < Math.min(dateien.size(), start + PRO_SEITE); i++) {
 			Path p = dateien.get(i);
-			try (InputStream in = Files.newInputStream(p)) {
-				NativeImage img = NativeImage.read(in);
-				Identifier id = Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "screenshot/" + (i - start));
-				int b = img.getWidth(), h = img.getHeight();
-				minecraft.getTextureManager().register(id, new DynamicTexture(() -> "bambus screenshot", img));
-				geladen.add(new Bild(p, id, b, h));
-			} catch (Exception e) {
-				BambusClient.LOGGER.warn("Screenshot {} nicht lesbar: {}", p.getFileName(), e.toString());
-			}
+			int platz = i - start;
+			geladen.add(null);
+			LADER.execute(() -> {
+				NativeImage img;
+				try (InputStream in = Files.newInputStream(p)) {
+					img = NativeImage.read(in);
+				} catch (Exception e) {
+					BambusClient.LOGGER.warn("Screenshot {} nicht lesbar: {}", p.getFileName(), e.toString());
+					return;
+				}
+				minecraft.execute(() -> {   // Textur nur im Spiel-Thread anlegen
+					if (nummer != ladeNummer || platz >= geladen.size()) {
+						img.close();   // inzwischen weitergeblättert oder geschlossen
+						return;
+					}
+					Identifier id = Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "screenshot/" + platz);
+					int b = img.getWidth(), h = img.getHeight();
+					minecraft.getTextureManager().register(id, new DynamicTexture(() -> "bambus screenshot", img));
+					geladen.set(platz, new Bild(p, id, b, h));
+				});
+			});
 		}
 	}
 
@@ -108,7 +131,7 @@ public class ScreenshotScreen extends Screen {
 			knopf(g, mx, my, "ZURÜCK", width / 2 + 51, height - 26, 85, 3);
 			return;
 		}
-		if (geladen.isEmpty()) {
+		if (dateien.isEmpty()) {
 			Neon.text(g, font, "Noch keine Screenshots. Drücke im Spiel F2.", width / 2 - 90, height / 2, 0.75f, Farben.GRAU, false);
 		}
 		int spalten = 3, abst = 10;
@@ -122,6 +145,12 @@ public class ScreenshotScreen extends Screen {
 		for (int i = 0; i < geladen.size(); i++) {
 			Bild b = geladen.get(i);
 			int x = x0 + (i % spalten) * (tb + abst), y = 46 + (i / spalten) * (th + abst);
+			if (b == null) {   // wird noch geladen
+				g.fill(x, y, x + tb, y + th, 0xFF0B1322);
+				g.renderOutline(x, y, tb, th, Farben.LINIE);
+				Neon.text(g, font, "lädt …", x + tb / 2 - 14, y + th / 2 - 3, 0.75f, Farben.GRAU, false);
+				continue;
+			}
 			g.blit(RenderPipelines.GUI_TEXTURED, b.id(), x, y, 0f, 0f, tb, th, b.b(), b.h(), b.b(), b.h());
 			boolean hover = Neon.ueber(mx, my, x, y, tb, th);
 			if (hover) {

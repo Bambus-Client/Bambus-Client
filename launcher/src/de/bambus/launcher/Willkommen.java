@@ -119,7 +119,18 @@ final class Willkommen extends JDialog {
 		nameFeld.addActionListener(e -> weiter());
 		p.add(nameFeld);
 
-		new Timer(33, e -> p.repaint()).start();   // Hintergrund und Übergänge animieren
+		animation = new Timer(33, e -> p.repaint());   // Hintergrund und Übergänge animieren
+		animation.start();
+	}
+
+	/** Läuft, solange das Fenster offen ist – beim Schließen anhalten, sonst bleibt das Fenster im Speicher. */
+	private Timer animation;
+
+	@Override
+	public void dispose() {
+		if (animation != null) animation.stop();
+		if (suchVerzoegerung != null) suchVerzoegerung.stop();
+		super.dispose();
 	}
 
 	private java.awt.Point maus = new java.awt.Point(-1, -1);

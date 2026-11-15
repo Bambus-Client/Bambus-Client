@@ -164,66 +164,123 @@ final class ClientEinstellungen {
 
 	private final Path datei;
 	private Map<String, Object> daten = new LinkedHashMap<>();
+	/** Änderungszeit der Datei beim letzten Lesen oder Schreiben – ändert sie sich, hat die Mod gespeichert. */
+	private long bekannteAenderung = Long.MIN_VALUE;
+	private long letztePruefung;
 
 	ClientEinstellungen(Path spielOrdner) {
 		this.datei = spielOrdner.resolve("config").resolve("bambus.json");
 		laden();
 	}
 
-	void laden() {
-		daten = new LinkedHashMap<>();
-		try {
-			if (Files.isRegularFile(datei)) {
-				Map<String, Object> m = Json.objekt(Json.parse(
-						new String(Files.readAllBytes(datei), StandardCharsets.UTF_8)));
+	/**
+	 * Liest bambus.json neu. Die Mod schreibt dieselbe Datei, während das Spiel läuft – darum wird vor jeder
+	 * Änderung frisch gelesen (siehe {@link #frisch}). Ist die Datei gerade unlesbar, bleibt der bisherige
+	 * Stand im Speicher; es wird nie ein leerer Stand gespeichert, der alles überschreibt.
+	 */
+	synchronized void laden() {
+		if (!Files.isRegularFile(datei)) {
+			bekannteAenderung = aenderungszeit();
+			return;
+		}
+		for (int versuch = 0; versuch < 4; versuch++) {
+			try {
+				long zeit = aenderungszeit();
+				Map<String, Object> m = Json.objekt(Json.parse(new String(Files.readAllBytes(datei), StandardCharsets.UTF_8)));
 				if (m != null) {
 					daten = m;
+					bekannteAenderung = zeit;
+					return;
 				}
+			} catch (Exception e) {
+				// vielleicht schreibt die Mod gerade – kurz warten und noch einmal
 			}
-		} catch (Exception e) {
-			daten = new LinkedHashMap<>();
+			try {
+				Thread.sleep(40);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+		}
+		System.err.println("[Bambus] bambus.json ist gerade nicht lesbar – der bisherige Stand bleibt erhalten.");
+	}
+
+	/** Neu lesen, wenn die Mod die Datei inzwischen geändert hat. sofort = false: höchstens zweimal pro Sekunde prüfen. */
+	private synchronized void frisch(boolean sofort) {
+		long jetzt = System.currentTimeMillis();
+		if (!sofort && jetzt - letztePruefung < 500) return;
+		letztePruefung = jetzt;
+		if (aenderungszeit() != bekannteAenderung) laden();
+	}
+
+	private long aenderungszeit() {
+		try {
+			return Files.getLastModifiedTime(datei).toMillis() * 31 + Files.size(datei);
+		} catch (IOException e) {
+			return -1;
 		}
 	}
 
-	void speichern() {
+	synchronized void speichern() {
 		try {
 			Files.createDirectories(datei.getParent());
 			Path tmp = datei.resolveSibling("bambus.json.tmp");
 			Files.write(tmp, Json.write(daten).getBytes(StandardCharsets.UTF_8));
-			Files.move(tmp, datei, StandardCopyOption.REPLACE_EXISTING);
+			try {
+				Files.move(tmp, datei, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			} catch (IOException e) {
+				Files.move(tmp, datei, StandardCopyOption.REPLACE_EXISTING);
+			}
+			bekannteAenderung = aenderungszeit();
 		} catch (IOException e) {
 			System.err.println("[Bambus] Einstellungen nicht gespeichert: " + e);
 		}
 	}
 
+	/** Zahl erhöhen (oder mit negativem Wert verringern) – frisch gelesen, damit nichts von der Mod verloren geht. */
+	synchronized int addiere(String schluessel, int menge) {
+		frisch(true);
+		Object o = daten.get(schluessel);
+		int neu = (o instanceof Number ? ((Number) o).intValue() : 0) + menge;
+		daten.put(schluessel, neu);
+		speichern();
+		return neu;
+	}
+
 	// ------------------------------------------------------------ Schalter
 
 	boolean wert(String schluessel, boolean standard) {
+		frisch(false);
 		Object o = daten.get(schluessel);
 		return o instanceof Boolean ? (Boolean) o : standard;
 	}
 
-	void setze(String schluessel, boolean wert) {
+	synchronized void setze(String schluessel, boolean wert) {
+		frisch(true);
 		daten.put(schluessel, wert);
 		speichern();
 	}
 
 	String text(String schluessel, String standard) {
+		frisch(false);
 		Object o = daten.get(schluessel);
 		return o instanceof String ? (String) o : standard;
 	}
 
-	void setze(String schluessel, String wert) {
+	synchronized void setze(String schluessel, String wert) {
+		frisch(true);
 		daten.put(schluessel, wert);
 		speichern();
 	}
 
 	int zahl(String schluessel, int standard) {
+		frisch(false);
 		Object o = daten.get(schluessel);
 		return o instanceof Number ? ((Number) o).intValue() : standard;
 	}
 
-	void setze(String schluessel, int wert) {
+	synchronized void setze(String schluessel, int wert) {
+		frisch(true);
 		daten.put(schluessel, wert);
 		speichern();
 	}
@@ -234,6 +291,7 @@ final class ClientEinstellungen {
 
 	/** Favoriten als „Name|Adresse“. Die Mod trägt sie beim Start in die Mehrspieler-Liste ein. */
 	java.util.List<String> serverFavoriten() {
+		frisch(false);
 		java.util.List<Object> l = Json.liste(daten.get("serverFavoriten"));
 		java.util.List<String> aus = new java.util.ArrayList<>();
 		if (l == null) {
@@ -246,18 +304,21 @@ final class ClientEinstellungen {
 
 	/** Mit ★ markierte Server (Adressen, klein geschrieben) – dieselbe Liste wie im Spiel. */
 	java.util.List<String> serverSterne() {
+		frisch(false);
 		java.util.List<Object> l = Json.liste(daten.get("serverSterne"));
 		java.util.List<String> aus = new java.util.ArrayList<>();
 		if (l != null) for (Object o : l) if (o instanceof String) aus.add((String) o);
 		return aus;
 	}
 
-	void setzeServerSterne(java.util.List<String> liste) {
+	synchronized void setzeServerSterne(java.util.List<String> liste) {
+		frisch(true);
 		daten.put("serverSterne", new java.util.ArrayList<Object>(liste));
 		speichern();
 	}
 
-	void setzeServerFavoriten(java.util.List<String> liste) {
+	synchronized void setzeServerFavoriten(java.util.List<String> liste) {
+		frisch(true);
 		daten.put("serverFavoriten", new java.util.ArrayList<Object>(liste));
 		speichern();
 	}
@@ -265,6 +326,7 @@ final class ClientEinstellungen {
 	// -------------------------------------------------------------- Module
 
 	private Map<String, Object> modul(String id) {
+		frisch(false);
 		Map<String, Object> module = Json.objekt(daten.get("module"));
 		if (module == null) {
 			module = new LinkedHashMap<>();
@@ -293,7 +355,8 @@ final class ClientEinstellungen {
 		return true;
 	}
 
-	void setzeModul(String id, boolean an) {
+	synchronized void setzeModul(String id, boolean an) {
+		frisch(true);
 		modul(id).put("an", an);
 		speichern();
 	}
@@ -307,7 +370,8 @@ final class ClientEinstellungen {
 		return text("capeDesign", "bambus");
 	}
 
-	void setzeCape(String id) {
+	synchronized void setzeCape(String id) {
+		frisch(true);
 		daten.put("capeAn", true);
 		daten.put("capeDesign", id);
 		speichern();

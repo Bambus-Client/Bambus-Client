@@ -40,11 +40,14 @@ public final class Musik {
 	private static volatile boolean coverDa;
 	private static String letztesLied = "";
 
-	private static Process prozess;
-	private static Writer eingabe;
-	private static long letzterStart;
-	private static boolean nurSpotify;
-	private static String fehler = "";
+	// werden vom Lese-Thread und vom Spiel-Thread benutzt – darum volatile
+	private static volatile Process prozess;
+	private static volatile Writer eingabe;
+	private static volatile long letzterStart;
+	private static volatile boolean nurSpotify;
+	private static volatile String fehler = "";
+	/** Starts hintereinander ohne Antwort vom Skript – danach wird immer länger gewartet (15 s bis 5 min). */
+	private static volatile int fehlversuche;
 
 	public static boolean moeglich() {
 		return System.getProperty("bambus.musik.befehl") != null
@@ -104,16 +107,22 @@ public final class Musik {
 
 	/** Jeden Tick: Skript starten, solange es gebraucht wird – sonst beenden. */
 	public static void tick(boolean gebraucht) {
-		if (gebraucht && !laeuft() && moeglich() && System.currentTimeMillis() - letzterStart > 15_000) {
+		if (gebraucht && !laeuft() && moeglich() && System.currentTimeMillis() - letzterStart > wartezeit()) {
 			starte();
 		} else if (!gebraucht && laeuft() && System.currentTimeMillis() - letzterStart > 30_000) {
 			stoppe();   // Modul aus: nach einer Weile beenden (Musik-Tasten starten es bei Bedarf neu)
 		}
 	}
 
+	/** Wartezeit bis zum nächsten Startversuch: 15 s, nach Fehlschlägen 30 s, 1, 2, 4 und höchstens 5 Minuten. */
+	private static long wartezeit() {
+		return Math.min(300_000L, 15_000L << Math.min(fehlversuche, 5));
+	}
+
 	private static synchronized void starte() {
 		if (laeuft() || !moeglich()) return;
 		letzterStart = System.currentTimeMillis();
+		fehlversuche++;   // zählt zurück auf 0, sobald das Skript sich meldet
 		try {
 			List<String> befehl = new ArrayList<>();
 			String test = System.getProperty("bambus.musik.befehl");
@@ -187,7 +196,7 @@ public final class Musik {
 		laeuftEtwas = false;
 		try {
 			int code = p.waitFor();
-			if (code != 0 && fehler.isEmpty()) {
+			if (code != 0 && fehler.isEmpty() && p == prozess) {   // absichtlich beendet (stoppe) ist kein Fehler
 				fehler = letzteMeldung.isEmpty() ? "Musik-Skript beendet (Code " + code + ")" : letzteMeldung;
 			}
 			BambusClient.LOGGER.info("[Musik] Skript beendet mit Code {}{}", code, fehler.isEmpty() ? "" : " – " + fehler);
@@ -197,6 +206,7 @@ public final class Musik {
 	}
 
 	private static void verarbeite(JsonObject o) {
+		fehlversuche = 0;   // das Skript läuft und antwortet
 		if (o.has("bereit")) {
 			fehler = "";
 			BambusClient.LOGGER.info("[Musik] Windows-Medienwiedergabe verbunden");
