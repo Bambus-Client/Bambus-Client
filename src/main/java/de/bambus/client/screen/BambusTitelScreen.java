@@ -14,7 +14,6 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public class BambusTitelScreen extends Screen {
 	/** Wenn true, ersetzt der Client den normalen Titelbildschirm in dieser Sitzung nicht mehr. */
 	public static boolean vanillaGewuenscht = false;
 
-	private record Knopf(String text, String unter, int akzent, ItemStack symbol, Runnable aktion) {}
+	private record Knopf(String text, String unter, int akzent, net.minecraft.world.item.Item symbol, Runnable aktion) {}
 
 	private record Segment(float x, float y, float tempo, float groesse, int farbe) {}
 
@@ -55,19 +54,19 @@ public class BambusTitelScreen extends Screen {
 	protected void init() {
 		knoepfe.clear();
 		// die zwei großen Karten
-		knoepfe.add(new Knopf("EINZELSPIELER", "Deine Welten", Farben.NEON, new ItemStack(Items.GRASS_BLOCK),
+		knoepfe.add(new Knopf("EINZELSPIELER", "Deine Welten", Farben.NEON, Items.GRASS_BLOCK,
 				() -> minecraft.setScreen(new SelectWorldScreen(this))));
-		knoepfe.add(new Knopf("MEHRSPIELER", "Server & LAN", Farben.NEON_CYAN, new ItemStack(Items.DIAMOND_SWORD),
+		knoepfe.add(new Knopf("MEHRSPIELER", "Server & LAN", Farben.NEON_CYAN, Items.DIAMOND_SWORD,
 				() -> minecraft.setScreen(new JoinMultiplayerScreen(this))));
 		// kleinere Knöpfe darunter
-		knoepfe.add(new Knopf("BAMBUS-MENÜ", "Module · Texturen", Farben.NEON_PINK, new ItemStack(Items.BAMBOO),
+		knoepfe.add(new Knopf("BAMBUS-MENÜ", "Module · Texturen", Farben.NEON_PINK, Items.BAMBOO,
 				() -> minecraft.setScreen(new BambusMenuScreen(this))));
 		if (FabricLoader.getInstance().isModLoaded("modmenu")) {
-			knoepfe.add(new Knopf("MODS", "Alle Mods", 0xFFFFC846, new ItemStack(Items.BOOK), this::oeffneModMenu));
+			knoepfe.add(new Knopf("MODS", "Alle Mods", 0xFFFFC846, Items.BOOK, this::oeffneModMenu));
 		}
-		knoepfe.add(new Knopf("OPTIONEN", "Grafik · Ton", 0xFFB0C4DE, new ItemStack(Items.COMPARATOR),
+		knoepfe.add(new Knopf("OPTIONEN", "Grafik · Ton", 0xFFB0C4DE, Items.COMPARATOR,
 				() -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
-		knoepfe.add(new Knopf("BEENDEN", "Bis bald!", Farben.ROT, new ItemStack(Items.OAK_DOOR), () -> minecraft.stop()));
+		knoepfe.add(new Knopf("BEENDEN", "Bis bald!", Farben.ROT, Items.OAK_DOOR, () -> minecraft.stop()));
 	}
 
 	/** Öffnet die Mod-Liste von Mod Menu (über dessen öffentliche API, ohne feste Abhängigkeit). */
@@ -182,7 +181,7 @@ public class BambusTitelScreen extends Screen {
 		Neon.text(g, font, "BAMBUS", tx, ly + 1, gross, Farben.NEON, false);
 		int unterY = ly + 1 + (int) (gross * 9) + 2;
 		Neon.text(g, font, "C L I E N T", tx + 2, unterY, eng ? 0.85f : 1f, Farben.NEON_CYAN, false);
-		Neon.text(g, font, "v" + BambusClient.VERSION + "  ·  Minecraft 1.21.11", tx + 2, unterY + (eng ? 10 : 12), 0.6f, Farben.GRAU, false);
+		Neon.text(g, font, "v" + BambusClient.VERSION + "  ·  Minecraft " + BambusClient.MINECRAFT, tx + 2, unterY + (eng ? 10 : 12), 0.6f, Farben.GRAU, false);
 
 		// ---- zwei große Karten: Einzelspieler und Mehrspieler
 		int ky = ly + lh + (eng ? 10 : 18);
@@ -260,7 +259,7 @@ public class BambusTitelScreen extends Screen {
 		g.pose().pushMatrix();
 		g.pose().translate(ix, iy);
 		g.pose().scale(s, s);
-		g.renderItem(k.symbol(), 0, 0);
+		de.bambus.client.Kompat.item(g, k.symbol(), 0, 0);
 		g.pose().popMatrix();
 
 		int textX = ix + is + 10;
@@ -290,7 +289,7 @@ public class BambusTitelScreen extends Screen {
 		}
 		g.fill(x, y + h - 2, x + b, y + h, Farben.alpha(k.akzent(), (int) (al * (0.45f + 0.55f * hv))));
 		int iy = y + (h - 16) / 2 - 1;
-		g.renderItem(k.symbol(), x + 4, iy);
+		de.bambus.client.Kompat.item(g, k.symbol(), x + 4, iy);
 		float ts = font.width(k.text()) > b - 26 ? 0.6f : 0.75f;
 		Neon.text(g, font, k.text(), x + 23, y + (h - (int) (8 * ts)) / 2 - 1, ts, Farben.alpha(hover ? Farben.WEISS : k.akzent(), al), false);
 		flaechen.add(new int[]{x, y0, b, h, i});
@@ -300,7 +299,7 @@ public class BambusTitelScreen extends Screen {
 	private void profil(GuiGraphics g, int x, int y, int b, int h) {
 		g.fill(x, y, x + b, y + h, 0xC0080D16);
 		Neon.ecken(g, x - 2, y - 2, b + 4, h + 4, 6, Farben.alpha(de.bambus.client.Blaetter.rangFarbe(), 200));
-		g.renderItem(new ItemStack(Items.PLAYER_HEAD), x + 6, y + (h - 16) / 2);
+		de.bambus.client.Kompat.item(g, Items.PLAYER_HEAD, x + 6, y + (h - 16) / 2);
 		String name = minecraft.getUser() == null ? "Spieler" : minecraft.getUser().getName();
 		boolean dev = de.bambus.client.Blaetter.istEntwickler();
 		Neon.text(g, font, font.plainSubstrByWidth(name, (int) ((b - 34) / 0.85f)), x + 27, y + 7, 0.85f, Farben.WEISS, false);
@@ -321,7 +320,7 @@ public class BambusTitelScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			for (int[] f : flaechen) {
 				if (Neon.ueber(e.x(), e.y(), f[0], f[1], f[2], f[3])) {
 					minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));

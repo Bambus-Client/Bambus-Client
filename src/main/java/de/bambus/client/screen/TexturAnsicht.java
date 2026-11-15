@@ -6,7 +6,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
@@ -38,8 +37,6 @@ public final class TexturAnsicht {
 	private static final Identifier KUERBIS = Identifier.withDefaultNamespace("textures/misc/pumpkinblur.png");
 	private static final Identifier WASSER = Identifier.withDefaultNamespace("textures/misc/underwater.png");
 
-	private static final ItemStack SCHILD = new ItemStack(Items.SHIELD);
-	private static final ItemStack SCHWERT = new ItemStack(Items.DIAMOND_SWORD);
 
 	private static Lage lage = Lage.FEUER;
 
@@ -110,20 +107,20 @@ public final class TexturAnsicht {
 		float schildY = y + h * 0.42f - schild[1] * h * 0.5f + wippen;
 		// Side Shield: von vorne gesehen wird der gedrehte Schild schmal (Breite ~ cos(Drehung))
 		float schmal = (float) Math.max(0.15, Math.cos(Math.toRadians(Texturen.schildDrehung())));
-		item(g, SCHILD, schildX, schildY, s * 2.1f * schmal, s * 2.1f);   // das Schild-Modell füllt sein Feld nicht ganz aus
+		item(g, Items.SHIELD, schildX, schildY, s * 2.1f * schmal, s * 2.1f);   // das Schild-Modell füllt sein Feld nicht ganz aus
 
 		float f = Texturen.schwertGroesse();
 		float ss = s * 1.5f * f;
 		// Griff unten rechts bleibt an der Hand – kleiner wird das Schwert zur Spitze hin
 		float griffX = x + b * 0.6f, griffY = y + h + 4 + (1f - f) * h * 0.12f + wippen;
-		item(g, SCHWERT, griffX, griffY - 16 * ss, ss, ss);
+		item(g, Items.DIAMOND_SWORD, griffX, griffY - 16 * ss, ss, ss);
 	}
 
-	private static void item(GuiGraphics g, ItemStack stack, float x, float y, float breite, float hoehe) {
+	private static void item(GuiGraphics g, net.minecraft.world.item.Item item, float x, float y, float breite, float hoehe) {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(breite, hoehe);
-		g.renderItem(stack, 0, 0);
+		de.bambus.client.Kompat.item(g, item, 0, 0);
 		g.pose().popMatrix();
 	}
 

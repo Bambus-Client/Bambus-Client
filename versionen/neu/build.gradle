@@ -1,0 +1,117 @@
+// Baut die Bambus-Mod für die neuen Minecraft-Versionen ab 26.1 – aus demselben Quellcode wie 1.21.11.
+//   ./gradlew build -Pmc=26.3        (Java 25 nötig)
+// Ergebnis: build/<mc>/libs/bambus-client-<version>+<mc>.jar
+//
+// Umbenennungen erledigen die Regeln in umbau/<version>.regeln. Wo das nicht reicht, liegt eine angepasste
+// Datei unter src/<version>/java (gilt ab dieser Version) – sie ersetzt die gleichnamige aus src/main/java.
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+/** Minecraft-Version → Fabric API zum Bauen und erlaubte Minecraft-Versionen. */
+def ziele = [
+		'26.1': [api: '0.145.1+26.1', minecraft: '>=26.1 <26.2'],
+		'26.2': [api: '0.161.0+26.2', minecraft: '>=26.2 <26.3'],
+		'26.3': [api: '0.166.2+26.3', minecraft: '>=26.3 <26.4'],
+]
+/** Versionen wie 26.1 und 26.1.2 vergleichen (negativ = a älter). */
+def vergleiche = { String a, String b ->
+	def x = a.tokenize('.')*.toInteger(), y = b.tokenize('.')*.toInteger()
+	for (int i = 0; i < Math.max(x.size(), y.size()); i++) {
+		int u = i < x.size() ? x[i] : 0, v = i < y.size() ? y[i] : 0
+		if (u != v) return u <=> v
+	}
+	return 0
+}
+def mc = (findProperty('mc') ?: '26.3').toString()
+def ziel = ziele[mc]
+if (ziel == null) throw new GradleException("Unbekannte Minecraft-Version $mc – möglich: ${ziele.keySet()}")
+
+def wurzel = file('../..')
+def wurzelEigenschaften = new Properties()
+file("$wurzel/gradle.properties").withInputStream { wurzelEigenschaften.load(it) }
+
+version = "${wurzelEigenschaften.getProperty('mod_version')}+$mc"
+group = wurzelEigenschaften.getProperty('maven_group')
+base { archivesName = 'bambus-client' }
+layout.buildDirectory = file("build/$mc")
+
+// Umbau: Der gemeinsame Quellcode wird mit den Regeln aus umbau/<version>.regeln an die neue
+// Minecraft-Version angepasst (Umbenennungen). Die Regeln gelten aufsteigend: 26.3 nutzt die von 26.1, 26.2 und 26.3.
+def umbauOrdner = layout.buildDirectory.dir('umbau')
+def regelDateien = fileTree('umbau') { include '*.regeln' }.files
+		.findAll { vergleiche(it.name - '.regeln', mc) <= 0 }
+		.sort { a, b -> vergleiche(a.name - '.regeln', b.name - '.regeln') }
+def umbau = tasks.register('umbau', Sync) {
+	from("$wurzel/src/main/java")
+	from("$wurzel/gemeinsam/src")
+	into umbauOrdner
+	inputs.files regelDateien
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	def regeln = []
+	regelDateien.each { f ->
+		f.eachLine('UTF-8') { zeile ->
+			if (zeile.trim().isEmpty() || zeile.trim().startsWith('#')) return
+			def teile = zeile.split(/\s+=>\s*/, 2)
+			if (teile.length == 2) regeln << [java.util.regex.Pattern.compile(teile[0].trim()), teile[1].trim() == '∅' ? '' : teile[1].trim()]
+		}
+	}
+	filter { String z ->
+		regeln.each { r -> z = r[0].matcher(z).replaceAll(r[1]) }
+		return z
+	}
+	filteringCharset = 'UTF-8'
+}
+
+// Quellordner nach Vorrang: angepasste Dateien (src/<version>/java gilt ab dieser Version, die neueste
+// passende zuerst; src/26 = alle 26er), danach der umgebaute gemeinsame Code
+def anpassungsVersionen = (file('src').listFiles() ?: []).findAll { it.isDirectory() && it.name ==~ /\d+(\.\d+)*/ }
+		.findAll { vergleiche(it.name, mc) <= 0 }
+		.sort { a, b -> vergleiche(b.name, a.name) }
+def anpassungen = anpassungsVersionen.collect { new File(it, 'java') }.findAll { it.isDirectory() }
+def ordner = anpassungen + [umbauOrdner.get().asFile]
+def ersetzt = { File datei ->
+	def eigener = ordner.find { datei.toPath().startsWith(it.toPath()) }
+	if (eigener == null) return false
+	def rel = eigener.toPath().relativize(datei.toPath()).toString()
+	return ordner.takeWhile { it != eigener }.any { new File(it, rel).isFile() }
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = anpassungen
+			srcDir(umbau)
+			exclude { it.file.isFile() && ersetzt(it.file) }
+		}
+		resources {
+			srcDirs = anpassungsVersionen.collect { new File(it, 'resources') }.findAll { it.isDirectory() } + [file("$wurzel/src/main/resources")]
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:$mc"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${ziel.api}"
+}
+
+processResources {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE   // angepasste Dateien zuerst
+	def werte = [version: project.version, minecraft: ziel.minecraft, java: '25']
+	inputs.properties werte
+	filesMatching('fabric.mod.json') {
+		expand werte
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+	it.options.compilerArgs += ['-Xmaxerrs', '2000']
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}

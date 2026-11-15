@@ -1,0 +1,13 @@
+# Umbau für Minecraft 26.3 (zusätzlich zu 26.1 und 26.2).
+
+# ---- OptionsScreen braucht wieder nur Bildschirm und Optionen
+OptionsScreen\(this, minecraft\.options, minecraft\.level != null\) => OptionsScreen(this, minecraft.options)
+
+# ---- Tastenart heißt KEYBOARD
+InputConstants\.Type\.KEYSYM => InputConstants.Type.KEYBOARD
+
+# ---- Ordner öffnen
+Util\.getPlatform\(\)\.openPath\( => com.mojang.blaze3d.Blaze3D.openPath(
+
+# ---- PoseStack dreht direkt um eine Achse
+\.mulPose\(Axis\.(\w+)\.rotationDegrees\(([^()]*)\)\) => .rotateDegrees(Axis.$1, $2)

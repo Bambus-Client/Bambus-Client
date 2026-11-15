@@ -1,4 +1,6 @@
 ## Neu in Version 3.4.0
+- Bambus Client jetzt auch für Minecraft 26.1 (mit 26.1.1 und 26.1.2), 26.2 und 26.3 – Module, HUD, Menüs, Kosmetik und Funktionen wie in 1.21.11. Der Launcher spielt automatisch die passende Mod ein
+- Launcher: Neues Fenster zum Anlegen eines Profils – Name und Minecraft-Version auf Karten mit Datum, Zwischenversionen als Knöpfe und dem Hinweis, ob der Bambus Client darauf läuft
 - Musik-Modul: Wörter-Ort wählbar – Seiten, Links, Rechts, Oben, Unten (die Bildmitte bleibt frei fürs PvP) oder Überall frei in der Welt
 - Musik-Modul: Schriftart wählbar – getrennt für die Insel und die 3D-Wörter: Minecraft, Poppins, Montserrat oder Pixel (freie Schriften unter der SIL Open Font License)
 - Musik-Modul (Spotify): Insel oben in der Mitte mit Cover, Songtext im Karaoke-Stil, Equalizer und Fortschritt; die gesungenen Wörter erscheinen groß in 3D in der Welt. Liest die Windows-Medienwiedergabe (Spotify, Browser) – ohne Anmeldung und ohne Premium; Songtexte von LRCLIB. Tasten für Pause, Weiter und Zurück frei belegbar
@@ -27,7 +29,7 @@
 - Jede Version bekommt einen eigenen Spielordner mit eigenen Mods und eigenen Welten – eine neuere Version baut dadurch keine alten Welten um
 - Mod-Suche bei Modrinth und CurseForge zeigt nur Mods, die zur Version des geöffneten Profils passen
 - Fabric wird zur gewählten Version passend eingerichtet (neuester stabiler Loader)
-- Der Bambus Client selbst läuft weiterhin auf 1.21.11; Profile mit anderer Version starten Minecraft mit Fabric und den gewählten Mods
+- Profile mit einer Version ohne Bambus-Mod starten Minecraft mit Fabric und den gewählten Mods
 
 ## Version 3.3
 - Quests und Blätter: Punkte sammeln durch tägliches Einloggen, Tages-Quests, Erfolge und Spielzeit – und damit im Shop Kosmetik freischalten. Kostet nie Geld.

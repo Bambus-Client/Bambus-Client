@@ -530,6 +530,18 @@ final class Sprache {
 		teil(" · Build ", " · Build "); teil("Update ", "Update "); teil(" (Build ", " (build ");
 		teil("Das Update konnte nicht geladen werden:", "The update could not be downloaded:"); teil("GitHub antwortet gerade nicht (", "GitHub isn't responding right now (");
 
+		// ---------------------------------------------------------------- Versions-Wahl
+		g("NAME & VERSION", "NAME & VERSION"); g("VERSION WÄHLEN", "CHOOSE VERSION"); g("NAME DES PROFILS", "PROFILE NAME");
+		g("MINECRAFT-VERSION", "MINECRAFT VERSION"); g("ERSTELLEN", "CREATE"); g("ÜBERNEHMEN", "APPLY"); g("NEUESTE", "NEWEST");
+		g("✓ BAMBUS CLIENT", "✓ BAMBUS CLIENT"); g("NUR FABRIC", "FABRIC ONLY"); g("Bewährt & stabil", "Proven & stable"); g("Alle neuen Features", "All the new features");
+		g("Jede Version hat eigene Mods und eigene Welten – alte Welten bleiben sicher.", "Every version has its own mods and worlds – old worlds stay safe.");
+		g("Dez. 2025", "Dec 2025"); g("März 2026", "Mar 2026"); g("Apr. 2026", "Apr 2026"); g("Juni 2026", "Jun 2026"); g("Sep. 2026", "Sep 2026");
+		teil(" mit Bambus Client, Fabric und deinen Mods.", " with Bambus Client, Fabric and your mods.");
+		teil(" mit Fabric und deinen Mods – ohne Bambus Client.", " with Fabric and your mods – without Bambus Client.");
+		teil("Den Bambus Client gibt es für Minecraft ", "Bambus Client isn't available for Minecraft ");
+		teil(" noch nicht. Dieses Profil startet mit Fabric und deinen Mods.", " yet. This profile starts with Fabric and your mods.");
+		teil("Die Bambus-Mod für Minecraft ", "The Bambus mod for Minecraft "); teil(" fehlt im Launcher.", " is missing from the launcher.");
+
 		// ---------------------------------------------------------------- Microsoft
 		g("MICROSOFT-KONTO", "MICROSOFT ACCOUNT"); g("MIT MICROSOFT ANMELDEN", "SIGN IN WITH MICROSOFT"); g("SEITE ÖFFNEN", "OPEN PAGE");
 		g("CODE KOPIEREN", "COPY CODE"); g("ABMELDEN", "SIGN OUT"); g("SPEICHERN", "SAVE"); g("Abgemeldet.", "Signed out.");

@@ -1,0 +1,16 @@
+# Umbau für Minecraft 26.2 (zusätzlich zu 26.1, gilt auch für spätere Versionen).
+
+# ---- Bildschirme gehören jetzt zur Gui: mc.setScreen(…) → mc.gui.setScreen(…), mc.screen → mc.gui.screen()
+(?:(?<=this\.)|(?<![\w.]))(mc|minecraft|client|Minecraft\.getInstance\(\))\.setScreen\( => $1.gui.setScreen(
+(?:(?<=this\.)|(?<![\w.]))(mc|minecraft|client|Minecraft\.getInstance\(\))\.screen\b(?!\s*\() => $1.gui.screen()
+
+# ---- HUD ausgeblendet (F1)
+(?:(?<=this\.)|(?<![\w.]))(mc|minecraft|client)\.options\.hideGui\b => $1.gui.hud.isHidden()
+
+# ---- Kamera und Bild gehören zum GameRenderer
+\.gameRenderer\.getMainCamera\(\) => .gameRenderer.mainCamera()
+\bmc\.getMainRenderTarget\(\) => mc.gameRenderer.mainRenderTarget()
+\bmc\.levelRenderer\.allChanged\(\) => mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors())
+
+# ---- Ladebildschirm-Overlay gehört zur Gui
+(?:(?<=this\.)|(?<![\w.]))(mc|minecraft|client)\.getOverlay\(\) => $1.gui.overlay()

@@ -343,7 +343,7 @@ public class GarderobeScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			for (int i = bereiche.size() - 1; i >= 0; i--) {
 				Bereich b = bereiche.get(i);
 				if (b.imRaster() && !imRaster(e.x(), e.y())) {

@@ -17,7 +17,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
@@ -287,7 +286,7 @@ public class HelferScreen extends Screen {
 			g.renderOutline(fx, fy, FELD - 1, FELD - 1, 0xFF2C3A4C);
 			Item ding = ding(e.rezept[i]);
 			if (ding != null) {
-				g.renderItem(new ItemStack(ding), fx, fy);
+				de.bambus.client.Kompat.item(g, ding, fx, fy);
 			}
 		}
 		int mitte = y + 3 * FELD / 2;
@@ -298,9 +297,7 @@ public class HelferScreen extends Screen {
 		g.renderOutline(ex, ey, FELD + 2, FELD + 2, Farben.NEON);
 		Item ergebnis = ding(e.ergebnis);
 		if (ergebnis != null) {
-			ItemStack stapel = new ItemStack(ergebnis, Math.max(1, Math.min(64, e.anzahl)));
-			g.renderItem(stapel, ex + 2, ey + 2);
-			g.renderItemDecorations(font, stapel, ex + 2, ey + 2);   // Anzahl unten rechts
+			de.bambus.client.Kompat.item(g, font, ergebnis, Math.max(1, Math.min(64, e.anzahl)), ex + 2, ey + 2);   // mit Anzahl
 		}
 	}
 
@@ -333,7 +330,7 @@ public class HelferScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			for (int i = bereiche.size() - 1; i >= 0; i--) {
 				Bereich b = bereiche.get(i);
 				if (Neon.ueber(e.x(), e.y(), b.x(), b.y(), b.b(), b.h())) {
