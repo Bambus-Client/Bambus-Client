@@ -523,7 +523,7 @@ public class BambusServerScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			// von hinten nach vorne: Stern und Pfeil liegen über der Karte
 			boolean inListe = e.y() >= ly && e.y() < ly + lh;
 			for (int i = bereiche.size() - 1; i >= 0; i--) {

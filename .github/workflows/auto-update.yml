@@ -27,12 +27,22 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          # 25 für die Mod ab Minecraft 26.1, 21 (zuletzt genannt = Standard) für 1.21.11 und den Launcher
+          java-version: |
+            25
+            21
 
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Bau-Nummer
         run: echo "BAMBUS_BUILD=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
+
+      - name: Bambus-Mod für Minecraft 26.x bauen
+        run: |
+          cd versionen/neu
+          for mc in 26.1 26.2 26.3; do
+            JAVA_HOME="$JAVA_HOME_25_X64" bash ./gradlew build -Pmc=$mc --no-daemon
+          done
 
       - name: Mod und Launcher bauen
         run: bash ./gradlew build --no-daemon

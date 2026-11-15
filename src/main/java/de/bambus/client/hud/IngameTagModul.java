@@ -16,7 +16,7 @@ public class IngameTagModul extends TextModul {
 
 	@Override
 	protected List<Zeile> zeilen(Minecraft mc, boolean editor) {
-		long zeit = mc.level != null ? mc.level.getDayTime() : 11 * 24000L + 6000;
+		long zeit = mc.level != null ? de.bambus.client.Kompat.tageszeit(mc.level) : 11 * 24000L + 6000;
 		String text = "Tag " + (zeit / 24000L + 1);
 		if (uhrzeit.an()) {
 			long t = (zeit + 6000) % 24000;   // Tick 0 = 6:00 Uhr

@@ -48,7 +48,7 @@ public final class Kampf {
 		}
 		long jetzt = System.currentTimeMillis();
 		if (le instanceof Player && BambusClient.config.freunde.stream().anyMatch(f -> f.equalsIgnoreCase(le.getName().getString()))) {
-			mc.player.displayClientMessage(net.minecraft.network.chat.Component.literal("§d♥ " + le.getName().getString() + " ist dein Freund"), true);
+			Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal("§d♥ " + le.getName().getString() + " ist dein Freund"), true);
 		}
 		reach = abstand(spieler.getEyePosition(), le.getBoundingBox());
 		combo = (le == ziel && jetzt - letzterTreffer < COMBO_ZEIT) ? combo + 1 : 1;

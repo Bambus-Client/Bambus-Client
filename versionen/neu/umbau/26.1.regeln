@@ -1,0 +1,44 @@
+# Umbau des gemeinsamen Quellcodes für Minecraft 26.1 (gilt auch für alle späteren Versionen).
+# Format: Java-Regex => Ersatz   (∅ = löschen). Wird zeilenweise angewendet.
+
+# ---- GUI-Zeichnen: GuiGraphics heißt GuiGraphicsExtractor, Methoden wurden umbenannt
+\bGuiGraphics\b => GuiGraphicsExtractor
+\.drawCenteredString\( => .centeredText(
+\.drawStringWithBackdrop\( => .textWithBackdrop(
+\.drawWordWrap\( => .textWithWordWrap(
+\.drawString\( => .text(
+\.hLine\( => .horizontalLine(
+\.vLine\( => .verticalLine(
+\.renderFakeItem\( => .fakeItem(
+\.renderItemDecorations\( => .itemDecorations(
+\.renderItem\( => .item(
+\.renderOutline\( => .outline(
+\.submitEntityRenderState\( => .entity(
+\.submitSkinRenderState\( => .skin(
+
+# ---- Bildschirme und Knöpfe zeichnen jetzt über „extract…“-Methoden
+void render\(GuiGraphicsExtractor => void extractRenderState(GuiGraphicsExtractor
+\bsuper\.render\( => super.extractRenderState(
+\bvoid renderBackground\( => void extractBackground(
+\bsuper\.renderBackground\( => super.extractBackground(
+\brenderBackground\(g, => extractBackground(g,
+\bvoid renderContents\( => void extractContents(
+\brenderBlurredBackground\( => extractBlurredBackground(
+\brenderMenuBackground\( => extractMenuBackground(
+\brenderTransparentBackground\( => extractTransparentBackground(
+\brenderPanorama\( => extractPanorama(
+\bw\.render\(g, mx, my, delta\) => w.extractRenderState(g, mx, my, delta)
+\bvanilla\.render\( => vanilla.extractRenderState(
+InventoryScreen\.renderEntityInInventoryFollowsMouse\( => InventoryScreen.extractEntityInInventoryFollowsMouse(
+
+# ---- Fabric API: neue Namen
+keybinding\.v1\.KeyBindingHelper => keymapping.v1.KeyMappingHelper
+KeyBindingHelper\.registerKeyBinding\( => KeyMappingHelper.registerKeyMapping(
+LivingEntityFeatureRendererRegistrationCallback => LivingEntityRenderLayerRegistrationCallback
+ScreenEvents\.afterRender\( => ScreenEvents.afterExtract(
+Screens\.getButtons\( => Screens.getWidgets(
+
+# ---- Minecraft: neue Namen
+\bmc\.resizeDisplay\(\) => mc.resizeGui()
+RenderTypes\.entityCutoutNoCull\( => RenderTypes.entityCutout(
+OptionsScreen\(this, minecraft\.options\) => OptionsScreen(this, minecraft.options, minecraft.level != null)

@@ -347,7 +347,7 @@ public class BambusMenuScreen extends Screen {
 		}
 
 		Neon.text(g, font, "[TAB] wechseln", x + 10, py + ph - 26, 0.6f, Farben.GRAU, false);
-		Neon.text(g, font, "v" + BambusClient.VERSION + " · 1.21.11", x + 10, py + ph - 16, 0.6f, 0xFF4A5A6E, false);
+		Neon.text(g, font, "v" + BambusClient.VERSION + " · " + BambusClient.MINECRAFT, x + 10, py + ph - 16, 0.6f, 0xFF4A5A6E, false);
 	}
 
 	/** Fuß rechts unter dem Inhalt: HUD BEARBEITEN und FERTIG. */
@@ -1092,8 +1092,8 @@ public class BambusMenuScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		boolean rechts = e.button() == 1;
-		if (e.button() == 0 || rechts) {
+		boolean rechts = e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT;
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT || rechts) {
 			// rückwärts, damit oben liegende Bereiche zuerst drankommen
 			for (int i = bereiche.size() - 1; i >= 0; i--) {
 				Bereich b = bereiche.get(i);

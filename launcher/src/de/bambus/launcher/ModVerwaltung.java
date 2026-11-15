@@ -89,7 +89,7 @@ final class ModVerwaltung {
 
 		/** Läuft der Bambus Client in diesem Profil mit? */
 		boolean mitBambus() {
-			return Installer.MC_VERSION.equals(version);
+			return Installer.bambusFuer(version);
 		}
 	}
 

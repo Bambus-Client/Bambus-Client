@@ -210,7 +210,7 @@ public class HudEditorScreen extends Screen {
 		if (super.mouseClicked(e, doppelt)) {
 			return true;
 		}
-		if (e.button() == 0 && aufLoeschen(markiert, e.x(), e.y())) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && aufLoeschen(markiert, e.x(), e.y())) {
 			ausblenden(markiert);
 			return true;
 		}
@@ -218,7 +218,7 @@ public class HudEditorScreen extends Screen {
 		if (m == null) {
 			return false;
 		}
-		if (e.button() == 1) {            // Rechtsklick: Größe zurück auf 100 %
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT) {            // Rechtsklick: Größe zurück auf 100 %
 			m.pos().groesse = 1f;
 			zeigeGroesse(m);
 			BambusClient.config.speichern();

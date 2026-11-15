@@ -44,7 +44,7 @@ import net.minecraft.resources.Identifier;
 import java.util.List;
 
 /**
- * Bambus Client – ein leichter PvP-/HUD-Client für Minecraft 1.21.11 (Fabric).
+ * Bambus Client – ein leichter PvP-/HUD-Client für Minecraft 1.21.11 und 26.x (Fabric).
  *
  * Tasten (änderbar unter Optionen → Steuerung):
  *  Rechts-Shift  Auswahl: Garderobe oder Mod-Menü
@@ -56,7 +56,9 @@ public class BambusClient implements ClientModInitializer {
 
 	public static final String MOD_ID = "bambus";
 	public static final String VERSION = "3.4.0";
-	private static final String FENSTERTITEL = "Bambus Client " + VERSION + " – Minecraft 1.21.11";
+	/** Minecraft-Version, auf der gerade gespielt wird (z. B. 1.21.11 oder 26.3). */
+	public static final String MINECRAFT = net.minecraft.SharedConstants.getCurrentVersion().name();
+	private static final String FENSTERTITEL = "Bambus Client " + VERSION + " – Minecraft " + MINECRAFT;
 
 	public static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("Bambus");
 
@@ -254,8 +256,8 @@ public class BambusClient implements ClientModInitializer {
 			Blaetter.tick(mc);   // Spielzeit, Blätter und die Herausforderungen des Tages
 		}
 
-		// Eigenes Bambus-Hauptmenü statt des Minecraft-Titelbildschirms
-		if (mc.screen instanceof TitleScreen && config.bambusHauptmenue && !BambusTitelScreen.vanillaGewuenscht) {
+		// Eigenes Bambus-Hauptmenü statt des Minecraft-Titelbildschirms – erst wenn fertig geladen ist
+		if (mc.screen instanceof TitleScreen && mc.getOverlay() == null && config.bambusHauptmenue && !BambusTitelScreen.vanillaGewuenscht) {
 			mc.setScreen(new BambusTitelScreen());
 		}
 
@@ -285,7 +287,7 @@ public class BambusClient implements ClientModInitializer {
 			config.speichern();
 			Hinweise.zeige("hud", "Bambus-HUD", config.hudAn ? "eingeschaltet" : "ausgeschaltet", Farben.NEON);
 			if (mc.player != null) {
-				mc.player.displayClientMessage(
+				Kompat.meldung(mc.player,
 						Component.literal("§aBambus-HUD: " + (config.hudAn ? "an" : "aus")), true);
 			}
 		}
@@ -317,7 +319,7 @@ public class BambusClient implements ClientModInitializer {
 		Hinweise.tick(mc);
 		if (screenshotIn > 0 && --screenshotIn == 0 && mc.player != null) {
 			net.minecraft.client.Screenshot.grab(mc.gameDirectory, mc.getMainRenderTarget(), nachricht -> {
-				mc.player.displayClientMessage(nachricht, false);
+				Kompat.meldung(mc.player, nachricht, false);
 				Hinweise.zeige("kamera", "Screenshot gespeichert", "Kill-Screenshot im Ordner screenshots", Farben.NEON_CYAN);
 			});
 		}

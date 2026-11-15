@@ -37,6 +37,26 @@ final class Installer {
 	static final String PROFIL_NAME = "Bambus Client";
 	static final String MOD_DATEI = "bambus-client.jar";
 
+	/**
+	 * Hauptversion, für die eine Bambus-Mod gebaut wird: Zwischenversionen teilen sich eine
+	 * (26.1, 26.1.1 und 26.1.2 → 26.1). Ältere Versionen wie 1.21.11 bleiben, wie sie sind.
+	 */
+	static String modLinie(String v) {
+		String[] t = v.split("\\.");
+		boolean neu = t.length >= 2 && t[0].matches("\\d+") && Integer.parseInt(t[0]) >= 26;
+		return neu ? t[0] + "." + t[1] : v;
+	}
+
+	/** Bambus-Mod für andere Versionen im Launcher: /mods/bambus-client-<Hauptversion>.jar */
+	static String modResource(String v) {
+		return "/mods/bambus-client-" + modLinie(v) + ".jar";
+	}
+
+	/** Läuft der Bambus Client auf dieser Minecraft-Version? */
+	static boolean bambusFuer(String v) {
+		return MC_VERSION.equals(v) || (kenntVersion(v) && Installer.class.getResource(modResource(v)) != null);
+	}
+
 	/** Gibt es diese Minecraft-Version im Launcher? */
 	static boolean kenntVersion(String v) {
 		for (String k : VERSIONEN) if (k.equals(v)) return true;
@@ -88,7 +108,7 @@ final class Installer {
 
 	/** Läuft die Bambus-Mod auf der gewählten Version? */
 	boolean bambusPasst() {
-		return MC_VERSION.equals(version);
+		return bambusFuer(version);
 	}
 
 	String versionId() {
@@ -96,11 +116,11 @@ final class Installer {
 	}
 
 	String profilId() {
-		return bambusPasst() ? PROFIL_ID : PROFIL_ID + "-" + version;
+		return MC_VERSION.equals(version) ? PROFIL_ID : PROFIL_ID + "-" + version;
 	}
 
 	String profilName() {
-		return bambusPasst() ? PROFIL_NAME : PROFIL_NAME + " " + version;
+		return MC_VERSION.equals(version) ? PROFIL_NAME : PROFIL_NAME + " " + version;
 	}
 
 	/**
@@ -229,8 +249,8 @@ final class Installer {
 			bambusMod(modVomNutzer);
 		} else {
 			f.melde("Minecraft " + version + " ohne Bambus-Mod …", 75);
-			letzteHinweise.add("Den Bambus Client selbst gibt es nur für Minecraft " + MC_VERSION
-					+ ". Dieses Profil startet " + version + " mit Fabric und deinen Mods.");
+			letzteHinweise.add("Den Bambus Client gibt es für Minecraft " + version
+					+ " noch nicht. Dieses Profil startet mit Fabric und deinen Mods.");
 		}
 
 		f.melde("Profil „" + profilName() + "“ wird angelegt …", 90);
@@ -295,7 +315,12 @@ final class Installer {
 	void bambusMod(Path vomNutzer) throws IOException {
 		Path ziel = modsOrdner.resolve(MOD_DATEI);
 		Path tmp = modsOrdner.resolve(MOD_DATEI + ".download");
-		if (modEingebaut()) {   // beim Selbst-Update kommt die Mod mit dem neuen Launcher
+		if (!MC_VERSION.equals(version)) {   // neuere Minecraft-Versionen: eigene Mod aus dem Launcher
+			try (InputStream in = Installer.class.getResourceAsStream(modResource(version))) {
+				if (in == null) throw new IOException("Die Bambus-Mod für Minecraft " + version + " fehlt im Launcher.");
+				Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+			}
+		} else if (modEingebaut()) {   // beim Selbst-Update kommt die Mod mit dem neuen Launcher
 			try (InputStream in = Installer.class.getResourceAsStream("/" + MOD_DATEI)) {
 				Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
 			}

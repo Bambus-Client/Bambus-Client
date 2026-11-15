@@ -177,7 +177,7 @@ public class EinstellungsCodeScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
-		if (e.button() == 0) {
+		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			for (Bereich r : bereiche) {
 				if (Neon.ueber(e.x(), e.y(), r.x(), r.y(), r.b(), r.h())) {
 					minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
