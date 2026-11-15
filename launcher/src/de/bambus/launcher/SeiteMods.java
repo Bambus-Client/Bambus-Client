@@ -310,47 +310,9 @@ final class SeiteMods extends JPanel {
 		repaint();
 	}
 
-	/**
-	 * Fragt Name und Minecraft-Version ab. Gibt {name, version} zurück oder null bei Abbruch.
-	 */
+	/** Fragt Name und Minecraft-Version ab (eigenes Fenster mit Versions-Karten). {name, version} oder null. */
 	private String[] frageProfil(String titel, String vorschlagName, String vorschlagVersion) {
-		javax.swing.JTextField feld = new javax.swing.JTextField(vorschlagName, 18);
-		javax.swing.JComboBox<String> wahl = new javax.swing.JComboBox<>();
-		for (int i = Installer.VERSIONEN.length - 1; i >= 0; i--) {   // neueste oben
-			String v = Installer.VERSIONEN[i];
-			wahl.addItem(v + (Installer.MC_VERSION.equals(v) ? "   " + Sprache.t("(mit Bambus Client)") : ""));
-		}
-		for (int i = 0; i < wahl.getItemCount(); i++) {
-			if (wahl.getItemAt(i).startsWith(vorschlagVersion + " ") || wahl.getItemAt(i).equals(vorschlagVersion)) {
-				wahl.setSelectedIndex(i);
-			}
-		}
-		javax.swing.JPanel feldTeil = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 0, 4));
-		feldTeil.add(new javax.swing.JLabel(Sprache.t("Name des Profils:")));
-		feldTeil.add(feld);
-		feldTeil.add(new javax.swing.JLabel(" "));
-		feldTeil.add(new javax.swing.JLabel(Sprache.t("Minecraft-Version:")));
-		feldTeil.add(wahl);
-		javax.swing.JLabel hinweis = new javax.swing.JLabel();
-		feldTeil.add(hinweis);
-		Runnable zeigeHinweis = () -> hinweis.setText(gewaehlteVersion(wahl).equals(Installer.MC_VERSION) ? " "
-				: Sprache.t("Nur Minecraft + Fabric + deine Mods – ohne Bambus Client."));
-		wahl.addActionListener(e -> zeigeHinweis.run());
-		zeigeHinweis.run();
-		if (JOptionPane.showConfirmDialog(l, feldTeil, Sprache.t(titel),
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
-			return null;
-		}
-		String name = feld.getText() == null ? "" : feld.getText().trim();
-		if (name.isEmpty()) return null;
-		return new String[]{name, gewaehlteVersion(wahl)};
-	}
-
-	private static String gewaehlteVersion(javax.swing.JComboBox<String> wahl) {
-		Object o = wahl.getSelectedItem();
-		String t = o == null ? Installer.MC_VERSION : o.toString().trim();
-		int leer = t.indexOf(' ');
-		return leer > 0 ? t.substring(0, leer) : t;
+		return VersionsWahl.frageProfil(l, titel, vorschlagName, vorschlagVersion);
 	}
 
 	private String frageName(String titel, String vorschlag) {
@@ -383,24 +345,8 @@ final class SeiteMods extends JPanel {
 	/** Minecraft-Version eines bestehenden Profils ändern. */
 	private void profilVersion() {
 		ModVerwaltung.Profil p = offen();
-		javax.swing.JComboBox<String> wahl = new javax.swing.JComboBox<>();
-		for (int i = Installer.VERSIONEN.length - 1; i >= 0; i--) {
-			String v = Installer.VERSIONEN[i];
-			wahl.addItem(v + (Installer.MC_VERSION.equals(v) ? "   " + Sprache.t("(mit Bambus Client)") : ""));
-		}
-		for (int i = 0; i < wahl.getItemCount(); i++) {
-			if (wahl.getItemAt(i).startsWith(p.version)) wahl.setSelectedIndex(i);
-		}
-		javax.swing.JPanel teil = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 0, 4));
-		teil.add(new javax.swing.JLabel(Sprache.t("Welche Minecraft-Version soll dieses Profil spielen?")));
-		teil.add(wahl);
-		teil.add(new javax.swing.JLabel(" "));
-		teil.add(new javax.swing.JLabel(Sprache.t("Jede Version hat eigene Mods und eigene Welten.")));
-		if (JOptionPane.showConfirmDialog(l, teil, Sprache.t("Minecraft-Version"),
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
-			return;
-		}
-		String neu = gewaehlteVersion(wahl);
+		String neu = VersionsWahl.frageVersion(l, p.version);
+		if (neu == null) return;
 		if (neu.equals(p.version)) return;
 		mods.setzeVersion(p.id, neu);
 		suchStatus = "";
