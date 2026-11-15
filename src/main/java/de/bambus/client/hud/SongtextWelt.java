@@ -34,7 +34,23 @@ public final class SongtextWelt {
 	public static final String[] ORTE = {"Seiten", "Links", "Rechts", "Oben", "Unten", "Überall"};
 	public static final int SEITEN = 0, LINKS = 1, RECHTS = 2, OBEN = 3, UNTEN = 4, UEBERALL = 5;
 
-	private static final long AUFTAUCHEN = 160, STEHEN = 850, WEGFLIEGEN = 380;
+	/** Wie schnell die Wörter verschwinden (Einstellung „Wörter-Tempo“). */
+	public static final String[] TEMPO = {"Sehr schnell", "Schnell", "Normal", "Langsam", "Sehr langsam"};
+	/** Je Tempo: so lange steht ein Wort, so lange fliegt es auf dich zu (Millisekunden). */
+	private static final long[] STEHEN_MS = {300, 550, 850, 1500, 2500}, WEGFLIEGEN_MS = {220, 300, 380, 550, 750};
+	private static final long AUFTAUCHEN = 160;
+
+	private static int tempo() {
+		return Math.floorMod(de.bambus.client.BambusClient.config.musikWoerterTempo, TEMPO.length);
+	}
+
+	private static long stehen() {
+		return STEHEN_MS[tempo()];
+	}
+
+	private static long wegfliegen() {
+		return WEGFLIEGEN_MS[tempo()];
+	}
 	private static final int MAX = 14, VERSUCHE = 16;
 
 	/** ort = fester Weltpunkt; rand = in einem Randbereich (dann nicht riesig und nicht übers Fadenkreuz). */
@@ -98,7 +114,7 @@ public final class SongtextWelt {
 		}
 		Sicht sicht = Sicht.von(mc);
 		long jetzt = System.currentTimeMillis();
-		woerter.removeIf(w -> jetzt - w.geboren() > AUFTAUCHEN + STEHEN + WEGFLIEGEN);
+		woerter.removeIf(w -> jetzt - w.geboren() > AUFTAUCHEN + stehen() + wegfliegen());
 		neueWoerter(mc, sicht, Math.floorMod(bereich, ORTE.length));
 		if (woerter.isEmpty()) return;
 
@@ -118,8 +134,8 @@ public final class SongtextWelt {
 				float k = alter / (float) AUFTAUCHEN;
 				pop = (float) (1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2));
 				deckkraft = Math.min(1f, k * 2);
-			} else if (alter > AUFTAUCHEN + STEHEN) {   // auf die Kamera zufliegen und verblassen
-				float k = Math.min(1f, (alter - AUFTAUCHEN - STEHEN) / (float) WEGFLIEGEN);
+			} else if (alter > AUFTAUCHEN + stehen()) {   // auf die Kamera zufliegen und verblassen
+				float k = Math.min(1f, (alter - AUFTAUCHEN - stehen()) / (float) wegfliegen());
 				ort = ort.lerp(sicht.cam(), Math.min(0.85, k * k * 0.9));
 				deckkraft = 1 - k;
 			}
@@ -191,7 +207,7 @@ public final class SongtextWelt {
 
 		// dasselbe Wort direkt noch mal: auf derselben Seite gleich dahinter
 		if (letztes != null && letztes.roh().equalsIgnoreCase(sauber) && woerter.contains(letztes)
-				&& jetzt - letztes.geboren() < AUFTAUCHEN + STEHEN) {
+				&& jetzt - letztes.geboren() < AUFTAUCHEN + stehen()) {
 			Vec3 ort = dahinter(mc, sicht, letztes, c);
 			if (ort != null) {
 				merke(new Wort(c, sauber, ort, jetzt, letztes.neigung(), letztes.groesse(), letztes.rand()));
