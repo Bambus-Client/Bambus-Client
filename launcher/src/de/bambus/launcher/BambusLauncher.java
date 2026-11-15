@@ -99,6 +99,7 @@ public final class BambusLauncher extends JFrame {
 		if (Selbststart.uebergeben(args)) {
 			return;
 		}
+		KlickHilfe.installieren();   // Klicks zählen auch, wenn die Maus beim Klicken minimal verrutscht
 		// Linux: Der XRender-Weg von Java zeichnet gedrehte, teils durchsichtige Bilder fehlerhaft
 		// (weiße Flächen in der 3D-Vorschau) – daher den Software-Weg benutzen.
 		if ("linux".equals(Installer.betriebssystem()) && System.getProperty("sun.java2d.xrender") == null) {
