@@ -23,7 +23,8 @@ import java.util.Set;
  * Gezeichnet im HUD: Der Weltpunkt wird jedes Bild mit Blickrichtung und Sichtfeld auf den Bildschirm umgerechnet.
  *
  * Wo die Wörter auftauchen, ist einstellbar ({@link #ORTE}) – gemeint ist die Stelle im Blickfeld beim Erscheinen,
- * danach bleiben sie in der Welt stehen. Neue Wörter suchen sich einen freien Platz (keine Überlappung); kommt
+ * danach bleiben sie in der Welt stehen. Wörter erscheinen nur dort, wo du gerade hinsiehst (ganz im Bild), und
+ * verschwinden, sobald du wegschaust. Neue Wörter suchen sich einen freien Platz (keine Überlappung); kommt
  * dasselbe Wort direkt noch mal, steht es auf derselben Seite gleich dahinter.
  */
 public final class SongtextWelt {
@@ -33,7 +34,23 @@ public final class SongtextWelt {
 	public static final String[] ORTE = {"Seiten", "Links", "Rechts", "Oben", "Unten", "Überall"};
 	public static final int SEITEN = 0, LINKS = 1, RECHTS = 2, OBEN = 3, UNTEN = 4, UEBERALL = 5;
 
-	private static final long AUFTAUCHEN = 160, STEHEN = 850, WEGFLIEGEN = 380;
+	/** Wie schnell die Wörter verschwinden (Einstellung „Wörter-Tempo“). */
+	public static final String[] TEMPO = {"Sehr schnell", "Schnell", "Normal", "Langsam", "Sehr langsam"};
+	/** Je Tempo: so lange steht ein Wort, so lange fliegt es auf dich zu (Millisekunden). */
+	private static final long[] STEHEN_MS = {300, 550, 850, 1500, 2500}, WEGFLIEGEN_MS = {220, 300, 380, 550, 750};
+	private static final long AUFTAUCHEN = 160;
+
+	private static int tempo() {
+		return Math.floorMod(de.bambus.client.BambusClient.config.musikWoerterTempo, TEMPO.length);
+	}
+
+	private static long stehen() {
+		return STEHEN_MS[tempo()];
+	}
+
+	private static long wegfliegen() {
+		return WEGFLIEGEN_MS[tempo()];
+	}
 	private static final int MAX = 14, VERSUCHE = 16;
 
 	/** ort = fester Weltpunkt; rand = in einem Randbereich (dann nicht riesig und nicht übers Fadenkreuz). */
@@ -97,14 +114,19 @@ public final class SongtextWelt {
 		}
 		Sicht sicht = Sicht.von(mc);
 		long jetzt = System.currentTimeMillis();
-		woerter.removeIf(w -> jetzt - w.geboren() > AUFTAUCHEN + STEHEN + WEGFLIEGEN);
+		woerter.removeIf(w -> jetzt - w.geboren() > AUFTAUCHEN + stehen() + wegfliegen());
 		neueWoerter(mc, sicht, Math.floorMod(bereich, ORTE.length));
 		if (woerter.isEmpty()) return;
 
 		// weiter entfernte zuerst, damit nahe Wörter oben liegen
 		List<Wort> reihe = new ArrayList<>(woerter);
 		reihe.sort((a, b) -> Double.compare(b.ort().distanceToSqr(sicht.cam()), a.ort().distanceToSqr(sicht.cam())));
+		List<Wort> weggeschaut = new ArrayList<>();
 		for (Wort w : reihe) {
+			if (!sichtbar(mc, sicht, w)) {   // aus dem Blick gedreht: nicht später hinter dir wieder auftauchen
+				weggeschaut.add(w);
+				continue;
+			}
 			long alter = jetzt - w.geboren();
 			Vec3 ort = w.ort();
 			float deckkraft = 1f, pop = 1f;
@@ -112,8 +134,8 @@ public final class SongtextWelt {
 				float k = alter / (float) AUFTAUCHEN;
 				pop = (float) (1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2));
 				deckkraft = Math.min(1f, k * 2);
-			} else if (alter > AUFTAUCHEN + STEHEN) {   // auf die Kamera zufliegen und verblassen
-				float k = Math.min(1f, (alter - AUFTAUCHEN - STEHEN) / (float) WEGFLIEGEN);
+			} else if (alter > AUFTAUCHEN + stehen()) {   // auf die Kamera zufliegen und verblassen
+				float k = Math.min(1f, (alter - AUFTAUCHEN - stehen()) / (float) wegfliegen());
 				ort = ort.lerp(sicht.cam(), Math.min(0.85, k * k * 0.9));
 				deckkraft = 1 - k;
 			}
@@ -123,6 +145,21 @@ public final class SongtextWelt {
 			if (s < 0.2f || deckkraft <= 0.02f) continue;
 			zeichneWort(g, mc, w, (float) p[0], (float) p[1], s, deckkraft);
 		}
+		woerter.removeAll(weggeschaut);
+	}
+
+	/** Ist das Wort (an seinem festen Platz) noch irgendwo im Bild? */
+	private static boolean sichtbar(Minecraft mc, Sicht sicht, Wort w) {
+		Kasten k = kasten(mc, w.text(), w.groesse(), w.rand(), w.ort(), sicht);
+		return k != null && k.x() + k.hb() > 0 && k.x() - k.hb() < sicht.bw() && k.y() + k.hh() > 0 && k.y() - k.hh() < sicht.bh();
+	}
+
+	/** Ganz im Bild (mit etwas Rand) – und Randwörter nicht über dem Fadenkreuz? */
+	private static boolean imBlick(Kasten k, Sicht sicht, boolean rand) {
+		boolean imBild = k.x() - k.hb() > 4 && k.x() + k.hb() < sicht.bw() - 4 && k.y() - k.hh() > 4 && k.y() + k.hh() < sicht.bh() - 4;
+		boolean fadenkreuzFrei = !rand || Math.abs(k.x() - sicht.bw() / 2f) > k.hb() + sicht.bw() * 0.08f
+				|| Math.abs(k.y() - sicht.bh() / 2f) > k.hh() + sicht.bh() * 0.08f;
+		return imBild && fadenkreuzFrei;
 	}
 
 	/** Schrift-Skalierung eines Wortes in der Tiefe z (am Rand gedeckelt, damit nichts riesig wird). */
@@ -170,7 +207,7 @@ public final class SongtextWelt {
 
 		// dasselbe Wort direkt noch mal: auf derselben Seite gleich dahinter
 		if (letztes != null && letztes.roh().equalsIgnoreCase(sauber) && woerter.contains(letztes)
-				&& jetzt - letztes.geboren() < AUFTAUCHEN + STEHEN) {
+				&& jetzt - letztes.geboren() < AUFTAUCHEN + stehen()) {
 			Vec3 ort = dahinter(mc, sicht, letztes, c);
 			if (ort != null) {
 				merke(new Wort(c, sauber, ort, jetzt, letztes.neigung(), letztes.groesse(), letztes.rand()));
@@ -190,7 +227,7 @@ public final class SongtextWelt {
 		for (int versuch = 0; versuch < VERSUCHE; versuch++) {
 			Vec3 ort = stelle(sicht, bereich, tanH, tanV);
 			Kasten k = kasten(mc, c, groesse, !frei, ort, sicht);
-			if (k == null) continue;
+			if (k == null || !imBlick(k, sicht, !frei)) continue;   // nur dort, wo du hinsiehst
 			float ueberlappung = ueberlappung(mc, sicht, k);
 			if (ueberlappung < besteUeberlappung) {
 				besteUeberlappung = ueberlappung;
@@ -236,7 +273,7 @@ public final class SongtextWelt {
 		return summe;
 	}
 
-	/** Platz direkt hinter dem vorigen Wort (in seiner Schräge) – passt es nicht mehr, eine Zeile darunter. */
+	/** Platz direkt hinter dem vorigen Wort (in seiner Schräge), sonst eine Zeile darunter – oder null, wenn beides nicht im Blick liegt. */
 	private static Vec3 dahinter(Minecraft mc, Sicht sicht, Wort vorher, Component neu) {
 		double einheit = vorher.groesse() / 8.0;   // Weltgröße eines Schrift-Pixels
 		double cos = Math.cos(vorher.neigung()), sin = Math.sin(vorher.neigung());
@@ -245,13 +282,9 @@ public final class SongtextWelt {
 		Vec3 zeile = vorher.ort().add(sicht.welt(-sin * 13 * einheit, cos * 13 * einheit));
 		for (Vec3 ort : new Vec3[] {rechts, zeile}) {
 			Kasten k = kasten(mc, neu, vorher.groesse(), vorher.rand(), ort, sicht);
-			if (k == null) continue;
-			boolean imBild = k.x() - k.hb() > 2 && k.x() + k.hb() < sicht.bw() - 2 && k.y() - k.hh() > 2 && k.y() + k.hh() < sicht.bh() - 2;
-			boolean fadenkreuzFrei = !vorher.rand() || Math.abs(k.x() - sicht.bw() / 2f) > k.hb() + sicht.bw() * 0.08f
-					|| Math.abs(k.y() - sicht.bh() / 2f) > k.hh() + sicht.bh() * 0.08f;
-			if (imBild && fadenkreuzFrei && ueberlappung(mc, sicht, k) == 0) return ort;
+			if (k != null && imBlick(k, sicht, vorher.rand()) && ueberlappung(mc, sicht, k) == 0) return ort;
 		}
-		return zeile;   // notfalls darunter, Hauptsache auf derselben Seite
+		return null;   // dahinter ist kein Platz im Blick – dann wie ein neues Wort platzieren
 	}
 
 	/** Weißes Wort mit bläulichem 3D-Rand, leicht schräg und kursiv. */

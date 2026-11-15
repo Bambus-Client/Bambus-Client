@@ -68,6 +68,8 @@ public class MusikModul extends HudModul {
 				w -> BambusClient.config.musikSchriftInsel = w, () -> true));
 		liste.add(Einstellung.Stufe.auswahl("Wörter-Ort", SongtextWelt.ORTE, () -> BambusClient.config.musikWoerterOrt,
 				w -> BambusClient.config.musikWoerterOrt = w, woerter::an));
+		liste.add(Einstellung.Stufe.auswahl("Wörter-Tempo", SongtextWelt.TEMPO, () -> BambusClient.config.musikWoerterTempo,
+				w -> BambusClient.config.musikWoerterTempo = w, woerter::an));
 		liste.add(Einstellung.Stufe.auswahl("Schrift Wörter", Schriften.NAMEN, () -> BambusClient.config.musikSchriftWoerter,
 				w -> BambusClient.config.musikSchriftWoerter = w, woerter::an));
 		return liste;
@@ -80,6 +82,7 @@ public class MusikModul extends HudModul {
 		BambusClient.config.musikSchriftInsel = 1;
 		BambusClient.config.musikSchriftWoerter = 2;
 		BambusClient.config.musikWoerterOrt = 0;
+		BambusClient.config.musikWoerterTempo = 2;
 	}
 
 	/** Deckkraft des Insel-Hintergrunds (0–1) aus der Einstellung „durchsichtig“. */
