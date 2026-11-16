@@ -85,12 +85,22 @@ public final class Quests {
 			{"hut", "bandana"},
 			{"partikel", "funken"},
 			{"spur", "funken"},
+			{"emote", "winken"},
+			{"emote", "jubeln"},
+			{"emote", "klatschen"},
 	};
 
 	/** Grundpreis je Art in Blättern; einzelne Stücke im SHOP haben eigene Preise. */
 	private static final String[][] PREISE = {
 			{"cape", "150"}, {"fluegel", "220"}, {"hut", "90"},
-			{"partikel", "110"}, {"spur", "110"}, {"killeffekt", "110"},
+			{"partikel", "110"}, {"spur", "110"}, {"killeffekt", "110"}, {"emote", "120"},
+	};
+
+	/** Emotes mit eigenem Preis – Tänze kosten mehr als Gesten: {id, Blätter}. */
+	public static final String[][] EMOTE_PREISE = {
+			{"salut", "80"}, {"muskeln", "100"}, {"lachen", "100"}, {"facepalm", "100"}, {"sieger", "140"},
+			{"chillen", "150"}, {"hampelmann", "160"}, {"kreisel", "180"}, {"wackler", "220"}, {"welle", "220"},
+			{"propeller", "240"}, {"roboter", "260"}, {"disco", "260"},
 	};
 
 	/**
@@ -171,6 +181,10 @@ public final class Quests {
 	public static int preis(String art, String id) {
 		String[] s = finde(SHOP, id);
         if (s != null) return Integer.parseInt(s[3]);
+		if ("emote".equals(art)) {
+			String[] e = finde(EMOTE_PREISE, id);
+			if (e != null) return Integer.parseInt(e[1]);
+		}
 		for (String[] p : PREISE) if (p[0].equals(art)) return Integer.parseInt(p[1]);
 		return 150;
 	}

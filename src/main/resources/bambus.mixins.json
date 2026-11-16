@@ -5,6 +5,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"AbstractClientPlayerMixin",
+		"AvatarRendererMixin",
 		"ClientLevelDataMixin",
 		"CameraMixin",
 		"EntityMixin",
@@ -15,6 +16,7 @@
 		"MinecraftMixin",
 		"MouseHandlerMixin",
 		"OptionInstanceAccessor",
+		"PlayerModelMixin",
 		"ScreenEffectRendererMixin"
 	],
 	"injectors": {

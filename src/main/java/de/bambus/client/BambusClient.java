@@ -102,6 +102,12 @@ public class BambusClient implements ClientModInitializer {
 	private static KeyMapping hudTaste;
 	private static KeyMapping koordinatenTaste;
 	private static KeyMapping musikPause, musikWeiter, musikZurueck;
+	private static KeyMapping emoteTaste;
+
+	/** Taste für das Emote-Rad (Standard B). */
+	public static KeyMapping emoteTaste() {
+		return emoteTaste;
+	}
 
 	private static boolean ersterTick = true;
 
@@ -120,6 +126,7 @@ public class BambusClient implements ClientModInitializer {
 		musikPause = taste("musik_pause", InputConstants.UNKNOWN.getValue(), kategorie);
 		musikWeiter = taste("musik_weiter", InputConstants.UNKNOWN.getValue(), kategorie);
 		musikZurueck = taste("musik_zurueck", InputConstants.UNKNOWN.getValue(), kategorie);
+		emoteTaste = taste("emotes", InputConstants.KEY_B, kategorie);
 
 		ClientTickEvents.END_CLIENT_TICK.register(BambusClient::tick);
 
@@ -323,6 +330,10 @@ public class BambusClient implements ClientModInitializer {
 		while (musikPause.consumeClick()) Musik.pause();
 		while (musikWeiter.consumeClick()) Musik.weiter();
 		while (musikZurueck.consumeClick()) Musik.zurueck();
+		while (emoteTaste.consumeClick()) {
+			if (mc.screen == null && mc.player != null) mc.setScreen(new de.bambus.client.screen.EmoteRadScreen());
+		}
+		de.bambus.client.emote.Emotes.tick(mc);
 		while (koordinatenTaste.consumeClick()) {
 			String k = KoordinatenModul.alsText(mc);
 			if (!k.isEmpty()) {

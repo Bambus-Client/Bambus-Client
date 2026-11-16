@@ -255,6 +255,19 @@ public final class KosmetikSymbole {
 					"#..........#",
 					"############",
 					"............"},
+			Garderobe.Art.EMOTES, new String[]{
+					"....##......",
+					"....##......",
+					"#...........",
+					".#.####...#.",
+					"..#.##...#..",
+					"....##.##...",
+					"....##......",
+					"...#..#.....",
+					"..#....#....",
+					".#......#...",
+					"#.......#...",
+					"............"},
 			Garderobe.Art.FLUEGEL, new String[]{
 					"............",
 					"##........##",
@@ -321,6 +334,13 @@ public final class KosmetikSymbole {
 			case HUETE -> hut(g, id, farbe, cx, cy, saat);
 			case KILL -> killEffekt(g, id, farbe, cx, cy, saat);
 			case PFEIL -> pfeilSpur(g, id, farbe, cx, cy, saat);
+			case EMOTES -> {
+				de.bambus.client.emote.Emote e = de.bambus.client.emote.Emotes.nachId(id);
+				if (e != null) {
+					float t = (System.currentTimeMillis() % 100_000L) / 1000f + saat * 0.37f;
+					de.bambus.client.emote.EmoteFigur.zeichne(g, e, e.schleife() ? t : t % (e.dauer() + 0.8f), cx, cy + 4, 1.6f, farbe);
+				}
+			}
 		}
 	}
 
