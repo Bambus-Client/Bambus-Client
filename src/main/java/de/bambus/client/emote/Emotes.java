@@ -336,25 +336,52 @@ public final class Emotes {
 
 	private static final Pose POSE = new Pose();
 
-	/** Haltung für den eigenen Spieler – null, wenn gerade kein Emote (und keine Vorschau) läuft. */
-	public static Pose poseFuer(int entityId) {
+	/** Für das nächste gezeichnete Spielermodell im Menü: dieses Emote zeigen (danach wieder null setzen). */
+	private static Emote erzwungen;
+	private static float erzwungenT;
+
+	public static void erzwinge(Emote e, float t) {
+		erzwungen = e;
+		erzwungenT = t;
+	}
+
+	/** Sekunden seit dem Wechsel der Vorschau (für das große Modell in Garderobe und Rad). */
+	public static float vorschauZeit() {
+		return (System.currentTimeMillis() - vorschauSeit) / 1000f;
+	}
+
+	public static Emote vorschau() {
+		return vorschau;
+	}
+
+	/** Beim Auslesen des Zustands: Welches Emote zeigt dieses Modell? Nur der eigene Spieler tanzt. */
+	public static void stempeln(AvatarRenderState s, int entityId) {
+		EmoteZustand z = (EmoteZustand) s;
 		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null || entityId != mc.player.getId()) return null;
-		Emote e = aktiv;
-		long start = seit;
-		if (vorschau != null && mc.screen != null) {   // in Garderobe und Rad tanzt das Modell im Menü
-			e = vorschau;
-			start = vorschauSeit;
+		if (mc.player == null || entityId != mc.player.getId()) {
+			z.bambus$setze(null, 0);
+		} else if (erzwungen != null) {
+			z.bambus$setze(erzwungen.id(), erzwungenT);
+		} else if (aktiv != null && mc.screen == null) {
+			z.bambus$setze(aktiv.id(), (System.currentTimeMillis() - seit) / 1000f);
+		} else {
+			z.bambus$setze(null, 0);
 		}
+	}
+
+	/** Haltung für ein Modell – null, wenn es kein Emote zeigt. */
+	public static Pose poseFuer(AvatarRenderState s) {
+		EmoteZustand z = (EmoteZustand) s;
+		Emote e = z.bambus$emote() == null ? null : NACH_ID.get(z.bambus$emote());
 		if (e == null) return null;
-		float t = (System.currentTimeMillis() - start) / 1000f;
-		if (!e.schleife() && e == vorschau) t = t % (e.dauer() + 0.8f);   // Vorschau einmaliger Emotes wiederholen
+		float t = z.bambus$zeit();
+		if (!e.schleife()) t = t % (e.dauer() + 0.8f);   // einmalige Emotes in Menüs wiederholen
 		return e.pose(t, POSE);
 	}
 
 	/** Aus dem Mixin in PlayerModel.setupAnim: Gelenke überschreiben. */
 	public static void anwenden(PlayerModel m, AvatarRenderState s) {
-		Pose p = poseFuer(s.id);
+		Pose p = poseFuer(s);
 		if (p == null) return;
 		m.head.xRot = p.kopfX;
 		m.head.yRot = p.kopfY;

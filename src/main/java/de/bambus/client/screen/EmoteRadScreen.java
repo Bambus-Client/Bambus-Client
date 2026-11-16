@@ -5,12 +5,10 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import de.bambus.client.emote.Emote;
-import de.bambus.client.emote.EmoteFigur;
 import de.bambus.client.emote.Emotes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -180,22 +178,24 @@ public class EmoteRadScreen extends Screen {
 				Neon.text(g, font, "frei", (int) fx - 7, (int) fy - 3, 0.7f, 0xFF4A5A6E, false);
 				continue;
 			}
-			float groesse = massstab * (an ? 2.3f : 1.9f);
 			boolean zu = Emotes.gesperrt(e);
-			EmoteFigur.zeichne(g, e, an && !zu ? t : 0.35f, fx, fy - 2 * massstab, groesse,
-					zu ? 0x66808A99 : an ? Farben.WEISS : Farben.alpha(e.farbe(), 230));
-			if (zu) schloss(g, (int) fx, (int) (fy - 6 * massstab), Farben.NEON_CYAN);
+			// der eigene Spieler führt das Emote vor (das Feld unter der Maus bewegt sich, die anderen zeigen eine Pose)
+			int halb = (int) (15 * massstab), groesse = (int) ((an ? 17.5f : 15f) * massstab);
+			EmoteSpieler.zeichne(g, e, an && !zu ? t : 0.6f, (int) fx - halb, (int) (fy - 22 * massstab), (int) fx + halb,
+					(int) (fy + 14 * massstab), groesse);
+			if (zu) {
+				g.fill((int) fx - halb, (int) (fy - 22 * massstab), (int) fx + halb, (int) (fy + 14 * massstab), 0x880B1322);
+				schloss(g, (int) fx, (int) (fy - 6 * massstab), Farben.NEON_CYAN);
+			}
 			String n = font.plainSubstrByWidth(e.name(), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
 			int nb = (int) (font.width(n) * 0.6f);
 			Neon.text(g, font, n, (int) fx - nb / 2, (int) (fy + 17 * massstab), 0.6f, an ? Farben.WEISS : 0xFFB5C2D4, false);
 		}
 
-		// Mitte: das eigene Modell tanzt vor
+		// Mitte: das eigene Modell tanzt die Vorschau groß vor
 		int r = (int) ((INNEN - 8) * massstab);
-		if (mc.player != null) {
-			InventoryScreen.renderEntityInInventoryFollowsMouse(g, (int) cx - r, (int) cy - r, (int) cx + r, (int) cy + r,
-					(int) (r * 0.62f), 0.0625f, (int) cx, (int) cy - r / 2, mc.player);
-		}
+		EmoteSpieler.zeichne(g, Emotes.vorschau(), Emotes.vorschauZeit(), (int) cx - r, (int) cy - r, (int) cx + r, (int) cy + r,
+				(int) (r * 0.62f));
 	}
 
 	/** Kleines Schloss (10 × 12) – für noch gesperrte Emotes. */

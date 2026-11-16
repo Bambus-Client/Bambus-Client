@@ -257,9 +257,9 @@ public class GarderobeScreen extends Screen {
 			g.fill(zx, zy, zx + spalte, zy + zh, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 			g.fill(zx, zy, zx + 2, zy + zh, e.farbe());
 			g.renderOutline(zx, zy, spalte, zh, hover ? Farben.alpha(e.farbe(), 200) : Farben.LINIE);
-			float s = zh / 26f;
-			de.bambus.client.emote.EmoteFigur.zeichne(g, e, hover ? t : 0.35f, zx + 12, zy + zh * 0.62f, s * 1.3f,
-					zu ? Farben.alpha(e.farbe(), 110) : e.farbe());
+			// der eigene Spieler mit diesem Emote (bewegt sich, wenn die Maus darauf ist)
+			EmoteSpieler.zeichne(g, e, hover ? t : 0.6f, zx + 3, zy + 1, zx + 22, zy + zh - 1, (int) (zh * 0.48f));
+			if (zu) g.fill(zx + 3, zy + 1, zx + 22, zy + zh - 1, 0x880B1322);
 			int tx = zx + 24;
 			float ns = spalte < 100 ? 0.65f : 0.8f;   // in schmalen Spalten kleiner, damit der Name passt
 			String n = font.plainSubstrByWidth(e.name(), (int) ((spalte - 27 - (imRad >= 0 || zu ? 13 : 0)) / ns));
@@ -303,9 +303,9 @@ public class GarderobeScreen extends Screen {
 		if (gezogen != null && zugBewegt) {
 			de.bambus.client.emote.Emote e = de.bambus.client.emote.Emotes.nachId(gezogen);
 			if (e != null) {
-				g.fill(mx - 14, my - 18, mx + 14, my + 8, Farben.alpha(0xFF0B1322, 220));
-				g.renderOutline(mx - 14, my - 18, 28, 26, e.farbe());
-				de.bambus.client.emote.EmoteFigur.zeichne(g, e, t, mx, my + 2, 1.4f, Farben.WEISS);
+				g.fill(mx - 16, my - 34, mx + 16, my + 8, Farben.alpha(0xFF0B1322, 220));
+				g.renderOutline(mx - 16, my - 34, 32, 42, e.farbe());
+				EmoteSpieler.zeichne(g, e, t, mx - 15, my - 33, mx + 15, my + 7, 20);
 			}
 		}
 	}
