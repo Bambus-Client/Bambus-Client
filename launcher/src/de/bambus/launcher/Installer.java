@@ -259,16 +259,37 @@ final class Installer {
 		f.melde("Fertig! Viel Spaß mit dem Bambus Client.", 100);
 	}
 
+	/** Gibt es die Datei und enthält sie ein vollständiges JSON-Objekt? */
+	static boolean gueltigesJson(Path datei) {
+		try {
+			return Files.isRegularFile(datei) && Files.size(datei) > 0
+					&& Json.objekt(Json.parse(new String(Files.readAllBytes(datei), StandardCharsets.UTF_8))) != null;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/** Erst in eine Zwischendatei schreiben, dann in einem Schritt austauschen – nie eine halbe Datei. */
+	static void schreibeSicher(Path ziel, byte[] daten) throws IOException {
+		Path tmp = ziel.resolveSibling(ziel.getFileName() + ".tmp");
+		Files.write(tmp, daten);
+		try {
+			Files.move(tmp, ziel, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} catch (IOException e) {
+			Files.move(tmp, ziel, StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
+
 	void fabricProfil() throws IOException {
 		String id = versionId();
 		Path ordner = mcOrdner.resolve("versions").resolve(id);
 		Path json = ordner.resolve(id + ".json");
 		Files.createDirectories(ordner);
-		if (!Files.isRegularFile(json) || Files.size(json) == 0) {
+		if (!gueltigesJson(json)) {   // fehlt, leer oder halb geschrieben → neu laden
 			String text = new String(lade("https://meta.fabricmc.net/v2/versions/loader/"
 					+ version + "/" + loader + "/profile/json"), StandardCharsets.UTF_8);
 			Json.parse(text); // prüfen, dass es gültiges JSON ist
-			Files.write(json, text.getBytes(StandardCharsets.UTF_8));
+			schreibeSicher(json, text.getBytes(StandardCharsets.UTF_8));
 		}
 		Path jar = ordner.resolve(id + ".jar");
 		if (!Files.exists(jar)) {

@@ -11,10 +11,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Discord-Status („Spielt Bambus Client“) über die lokale Discord-Schnittstelle (IPC) – ohne Zusatzbibliothek.
  * Braucht eine Discord-Anwendungs-ID (kostenlos im Discord Developer Portal). Ohne ID bleibt alles aus.
+ *
+ * Der Austausch mit Discord läuft in einem eigenen Hintergrund-Thread: Hängt Discord, ruckelt das Spiel nicht.
+ * Der Spiel-Thread stellt nur den Text zusammen.
  */
 public final class DiscordStatus {
 
@@ -23,9 +29,20 @@ public final class DiscordStatus {
 	/** Fest eingebaute Discord-App-ID (leer = keine). Eine ID in der Konfiguration hat Vorrang. */
 	public static final String STANDARD_APP_ID = "";
 
-	private static SocketChannel unix;
-	private static RandomAccessFile pipe;
-	private static long start = System.currentTimeMillis() / 1000;
+	/** Ein einziger Hintergrund-Thread für alles, was mit Discord spricht. */
+	private static final ExecutorService ARBEITER = Executors.newSingleThreadExecutor(r -> {
+		Thread t = new Thread(r, "Bambus-Discord");
+		t.setDaemon(true);
+		return t;
+	});
+	/** Läuft gerade eine Aufgabe im Hintergrund? Dann wird nichts Neues eingereiht. */
+	private static final AtomicBoolean BESCHAEFTIGT = new AtomicBoolean();
+
+	// nur im Hintergrund-Thread benutzt (trennen() schließt zusätzlich vom Spiel-Thread aus, um Hänger zu lösen)
+	private static volatile SocketChannel unix;
+	private static volatile RandomAccessFile pipe;
+
+	private static final long START = System.currentTimeMillis() / 1000;
 	private static long letzterVersuch, letztesUpdate;
 	private static String letzterText = "";
 
@@ -41,38 +58,36 @@ public final class DiscordStatus {
 	/** Jeden Tick; schickt höchstens alle 15 s ein Update. */
 	public static void tick(net.minecraft.client.Minecraft mc) {
 		if (!BambusClient.config.discordAn || !moeglich()) {
-			trennen();
+			if (verbunden()) trennen();
 			return;
 		}
 		long jetzt = System.currentTimeMillis();
-		if (!verbunden()) {
-			if (jetzt - letzterVersuch < 30_000) {
-				return;
-			}
-			letzterVersuch = jetzt;
-			if (!verbinden()) {
-				return;
-			}
-		}
 		String details = mc.level == null ? "Im Hauptmenü"
 				: mc.isLocalServer() ? "Einzelspieler"
 				: mc.getCurrentServer() != null ? "Auf " + mc.getCurrentServer().ip : "Mehrspieler";
 		String text = details + "|" + Kampf.kills;
-		if (text.equals(letzterText) && jetzt - letztesUpdate < 60_000) {
-			return;
-		}
-		if (jetzt - letztesUpdate < 15_000) {
-			return;
-		}
+		boolean verbunden = verbunden();
+		if (!verbunden && jetzt - letzterVersuch < 30_000) return;
+		if (verbunden && text.equals(letzterText) && jetzt - letztesUpdate < 60_000) return;
+		if (verbunden && jetzt - letztesUpdate < 15_000) return;
+		if (!BESCHAEFTIGT.compareAndSet(false, true)) return;   // die letzte Aufgabe läuft noch
+
+		if (!verbunden) letzterVersuch = jetzt;
 		letzterText = text;
 		letztesUpdate = jetzt;
+		String appId = appId();
 		String json = "{\"cmd\":\"SET_ACTIVITY\",\"nonce\":\"" + jetzt + "\",\"args\":{\"pid\":" + ProcessHandle.current().pid()
 				+ ",\"activity\":{\"details\":\"" + esc(details) + "\",\"state\":\"Bambus Client " + BambusClient.VERSION
-				+ (Kampf.kills > 0 ? " · " + Kampf.kills + " Kills" : "") + "\",\"timestamps\":{\"start\":" + start
+				+ (Kampf.kills > 0 ? " · " + Kampf.kills + " Kills" : "") + "\",\"timestamps\":{\"start\":" + START
 				+ "},\"assets\":{\"large_image\":\"bambus\",\"large_text\":\"Bambus Client\"}}}}";
-		if (!senden(1, json)) {
-			trennen();
-		}
+		ARBEITER.execute(() -> {
+			try {
+				if (!verbunden() && !verbinden(appId)) return;
+				if (!senden(1, json)) schliessen();
+			} finally {
+				BESCHAEFTIGT.set(false);
+			}
+		});
 	}
 
 	private static String esc(String s) {
@@ -80,10 +95,12 @@ public final class DiscordStatus {
 	}
 
 	private static boolean verbunden() {
-		return (unix != null && unix.isOpen()) || pipe != null;
+		SocketChannel u = unix;
+		return (u != null && u.isOpen()) || pipe != null;
 	}
 
-	private static boolean verbinden() {
+	/** Im Hintergrund-Thread: mit Discord verbinden und anmelden. */
+	private static boolean verbinden(String appId) {
 		for (int i = 0; i < 10; i++) {
 			try {
 				if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
@@ -93,16 +110,18 @@ public final class DiscordStatus {
 					if (!Files.exists(p)) {
 						continue;
 					}
-					unix = SocketChannel.open(StandardProtocolFamily.UNIX);
-					unix.connect(UnixDomainSocketAddress.of(p));
-					unix.configureBlocking(false);
+					SocketChannel u = SocketChannel.open(StandardProtocolFamily.UNIX);
+					unix = u;
+					u.connect(UnixDomainSocketAddress.of(p));
+					u.configureBlocking(false);
 				}
-				if (senden(0, "{\"v\":1,\"client_id\":\"" + appId() + "\"}")) {
+				if (senden(0, "{\"v\":1,\"client_id\":\"" + appId + "\"}")) {
 					BambusClient.LOGGER.info("Discord-Status verbunden");
 					return true;
 				}
+				schliessen();   // Anmeldung fehlgeschlagen: diese Verbindung schließen, bevor die nächste versucht wird
 			} catch (Exception e) {
-				trennen();
+				schliessen();
 			}
 		}
 		return false;
@@ -118,22 +137,25 @@ public final class DiscordStatus {
 		return Paths.get("/tmp");
 	}
 
+	/** Im Hintergrund-Thread: ein Paket senden und Discords Antwort abholen, damit sich nichts anstaut. */
 	private static boolean senden(int op, String json) {
 		byte[] daten = json.getBytes(StandardCharsets.UTF_8);
 		ByteBuffer buf = ByteBuffer.allocate(8 + daten.length).order(ByteOrder.LITTLE_ENDIAN);
 		buf.putInt(op).putInt(daten.length).put(daten).flip();
 		try {
-			if (pipe != null) {
-				pipe.write(buf.array());
-				lesen();
-			} else if (unix != null) {
+			RandomAccessFile pp = pipe;
+			SocketChannel u = unix;
+			if (pp != null) {
+				pp.write(buf.array());
+				antwortLesen(pp);   // Discord antwortet auf jedes Paket genau einmal
+			} else if (u != null) {
 				ByteBuffer weg = ByteBuffer.allocate(8192);
-				while (unix.read(weg) > 0) {
+				while (u.read(weg) > 0) {
 					weg.clear(); // Antworten von Discord verwerfen
 				}
 				int versuche = 0;
 				while (buf.hasRemaining() && versuche++ < 200) {
-					unix.write(buf);
+					u.write(buf);
 				}
 			}
 			return true;
@@ -142,32 +164,30 @@ public final class DiscordStatus {
 		}
 	}
 
-	/** Antwort von Discord abholen, damit der Puffer nicht volläuft (nur Windows-Pipe, blockiert kurz). */
-	private static void lesen() {
-		try {
-			lesenRoh();
-		} catch (Exception ignoriert) {
-			// Pipe kann keine Länge melden – dann eben nicht
-		}
+	/** Eine Antwort von der Windows-Pipe lesen und verwerfen (blockiert nur den Hintergrund-Thread). */
+	private static void antwortLesen(RandomAccessFile pp) throws IOException {
+		byte[] kopf = new byte[8];
+		pp.readFully(kopf);
+		int laenge = ByteBuffer.wrap(kopf).order(ByteOrder.LITTLE_ENDIAN).getInt(4);
+		if (laenge < 0 || laenge > 1 << 20) throw new IOException("Ungültige Antwort von Discord");
+		pp.readFully(new byte[laenge]);
 	}
 
-	private static void lesenRoh() throws IOException {
-		if (pipe != null && pipe.length() > 0) {
-			byte[] kopf = new byte[8];
-			pipe.readFully(kopf);
-			int laenge = ByteBuffer.wrap(kopf).order(ByteOrder.LITTLE_ENDIAN).getInt(4);
-			pipe.skipBytes(laenge);
-		}
-	}
-
-	public static void trennen() {
+	private static void schliessen() {
 		try {
-			if (unix != null) unix.close();
-			if (pipe != null) pipe.close();
+			SocketChannel u = unix;
+			RandomAccessFile pp = pipe;
+			if (u != null) u.close();
+			if (pp != null) pp.close();
 		} catch (IOException ignoriert) {
 			// schon zu
 		}
 		unix = null;
 		pipe = null;
+	}
+
+	/** Verbindung beenden – auch vom Spiel-Thread aus; löst dabei einen Hintergrund-Thread, der auf Discord wartet. */
+	public static void trennen() {
+		schliessen();
 	}
 }

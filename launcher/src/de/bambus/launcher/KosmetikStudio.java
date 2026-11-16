@@ -187,7 +187,17 @@ final class KosmetikStudio extends JDialog {
 		inhalt.add(schliessen);
 
 		setzeArt(cape);
-		new Timer(33, e -> vorschau.repaint()).start();
+		animation = new Timer(33, e -> vorschau.repaint());
+		animation.start();
+	}
+
+	/** Läuft, solange das Fenster offen ist – beim Schließen anhalten, sonst bleibt das Fenster im Speicher. */
+	private Timer animation;
+
+	@Override
+	public void dispose() {
+		if (animation != null) animation.stop();
+		super.dispose();
 	}
 
 	// ============================================================== Logik

@@ -531,7 +531,9 @@ public final class BambusLauncher extends JFrame {
 	void speichereLauncherEinstellungen() {
 		try {
 			Files.createDirectories(launcherDatei.getParent());
-			try (Writer w = Files.newBufferedWriter(launcherDatei, StandardCharsets.UTF_8)) {
+			// sicher speichern: erst in eine Zwischendatei, dann austauschen
+			java.io.StringWriter w = new java.io.StringWriter();
+			{
 				Properties p = new Properties();
 				p.setProperty("ram", String.valueOf(ramGb));
 				p.setProperty("taskleisteTipp", String.valueOf(taskleisteTippGesehen));
@@ -542,6 +544,7 @@ public final class BambusLauncher extends JFrame {
 				p.setProperty("schriftgroesse", String.valueOf(NeonUI.textFaktor()));
 				p.store(w, "Bambus Launcher");
 			}
+			Installer.schreibeSicher(launcherDatei, w.toString().getBytes(StandardCharsets.UTF_8));
 		} catch (Exception ignoriert) {
 			// nicht schlimm
 		}

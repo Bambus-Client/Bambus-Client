@@ -39,8 +39,8 @@ final class Fortschritt {
 
 	private void gib(int wieviel) {
 		if (wieviel <= 0) return;
-		c.setze("punkte", blaetter() + wieviel);
-		c.setze("punkteGesamt", gesammelt() + wieviel);
+		c.addiere("punkte", wieviel);
+		c.addiere("punkteGesamt", wieviel);
 	}
 
 	int rang() { return Quests.rangNummer(gesammelt()); }
@@ -260,7 +260,7 @@ final class Fortschritt {
 		if (!gesperrtKosmetik(art, id)) return false;
 		int p = Quests.preis(art, id);
 		if (blaetter() < p) return false;
-		c.setze("punkte", blaetter() - p);
+		c.addiere("punkte", -p);
 		Set<String> m = menge("shop");
 		m.add(id);
 		merke("shop", m);
@@ -282,7 +282,7 @@ final class Fortschritt {
 		String[] s = saison();
 		int p = Integer.parseInt(s[3]);
 		if (!saisonOffen() || blaetter() < p) return false;
-		c.setze("punkte", blaetter() - p);
+		c.addiere("punkte", -p);
 		Set<String> m = menge("shop");
 		for (String[] st : Quests.saisonStuecke(s)) m.add(st[1]);
 		merke("shop", m);
@@ -324,7 +324,7 @@ final class Fortschritt {
 		if (s == null || gekauft(id)) return false;
 		int p = Integer.parseInt(s[3]);
 		if (blaetter() < p) return false;
-		c.setze("punkte", blaetter() - p);
+		c.addiere("punkte", -p);
 		Set<String> m = menge("shop");
 		m.add(id);
 		merke("shop", m);

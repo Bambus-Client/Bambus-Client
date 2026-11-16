@@ -145,7 +145,10 @@ public class BambusClient implements ClientModInitializer {
 			return InteractionResult.PASS;
 		});
 		// Eigene Capes/Flügel aus config/bambus-kosmetik/ laden, sobald die Texturen bereit sind
-		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Musik.stoppe());
+		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> {
+			Musik.stoppe();
+			DiscordStatus.trennen();
+		});
 		ClientLifecycleEvents.CLIENT_STARTED.register(mc -> {
 			EigeneKosmetik.neuLaden();
 			Hinweise.versionPruefen();
@@ -250,8 +253,21 @@ public class BambusClient implements ClientModInitializer {
 
 	// ------------------------------------------------------------------ Tick
 
+	/** Zählt Ticks für seltene Aufgaben. */
+	private static int takt;
+
 	private static void tick(Minecraft mc) {
 		mc.getWindow().setTitle(FENSTERTITEL);
+		// alle zwei Sekunden: Hat der Launcher bambus.json geändert (z. B. Kosmetik gekauft)? Dann übernehmen statt überschreiben
+		if (++takt % 40 == 0) {
+			BambusConfig neu = BambusConfig.vonAussenGeaendert();
+			if (neu != null) {
+				config = neu;
+				toggleSprint().ausConfigUebernehmen(neu);
+				Funktionen.sprintUndSchleichenAnwenden(mc);
+				LOGGER.info("Einstellungen vom Launcher übernommen");
+			}
+		}
 		if (mc.level != null && mc.player != null) {
 			Blaetter.tick(mc);   // Spielzeit, Blätter und die Herausforderungen des Tages
 		}

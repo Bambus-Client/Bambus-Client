@@ -203,7 +203,7 @@ final class SeiteMeinSpiel extends JPanel {
 					@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
 					@Override public void mouseClicked(MouseEvent e) { oeffneBild(datei); }
 				});
-				pool.submit(() -> {
+				if (!vorschau.containsKey(datei)) pool.submit(() -> {   // schon geladen: nicht noch einmal entpacken
 					BufferedImage klein = lade(datei);
 					if (klein != null) {
 						SwingUtilities.invokeLater(() -> {
