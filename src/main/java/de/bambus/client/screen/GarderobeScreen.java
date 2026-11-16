@@ -170,6 +170,17 @@ public class GarderobeScreen extends Screen {
 			});
 		}
 
+		// Emotes: Musik an/aus; die Vorschau tanzt das Emote des gewählten Rad-Platzes
+		if (art == Garderobe.Art.EMOTES) {
+			kleinKnopf(g, mx, my, BambusClient.config.emoteMusik ? "MUSIK: AN" : "MUSIK: AUS", x + b - 70, 14, 70, () -> {
+				BambusClient.config.emoteMusik = !BambusClient.config.emoteMusik;
+				BambusClient.config.speichern();
+			});
+			de.bambus.client.emote.Emotes.setzeVorschau(gewaehlt == null ? null : de.bambus.client.emote.Emotes.nachId(gewaehlt.id()));
+		} else {
+			de.bambus.client.emote.Emotes.setzeVorschau(null);
+		}
+
 		// Vorschau mit Spielerfigur – kompakte Box, nur wenn genug Platz ist
 		int vb = b >= 260 ? VORSCHAU_B : 0;
 		if (vb > 0) {
@@ -180,8 +191,11 @@ public class GarderobeScreen extends Screen {
 		// Kacheln
 		rx = x + (vb > 0 ? vb + RAND : 0);
 		ry = KOPF;
+		if (art == Garderobe.Art.EMOTES) {   // darüber die 8 Plätze des Emote-Rads
+			ry += radPlaetze(g, mx, my, rx, KOPF, x + b - rx) + 8;
+		}
 		rb = x + b - rx;
-		rh = height - KOPF - RAND;
+		rh = height - ry - RAND;
 		g.enableScissor(rx, ry, rx + rb, ry + rh);
 		float wechsel = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - artSeit) / Anim.WECHSEL_MS)) : 1f;
 		int y0 = ry - scroll + Math.round((1 - wechsel) * 10);
@@ -199,6 +213,36 @@ public class GarderobeScreen extends Screen {
 			g.fill(rx + rb - 2, ry, rx + rb, ry + rh, Farben.LINIE);
 			g.fill(rx + rb - 2, balkenY, rx + rb, balkenY + balkenH, Farben.NEON);
 		}
+	}
+
+	/** Die 8 Plätze des Emote-Rads; ein Klick wählt den Platz, den die Kacheln darunter belegen. Gibt die Höhe zurück. */
+	private int radPlaetze(GuiGraphics g, int mx, int my, int x, int y, int b) {
+		String[] rad = de.bambus.client.emote.Emotes.rad();
+		int abst = 4, h = 40;
+		int pb = (b - abst * 7) / 8;
+		Neon.text(g, font, "EMOTE-RAD · Platz wählen, dann unten ein Emote", x, y, 0.6f, Farben.GRAU, false);
+		y += 9;
+		float t = (System.currentTimeMillis() % 100_000L) / 1000f;
+		for (int i = 0; i < 8; i++) {
+			int px = x + i * (pb + abst);
+			boolean an = i == de.bambus.client.emote.Emotes.gewaehlterPlatz;
+			boolean hover = Neon.ueber(mx, my, px, y, pb, h);
+			g.fill(px, y, px + pb, y + h, an ? Farben.alpha(Farben.NEON, 34) : hover ? Farben.KARTE_HOVER : Farben.KARTE);
+			if (an) Neon.leuchtRahmen(g, px, y, pb, h, Farben.NEON, 0.6f + 0.4f * Farben.puls());
+			else g.renderOutline(px, y, pb, h, hover ? 0xFF2E4058 : Farben.LINIE);
+			Neon.text(g, font, String.valueOf(i + 1), px + 3, y + 3, 0.6f, an ? Farben.NEON : Farben.GRAU, false);
+			de.bambus.client.emote.Emote e = de.bambus.client.emote.Emotes.nachId(rad[i]);
+			if (e != null) {
+				de.bambus.client.emote.EmoteFigur.zeichne(g, e, an ? t : 0.35f, px + pb / 2f, y + 22, 1.15f, an ? Farben.WEISS : e.farbe());
+				String n = font.plainSubstrByWidth(e.name(), (int) ((pb - 4) / 0.5f));
+				Neon.text(g, font, n, px + (pb - (int) (font.width(n) * 0.5f)) / 2, y + h - 7, 0.5f, an ? Farben.WEISS : 0xFFB5C2D4, false);
+			} else {
+				Neon.text(g, font, "frei", px + pb / 2 - 5, y + h / 2 - 2, 0.6f, 0xFF4A5A6E, false);
+			}
+			int platz = i;
+			klick(px, y, pb, h, () -> de.bambus.client.emote.Emotes.gewaehlterPlatz = platz, false);
+		}
+		return 9 + h;
 	}
 
 	private void vorschau(GuiGraphics g, int mx, int my, int x, int y, int b, int h, Garderobe.Eintrag gewaehlt) {
@@ -384,6 +428,11 @@ public class GarderobeScreen extends Screen {
 			return true;
 		}
 		return super.keyPressed(e);
+	}
+
+	@Override
+	public void removed() {
+		de.bambus.client.emote.Emotes.setzeVorschau(null);
 	}
 
 	@Override

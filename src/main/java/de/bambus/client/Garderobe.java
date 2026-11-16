@@ -30,7 +30,8 @@ public final class Garderobe {
 		PARTIKEL("Partikel", "Kreisen um dich herum"),
 		HUETE("Hüte", "Kopf-Kosmetik"),
 		KILL("Kill-Effekte", "Wenn du jemanden besiegst"),
-		PFEIL("Pfeil-Spuren", "Hinter deinen Geschossen");
+		PFEIL("Pfeil-Spuren", "Hinter deinen Geschossen"),
+		EMOTES("Emotes", "Tänze und Gesten · Rad mit Taste B");
 
 		public final String titel;
 		public final String beschreibung;
@@ -50,6 +51,7 @@ public final class Garderobe {
 				case HUETE -> Kosmetik.HUETE.forEach(h -> liste.add(new Eintrag(h.id(), h.name(), h.farbe(), false)));
 				case KILL -> Kosmetik.KILL_EFFEKTE.forEach(e -> liste.add(new Eintrag(e.id(), e.name(), e.farbe(), false)));
 				case PFEIL -> Kosmetik.SPUREN.forEach(e -> liste.add(new Eintrag(e.id(), e.name(), e.farbe(), false)));
+				case EMOTES -> de.bambus.client.emote.Emotes.ALLE.forEach(e -> liste.add(new Eintrag(e.id(), e.name(), e.farbe(), false)));
 			}
 			return liste;
 		}
@@ -63,6 +65,7 @@ public final class Garderobe {
 				case HUETE -> "hut";
 				case KILL -> "killeffekt";
 				case PFEIL -> "spur";
+				case EMOTES -> "emote";
 			};
 		}
 
@@ -82,6 +85,10 @@ public final class Garderobe {
 				case HUETE -> c.hut;
 				case KILL -> c.killEffekt;
 				case PFEIL -> c.spur;
+				case EMOTES -> {   // das Emote auf dem in der Garderobe gewählten Platz des Rads
+					String id = de.bambus.client.emote.Emotes.rad()[de.bambus.client.emote.Emotes.gewaehlterPlatz];
+					yield id.isEmpty() ? Kosmetik.AUS : id;
+				}
 			};
 		}
 
@@ -109,6 +116,8 @@ public final class Garderobe {
 				case HUETE -> c.hut = id;
 				case KILL -> c.killEffekt = id;
 				case PFEIL -> c.spur = id;
+				case EMOTES -> de.bambus.client.emote.Emotes.setzePlatz(de.bambus.client.emote.Emotes.gewaehlterPlatz,
+						Kosmetik.AUS.equals(id) ? "" : id);
 			}
 		}
 	}
