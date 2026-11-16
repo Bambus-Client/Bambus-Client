@@ -29,7 +29,8 @@ public final class Emotes {
 	private static final Map<String, Emote> NACH_ID = new LinkedHashMap<>();
 
 	/** Belegung des Rads ab Werk. */
-	public static final String STANDARD_RAD = "winken,jubeln,wackler,roboter,disco,hampelmann,kreisel,chillen";
+	/** Ab Werk liegen nur die Emotes aus dem Start-Set im Rad – die anderen werden mit Blättern freigeschaltet. */
+	public static final String STANDARD_RAD = "winken,jubeln,klatschen,,,,,";
 	public static final int PLAETZE = 8;
 
 	private static float sin(float t, float hz) {
@@ -267,9 +268,23 @@ public final class Emotes {
 		}
 	}
 
+	/** Noch nicht mit Blättern freigeschaltet? */
+	public static boolean gesperrt(Emote e) {
+		return e != null && de.bambus.client.Blaetter.gesperrt("emote", e.id());
+	}
+
+	public static int preis(Emote e) {
+		return de.bambus.client.Blaetter.preis("emote", e.id());
+	}
+
 	public static void starte(Emote e) {
 		Minecraft mc = Minecraft.getInstance();
 		if (e == null || mc.player == null) return;
+		if (gesperrt(e)) {
+			de.bambus.client.Hinweise.zeige("stern", e.name() + " ist noch gesperrt",
+					"In der Garderobe für " + preis(e) + " Blätter freischalten", de.bambus.client.Farben.NEON_CYAN);
+			return;
+		}
 		if (aktiv == null) {
 			alteKamera = mc.options.getCameraType();
 			if (alteKamera.isFirstPerson()) mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);

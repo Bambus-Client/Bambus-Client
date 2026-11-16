@@ -181,7 +181,10 @@ public class EmoteRadScreen extends Screen {
 				continue;
 			}
 			float groesse = massstab * (an ? 2.3f : 1.9f);
-			EmoteFigur.zeichne(g, e, an ? t : 0.35f, fx, fy - 2 * massstab, groesse, an ? Farben.WEISS : Farben.alpha(e.farbe(), 230));
+			boolean zu = Emotes.gesperrt(e);
+			EmoteFigur.zeichne(g, e, an && !zu ? t : 0.35f, fx, fy - 2 * massstab, groesse,
+					zu ? 0x66808A99 : an ? Farben.WEISS : Farben.alpha(e.farbe(), 230));
+			if (zu) schloss(g, (int) fx, (int) (fy - 6 * massstab), Farben.NEON_CYAN);
 			String n = font.plainSubstrByWidth(e.name(), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
 			int nb = (int) (font.width(n) * 0.6f);
 			Neon.text(g, font, n, (int) fx - nb / 2, (int) (fy + 17 * massstab), 0.6f, an ? Farben.WEISS : 0xFFB5C2D4, false);
@@ -193,6 +196,14 @@ public class EmoteRadScreen extends Screen {
 			InventoryScreen.renderEntityInInventoryFollowsMouse(g, (int) cx - r, (int) cy - r, (int) cx + r, (int) cy + r,
 					(int) (r * 0.62f), 0.0625f, (int) cx, (int) cy - r / 2, mc.player);
 		}
+	}
+
+	/** Kleines Schloss (10 × 12) – für noch gesperrte Emotes. */
+	public static void schloss(GuiGraphics g, int x, int y, int farbe) {
+		g.fill(x - 5, y, x + 5, y + 8, farbe);
+		g.fill(x - 3, y - 4, x + 3, y, farbe);
+		g.fill(x - 2, y - 3, x + 2, y, 0xFF0B1322);
+		g.fill(x - 1, y + 3, x + 1, y + 6, 0xFF0B1322);
 	}
 
 	// ================================================================ Eingabe

@@ -60,7 +60,6 @@ public final class Blaetter {
 	public static boolean gesperrt(String art, String id) {
 		stelleUm();
 		if (id == null || id.isEmpty() || Kosmetik.AUS.equals(id)) return false;
-		if ("emote".equals(art)) return false;   // Emotes sind für alle frei
 		if (Quests.imStartset(id) || Kosmetik.istEigen(id)) return false;
 		if (istEntwickler()) return false;   // der Entwickler hat alles frei
 		return !menge("shop").contains(id);

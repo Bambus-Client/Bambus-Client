@@ -176,6 +176,8 @@ public class GarderobeScreen extends Screen {
 				BambusClient.config.emoteMusik = !BambusClient.config.emoteMusik;
 				BambusClient.config.speichern();
 			});
+			String blaetter = de.bambus.client.Blaetter.blaetter() + " Blätter";
+			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(blaetter) * 0.75f), 18, 0.75f, Farben.NEON, false);
 			emoteEditor(g, mx, my, x, b);
 			return;
 		}
@@ -251,16 +253,23 @@ public class GarderobeScreen extends Screen {
 			boolean hover = gezogen == null && Neon.ueber(mx, my, zx, zy, spalte, zh);
 			if (hover) hoverId = e.id();
 			int imRad = java.util.Arrays.asList(rad).indexOf(e.id());
+			boolean zu = de.bambus.client.emote.Emotes.gesperrt(e);
 			g.fill(zx, zy, zx + spalte, zy + zh, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 			g.fill(zx, zy, zx + 2, zy + zh, e.farbe());
 			g.renderOutline(zx, zy, spalte, zh, hover ? Farben.alpha(e.farbe(), 200) : Farben.LINIE);
 			float s = zh / 26f;
-			de.bambus.client.emote.EmoteFigur.zeichne(g, e, hover ? t : 0.35f, zx + 12, zy + zh * 0.62f, s * 1.3f, e.farbe());
+			de.bambus.client.emote.EmoteFigur.zeichne(g, e, hover ? t : 0.35f, zx + 12, zy + zh * 0.62f, s * 1.3f,
+					zu ? Farben.alpha(e.farbe(), 110) : e.farbe());
 			int tx = zx + 24;
 			float ns = spalte < 100 ? 0.65f : 0.8f;   // in schmalen Spalten kleiner, damit der Name passt
-			String n = font.plainSubstrByWidth(e.name(), (int) ((spalte - 27 - (imRad >= 0 ? 13 : 0)) / ns));
+			String n = font.plainSubstrByWidth(e.name(), (int) ((spalte - 27 - (imRad >= 0 || zu ? 13 : 0)) / ns));
 			Neon.text(g, font, n, tx, zy + (zh >= 24 ? 5 : zh / 2 - 3), ns, hover ? Farben.WEISS : 0xFFC8D2DE, false);
-			if (zh >= 24) {
+			if (zu) {   // noch gesperrt: Schloss und Preis (zweiter Klick kauft)
+				de.bambus.client.screen.EmoteRadScreen.schloss(g, zx + spalte - 8, zy + zh / 2 - 3, Farben.NEON_CYAN);
+				int p = de.bambus.client.emote.Emotes.preis(e);
+				String preis = e.id().equals(kaufBereit) ? "KAUFEN?" : spalte < 100 ? p + " Bl." : p + " BLÄTTER";
+				Neon.text(g, font, preis, tx, zy + zh - (zh >= 24 ? 10 : 7), 0.55f, Farben.NEON_CYAN, false);
+			} else if (zh >= 24) {
 				String bes = font.plainSubstrByWidth(e.beschreibung(), (int) ((spalte - 32) / 0.55f));
 				Neon.text(g, font, bes, tx, zy + zh - 10, 0.55f, Farben.GRAU, false);
 			}
@@ -316,6 +325,12 @@ public class GarderobeScreen extends Screen {
 		if (e.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) return false;
 		for (EmoteZeile z : emoteZeilen) {
 			if (Neon.ueber(e.x(), e.y(), z.x(), z.y(), z.b(), z.h())) {
+				de.bambus.client.emote.Emote em = de.bambus.client.emote.Emotes.nachId(z.id());
+				if (de.bambus.client.emote.Emotes.gesperrt(em)) {   // erst freischalten (zweiter Klick kauft)
+					klickGeraeusch();
+					kaufe(z.id(), de.bambus.client.emote.Emotes.preis(em));
+					return true;
+				}
 				gezogen = z.id();
 				zugX = e.x();
 				zugY = e.y();
@@ -449,8 +464,11 @@ public class GarderobeScreen extends Screen {
 		if (de.bambus.client.Blaetter.kaufe(art.schluessel(), id)) {
 			art.waehle(id);
 			BambusClient.config.speichern();
+			String danach = art == Garderobe.Art.EMOTES
+					? "liegt jetzt auf Platz " + (de.bambus.client.emote.Emotes.gewaehlterPlatz + 1) + " im Rad"
+					: "schon angezogen";
 			de.bambus.client.Hinweise.zeige("stern", Garderobe.name(art.schluessel(), id) + " freigeschaltet",
-					"−" + preis + " Blätter · schon angezogen", de.bambus.client.Blaetter.rangFarbe());
+					"−" + preis + " Blätter · " + danach, de.bambus.client.Blaetter.rangFarbe());
 		}
 	}
 
