@@ -170,16 +170,16 @@ public class GarderobeScreen extends Screen {
 			});
 		}
 
-		// Emotes: Musik an/aus; die Vorschau tanzt das Emote des gewählten Rad-Platzes
+		// Emotes: Rad in der Mitte, Emotes links und rechts – ziehen oder klicken (eigene Ansicht statt Raster)
 		if (art == Garderobe.Art.EMOTES) {
 			kleinKnopf(g, mx, my, BambusClient.config.emoteMusik ? "MUSIK: AN" : "MUSIK: AUS", x + b - 70, 14, 70, () -> {
 				BambusClient.config.emoteMusik = !BambusClient.config.emoteMusik;
 				BambusClient.config.speichern();
 			});
-			de.bambus.client.emote.Emotes.setzeVorschau(gewaehlt == null ? null : de.bambus.client.emote.Emotes.nachId(gewaehlt.id()));
-		} else {
-			de.bambus.client.emote.Emotes.setzeVorschau(null);
+			emoteEditor(g, mx, my, x, b);
+			return;
 		}
+		de.bambus.client.emote.Emotes.setzeVorschau(null);
 
 		// Vorschau mit Spielerfigur – kompakte Box, nur wenn genug Platz ist
 		int vb = b >= 260 ? VORSCHAU_B : 0;
@@ -191,9 +191,6 @@ public class GarderobeScreen extends Screen {
 		// Kacheln
 		rx = x + (vb > 0 ? vb + RAND : 0);
 		ry = KOPF;
-		if (art == Garderobe.Art.EMOTES) {   // darüber die 8 Plätze des Emote-Rads
-			ry += radPlaetze(g, mx, my, rx, KOPF, x + b - rx) + 8;
-		}
 		rb = x + b - rx;
 		rh = height - ry - RAND;
 		g.enableScissor(rx, ry, rx + rb, ry + rh);
@@ -215,34 +212,137 @@ public class GarderobeScreen extends Screen {
 		}
 	}
 
-	/** Die 8 Plätze des Emote-Rads; ein Klick wählt den Platz, den die Kacheln darunter belegen. Gibt die Höhe zurück. */
-	private int radPlaetze(GuiGraphics g, int mx, int my, int x, int y, int b) {
+	// ------------------------------------------------------------ Emote-Editor
+
+	/** Ein Emote in den Listen links und rechts. */
+	private record EmoteZeile(int x, int y, int b, int h, String id) {}
+
+	private final List<EmoteZeile> emoteZeilen = new ArrayList<>();
+	private String gezogen;              // Emote, das gerade mit der Maus gezogen wird
+	private double zugX, zugY;
+	private boolean zugBewegt;
+	private float radX, radY;            // Lage des Rads (für Klicks und Ablegen)
+	private int radD;
+
+	/** Rad in der Mitte, Emotes links und rechts – wie ein Kleiderschrank für Tänze. */
+	private void emoteEditor(GuiGraphics g, int mx, int my, int x, int b) {
+		emoteZeilen.clear();
+		List<de.bambus.client.emote.Emote> alle = de.bambus.client.emote.Emotes.ALLE;
 		String[] rad = de.bambus.client.emote.Emotes.rad();
-		int abst = 4, h = 40;
-		int pb = (b - abst * 7) / 8;
-		Neon.text(g, font, "EMOTE-RAD · Platz wählen, dann unten ein Emote", x, y, 0.6f, Farben.GRAU, false);
-		y += 9;
+		int oben = KOPF, unten = height - RAND - 14;
+		int platz = unten - oben;
+		// das Rad lässt den Listen links und rechts möglichst je 110 Pixel, wird aber nie kleiner als 110
+		radD = Math.max(110, Math.min(Math.min((int) (b * 0.46f), platz), b - 2 * 110));
+		radX = x + b / 2f;
+		radY = oben + platz / 2f;
+		int spalte = Math.max(60, (int) ((b - radD) / 2f) - 10);
+		int haelfte = (alle.size() + 1) / 2;
+		int zh = Math.max(16, Math.min(30, (platz + 4) / haelfte - 4));
 		float t = (System.currentTimeMillis() % 100_000L) / 1000f;
-		for (int i = 0; i < 8; i++) {
-			int px = x + i * (pb + abst);
-			boolean an = i == de.bambus.client.emote.Emotes.gewaehlterPlatz;
-			boolean hover = Neon.ueber(mx, my, px, y, pb, h);
-			g.fill(px, y, px + pb, y + h, an ? Farben.alpha(Farben.NEON, 34) : hover ? Farben.KARTE_HOVER : Farben.KARTE);
-			if (an) Neon.leuchtRahmen(g, px, y, pb, h, Farben.NEON, 0.6f + 0.4f * Farben.puls());
-			else g.renderOutline(px, y, pb, h, hover ? 0xFF2E4058 : Farben.LINIE);
-			Neon.text(g, font, String.valueOf(i + 1), px + 3, y + 3, 0.6f, an ? Farben.NEON : Farben.GRAU, false);
-			de.bambus.client.emote.Emote e = de.bambus.client.emote.Emotes.nachId(rad[i]);
-			if (e != null) {
-				de.bambus.client.emote.EmoteFigur.zeichne(g, e, an ? t : 0.35f, px + pb / 2f, y + 22, 1.15f, an ? Farben.WEISS : e.farbe());
-				String n = font.plainSubstrByWidth(e.name(), (int) ((pb - 4) / 0.5f));
-				Neon.text(g, font, n, px + (pb - (int) (font.width(n) * 0.5f)) / 2, y + h - 7, 0.5f, an ? Farben.WEISS : 0xFFB5C2D4, false);
-			} else {
-				Neon.text(g, font, "frei", px + pb / 2 - 5, y + h / 2 - 2, 0.6f, 0xFF4A5A6E, false);
+
+		// Feld des Rads unter der Maus; beim Ziehen zeigt es, wo das Emote landet
+		int radFeld = EmoteRadScreen.feld(radX, radY, radD, mx, my, true);
+		String hoverId = null;
+
+		for (int i = 0; i < alle.size(); i++) {
+			de.bambus.client.emote.Emote e = alle.get(i);
+			int zx = i < haelfte ? x : x + b - spalte;
+			int zy = oben + (i % haelfte) * (zh + 4);
+			boolean hover = gezogen == null && Neon.ueber(mx, my, zx, zy, spalte, zh);
+			if (hover) hoverId = e.id();
+			int imRad = java.util.Arrays.asList(rad).indexOf(e.id());
+			g.fill(zx, zy, zx + spalte, zy + zh, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+			g.fill(zx, zy, zx + 2, zy + zh, e.farbe());
+			g.renderOutline(zx, zy, spalte, zh, hover ? Farben.alpha(e.farbe(), 200) : Farben.LINIE);
+			float s = zh / 26f;
+			de.bambus.client.emote.EmoteFigur.zeichne(g, e, hover ? t : 0.35f, zx + 12, zy + zh * 0.62f, s * 1.3f, e.farbe());
+			int tx = zx + 24;
+			float ns = spalte < 100 ? 0.65f : 0.8f;   // in schmalen Spalten kleiner, damit der Name passt
+			String n = font.plainSubstrByWidth(e.name(), (int) ((spalte - 27 - (imRad >= 0 ? 13 : 0)) / ns));
+			Neon.text(g, font, n, tx, zy + (zh >= 24 ? 5 : zh / 2 - 3), ns, hover ? Farben.WEISS : 0xFFC8D2DE, false);
+			if (zh >= 24) {
+				String bes = font.plainSubstrByWidth(e.beschreibung(), (int) ((spalte - 32) / 0.55f));
+				Neon.text(g, font, bes, tx, zy + zh - 10, 0.55f, Farben.GRAU, false);
 			}
-			int platz = i;
-			klick(px, y, pb, h, () -> de.bambus.client.emote.Emotes.gewaehlterPlatz = platz, false);
+			if (imRad >= 0) {   // liegt schon im Rad: Platznummer
+				g.fill(zx + spalte - 12, zy + 3, zx + spalte - 3, zy + 12, Farben.alpha(Farben.NEON, 60));
+				Neon.text(g, font, String.valueOf(imRad + 1), zx + spalte - 10, zy + 5, 0.6f, Farben.NEON, false);
+			}
+			emoteZeilen.add(new EmoteZeile(zx, zy, spalte, zh, e.id()));
 		}
-		return 9 + h;
+
+		// Vorschau in der Mitte: das Emote unter der Maus, sonst das gezogene, sonst das des gewählten Platzes
+		int gewaehlt = de.bambus.client.emote.Emotes.gewaehlterPlatz;
+		String zeigen = hoverId != null ? hoverId : gezogen != null ? gezogen
+				: radFeld >= 0 && !rad[radFeld].isEmpty() ? rad[radFeld] : rad[gewaehlt];
+		de.bambus.client.emote.Emotes.setzeVorschau(de.bambus.client.emote.Emotes.nachId(zeigen));
+		int hervor = gezogen != null && radFeld >= 0 ? radFeld : radFeld >= 0 ? radFeld : gewaehlt;
+		EmoteRadScreen.zeichneRad(g, font, minecraft, radX, radY, radD, rad, hervor, t);
+		if (gezogen == null && radFeld < 0) {   // gewählter Platz bleibt markiert
+			double w = gewaehlt * Math.PI / 4;
+			float r = radD / 2f * 0.98f;
+			int px = (int) (radX + Math.sin(w) * r), py = (int) (radY - Math.cos(w) * r);
+			g.fill(px - 3, py - 3, px + 3, py + 3, Farben.NEON);
+		}
+
+		String hinweis = gezogen != null ? "Auf einen Platz im Rad ziehen und loslassen"
+				: "Emote ins Rad ziehen – oder Platz anklicken, dann Emote anklicken · Rechtsklick leert einen Platz";
+		int hb = (int) (font.width(hinweis) * 0.6f);
+		Neon.text(g, font, hinweis, (int) radX - hb / 2, unten + 4, 0.6f, Farben.GRAU, false);
+
+		// das gezogene Emote hängt an der Maus
+		if (gezogen != null && zugBewegt) {
+			de.bambus.client.emote.Emote e = de.bambus.client.emote.Emotes.nachId(gezogen);
+			if (e != null) {
+				g.fill(mx - 14, my - 18, mx + 14, my + 8, Farben.alpha(0xFF0B1322, 220));
+				g.renderOutline(mx - 14, my - 18, 28, 26, e.farbe());
+				de.bambus.client.emote.EmoteFigur.zeichne(g, e, t, mx, my + 2, 1.4f, Farben.WEISS);
+			}
+		}
+	}
+
+	/** Klick im Emote-Editor: Platz wählen bzw. leeren oder ein Emote aufnehmen. */
+	private boolean emoteKlick(MouseButtonEvent e) {
+		int feld = EmoteRadScreen.feld(radX, radY, radD, e.x(), e.y(), true);
+		if (feld >= 0) {
+			if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT) {
+				de.bambus.client.emote.Emotes.setzePlatz(feld, "");
+			} else {
+				de.bambus.client.emote.Emotes.gewaehlterPlatz = feld;
+			}
+			klickGeraeusch();
+			return true;
+		}
+		if (e.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) return false;
+		for (EmoteZeile z : emoteZeilen) {
+			if (Neon.ueber(e.x(), e.y(), z.x(), z.y(), z.b(), z.h())) {
+				gezogen = z.id();
+				zugX = e.x();
+				zugY = e.y();
+				zugBewegt = false;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Emote losgelassen: auf dem Rad → dieser Platz; nur geklickt → gewählter Platz (dann weiter zum nächsten). */
+	private void emoteAblegen(double mx, double my) {
+		if (gezogen == null) return;
+		int feld = EmoteRadScreen.feld(radX, radY, radD, mx, my, false);
+		double dx = mx - radX, dy = my - radY;
+		boolean aufRad = Math.sqrt(dx * dx + dy * dy) <= radD / 2f;
+		if (zugBewegt && aufRad && feld >= 0) {
+			de.bambus.client.emote.Emotes.setzePlatz(feld, gezogen);
+			de.bambus.client.emote.Emotes.gewaehlterPlatz = feld;
+			klickGeraeusch();
+		} else if (!zugBewegt) {
+			int platz = de.bambus.client.emote.Emotes.gewaehlterPlatz;
+			de.bambus.client.emote.Emotes.setzePlatz(platz, gezogen);
+			de.bambus.client.emote.Emotes.gewaehlterPlatz = (platz + 1) % de.bambus.client.emote.Emotes.PLAETZE;
+			klickGeraeusch();
+		}
+		gezogen = null;
 	}
 
 	private void vorschau(GuiGraphics g, int mx, int my, int x, int y, int b, int h, Garderobe.Eintrag gewaehlt) {
@@ -387,6 +487,9 @@ public class GarderobeScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent e, boolean doppelt) {
+		if (art == Garderobe.Art.EMOTES && e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && emoteKlick(e)) {
+			return true;
+		}
 		if (e.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
 			for (int i = bereiche.size() - 1; i >= 0; i--) {
 				Bereich b = bereiche.get(i);
@@ -399,8 +502,27 @@ public class GarderobeScreen extends Screen {
 					return true;
 				}
 			}
+			if (art == Garderobe.Art.EMOTES && emoteKlick(e)) return true;
 		}
 		return super.mouseClicked(e, doppelt);
+	}
+
+	@Override
+	public boolean mouseDragged(MouseButtonEvent e, double dx, double dy) {
+		if (gezogen != null) {
+			if (Math.abs(e.x() - zugX) + Math.abs(e.y() - zugY) > 4) zugBewegt = true;
+			return true;
+		}
+		return super.mouseDragged(e, dx, dy);
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent e) {
+		if (gezogen != null) {
+			emoteAblegen(e.x(), e.y());
+			return true;
+		}
+		return super.mouseReleased(e);
 	}
 
 	@Override

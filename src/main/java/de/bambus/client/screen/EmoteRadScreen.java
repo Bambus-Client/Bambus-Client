@@ -49,7 +49,7 @@ public class EmoteRadScreen extends Screen {
 
 	// ================================================================ Texturen (einmal erzeugt)
 
-	private static void texturen(Minecraft mc) {
+	static void texturen(Minecraft mc) {
 		if (texturenDa) return;
 		texturenDa = true;
 		mc.getTextureManager().register(RING, new DynamicTexture(() -> "bambus emote-ring", bild(0)));
@@ -112,60 +112,16 @@ public class EmoteRadScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		super.render(g, mx, my, delta);
-		texturen(minecraft);
 		int d = (int) Math.min(height * 0.78f, 236);
 		float cx = width / 2f, cy = height / 2f;
-		float massstab = d / (float) TEX;
 
 		// Richtung der Maus → Feld (0 = oben, im Uhrzeigersinn)
-		float dx = mx - cx, dy = my - cy;
-		float abstand = (float) Math.sqrt(dx * dx + dy * dy);
-		if (abstand > INNEN * massstab * 0.5f) {
-			double winkel = Math.atan2(dx, -dy);
-			auswahl = Math.floorMod((int) Math.round(winkel / (Math.PI / 4)), Emotes.PLAETZE);
-		}
+		int feld = feld(cx, cy, d, mx, my, false);
+		if (feld >= 0) auswahl = feld;
 		Emote gezeigt = auswahl >= 0 ? Emotes.nachId(rad[auswahl]) : null;
 		Emotes.setzeVorschau(gezeigt);
-
-		int x0 = Math.round(cx - d / 2f), y0 = Math.round(cy - d / 2f);
-		g.blit(RenderPipelines.GUI_TEXTURED, RING, x0, y0, 0f, 0f, d, d, TEX, TEX, TEX, TEX, 0xFFFFFFFF);
-		if (auswahl >= 0) {
-			g.pose().pushMatrix();
-			g.pose().translate(cx, cy);
-			g.pose().rotate((float) (auswahl * Math.PI / 4));
-			g.blit(RenderPipelines.GUI_TEXTURED, KEIL, -d / 2, -d / 2, 0f, 0f, d, d, TEX, TEX, TEX, TEX,
-					Farben.alpha(gezeigt != null ? gezeigt.farbe() : Farben.GRAU, 150));
-			g.pose().popMatrix();
-		}
-		g.blit(RenderPipelines.GUI_TEXTURED, MITTE, x0, y0, 0f, 0f, d, d, TEX, TEX, TEX, TEX, 0xFFFFFFFF);
-
-		// Felder: tanzende Figur + Name
-		float rm = (INNEN + AUSSEN) / 2f * massstab;
-		float t = (System.currentTimeMillis() - geoeffnet) / 1000f;
-		for (int i = 0; i < Emotes.PLAETZE; i++) {
-			double w = i * Math.PI / 4;
-			float fx = cx + (float) Math.sin(w) * rm, fy = cy - (float) Math.cos(w) * rm;
-			Emote e = Emotes.nachId(rad[i]);
-			boolean an = i == auswahl;
-			if (e == null) {
-				Neon.text(g, font, "frei", (int) fx - 7, (int) fy - 3, 0.7f, 0xFF4A5A6E, false);
-				continue;
-			}
-			float groesse = massstab * (an ? 2.3f : 1.9f);
-			EmoteFigur.zeichne(g, e, an ? t : 0.35f, fx, fy - 2 * massstab, groesse, an ? Farben.WEISS : Farben.alpha(e.farbe(), 230));
-			String n = font.plainSubstrByWidth(e.name(), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
-			int nb = (int) (font.width(n) * 0.6f);
-			Neon.text(g, font, n, (int) fx - nb / 2, (int) (fy + 17 * massstab), 0.6f, an ? Farben.WEISS : 0xFFB5C2D4, false);
-			Neon.text(g, font, String.valueOf(i + 1), (int) (fx + Math.sin(w) * 18 * massstab) - 2,
-					(int) (fy - Math.cos(w) * 18 * massstab) - 3, 0.55f, 0xFF4A5A6E, false);
-		}
-
-		// Mitte: das eigene Modell tanzt vor
-		int r = (int) ((INNEN - 8) * massstab);
-		if (minecraft.player != null) {
-			InventoryScreen.renderEntityInInventoryFollowsMouse(g, (int) cx - r, (int) cy - r, (int) cx + r, (int) cy + r,
-					(int) (r * 0.62f), 0.0625f, (int) cx, (int) cy - r / 2, minecraft.player);
-		}
+		int y0 = Math.round(cy - d / 2f);
+		zeichneRad(g, font, minecraft, cx, cy, d, rad, auswahl, (System.currentTimeMillis() - geoeffnet) / 1000f);
 
 		// Kopf und Hinweis
 		String titel = gezeigt != null ? gezeigt.name().toUpperCase(java.util.Locale.ROOT) : "EMOTES";
@@ -177,6 +133,66 @@ public class EmoteRadScreen extends Screen {
 		String fuss = "Bewegen beendet das Emote  ·  Musik: " + (BambusClient.config.emoteMusik ? "AN" : "AUS") + " (M)  ·  Belegen in der Garderobe";
 		int fb = (int) (font.width(fuss) * 0.6f);
 		Neon.text(g, font, fuss, (int) cx - fb / 2, y0 + d + 8, 0.6f, 0xFF6B7A90, false);
+	}
+
+	// ================================================================ Rad (auch für die Garderobe)
+
+	/**
+	 * Feld unter der Maus (0 = oben, im Uhrzeigersinn) oder −1. nurImRing: nur wenn die Maus auf dem Ring ist
+	 * (Garderobe); sonst zählt nur die Richtung (Rad mit Taste B).
+	 */
+	public static int feld(float cx, float cy, int d, double mx, double my, boolean nurImRing) {
+		float massstab = d / (float) TEX;
+		double dx = mx - cx, dy = my - cy;
+		double abstand = Math.sqrt(dx * dx + dy * dy);
+		if (nurImRing ? abstand < INNEN * massstab || abstand > AUSSEN * massstab : abstand < INNEN * massstab * 0.5f) return -1;
+		return Math.floorMod((int) Math.round(Math.atan2(dx, -dy) / (Math.PI / 4)), Emotes.PLAETZE);
+	}
+
+	/** Zeichnet das Rad mit den Emotes der Plätze; in der Mitte tanzt das eigene Modell (Emotes.setzeVorschau). */
+	public static void zeichneRad(GuiGraphics g, net.minecraft.client.gui.Font font, Minecraft mc, float cx, float cy, int d,
+								  String[] rad, int hervor, float t) {
+		texturen(mc);
+		float massstab = d / (float) TEX;
+		Emote gezeigt = hervor >= 0 ? Emotes.nachId(rad[hervor]) : null;
+		int x0 = Math.round(cx - d / 2f), y0 = Math.round(cy - d / 2f);
+		g.blit(RenderPipelines.GUI_TEXTURED, RING, x0, y0, 0f, 0f, d, d, TEX, TEX, TEX, TEX, 0xFFFFFFFF);
+		if (hervor >= 0) {
+			g.pose().pushMatrix();
+			g.pose().translate(cx, cy);
+			g.pose().rotate((float) (hervor * Math.PI / 4));
+			g.blit(RenderPipelines.GUI_TEXTURED, KEIL, -d / 2, -d / 2, 0f, 0f, d, d, TEX, TEX, TEX, TEX,
+					Farben.alpha(gezeigt != null ? gezeigt.farbe() : Farben.NEON, 150));
+			g.pose().popMatrix();
+		}
+		g.blit(RenderPipelines.GUI_TEXTURED, MITTE, x0, y0, 0f, 0f, d, d, TEX, TEX, TEX, TEX, 0xFFFFFFFF);
+
+		// Felder: tanzende Figur + Name
+		float rm = (INNEN + AUSSEN) / 2f * massstab;
+		for (int i = 0; i < Emotes.PLAETZE; i++) {
+			double w = i * Math.PI / 4;
+			float fx = cx + (float) Math.sin(w) * rm, fy = cy - (float) Math.cos(w) * rm;
+			Emote e = Emotes.nachId(rad[i]);
+			boolean an = i == hervor;
+			Neon.text(g, font, String.valueOf(i + 1), (int) (fx + Math.sin(w) * 18 * massstab) - 2,
+					(int) (fy - Math.cos(w) * 18 * massstab) - 3, 0.55f, 0xFF4A5A6E, false);
+			if (e == null) {
+				Neon.text(g, font, "frei", (int) fx - 7, (int) fy - 3, 0.7f, 0xFF4A5A6E, false);
+				continue;
+			}
+			float groesse = massstab * (an ? 2.3f : 1.9f);
+			EmoteFigur.zeichne(g, e, an ? t : 0.35f, fx, fy - 2 * massstab, groesse, an ? Farben.WEISS : Farben.alpha(e.farbe(), 230));
+			String n = font.plainSubstrByWidth(e.name(), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
+			int nb = (int) (font.width(n) * 0.6f);
+			Neon.text(g, font, n, (int) fx - nb / 2, (int) (fy + 17 * massstab), 0.6f, an ? Farben.WEISS : 0xFFB5C2D4, false);
+		}
+
+		// Mitte: das eigene Modell tanzt vor
+		int r = (int) ((INNEN - 8) * massstab);
+		if (mc.player != null) {
+			InventoryScreen.renderEntityInInventoryFollowsMouse(g, (int) cx - r, (int) cy - r, (int) cx + r, (int) cy + r,
+					(int) (r * 0.62f), 0.0625f, (int) cx, (int) cy - r / 2, mc.player);
+		}
 	}
 
 	// ================================================================ Eingabe
