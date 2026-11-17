@@ -34,3 +34,16 @@ jobs:
           for mc in 26.1 26.2 26.3; do
             JAVA_HOME="$JAVA_HOME_25_X64" bash ./gradlew build -Pmc=$mc --no-daemon
           done
+
+      # vorübergehend: Methoden von MultiPlayerGameMode in 26.1 anzeigen
+      - name: Nachsehen (26.1)
+        if: failure()
+        run: |
+          for jar in $(find ~/.gradle/caches versionen/neu/.gradle -name "*.jar" 2>/dev/null | grep -iE "minecraft|merged|client" | head -40); do
+            if unzip -l "$jar" 2>/dev/null | grep -q "net/minecraft/client/multiplayer/MultiPlayerGameMode.class"; then
+              echo "== $jar"
+              "$JAVA_HOME_25_X64/bin/javap" -cp "$jar" net.minecraft.client.multiplayer.MultiPlayerGameMode | grep -iE "Container|Inventory|click" || true
+              "$JAVA_HOME_25_X64/bin/javap" -cp "$jar" net.minecraft.world.inventory.ContainerInput | head -20 || true
+              break
+            fi
+          done
