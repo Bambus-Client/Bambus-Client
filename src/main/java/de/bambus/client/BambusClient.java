@@ -152,6 +152,9 @@ public class BambusClient implements ClientModInitializer {
 		// Eigene Treffer auswerten (Combo, Reach, Target-HUD, Kills) – nur lesen, nichts verändern
 		AttackEntityCallback.EVENT.register((spieler, welt, hand, entity, treffer) -> {
 			if (welt.isClientSide()) {
+				if (Kampf.schuetzeFreund(spieler, entity)) {
+					return InteractionResult.FAIL;   // Schlag gar nicht erst schicken
+				}
 				Kampf.angriff(spieler, entity);
 			}
 			return InteractionResult.PASS;

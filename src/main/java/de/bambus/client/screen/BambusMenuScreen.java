@@ -17,6 +17,11 @@ import de.bambus.client.Funktionen;
 import de.bambus.client.hud.HudModul;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -43,6 +48,7 @@ public class BambusMenuScreen extends Screen {
 		MODULE("Module", "HUD & Texturen", "alle"),
 		FUNKTIONEN("Funktionen", "Zoom & Visuals", "blitz"),
 		FADENKREUZ("Fadenkreuz", "Form & Farbe", "fadenkreuz"),
+		FREUNDE("Freunde", "Liste & Online", "person"),
 		MEHR("Mehr", "Design & Extras", "mehr");
 
 		final String titel;
@@ -68,6 +74,7 @@ public class BambusMenuScreen extends Screen {
 	private static String kategorie = "ALLE";
 	private EditBox suchFeld;
 	private EditBox freundFeld;
+	private String entfernenFrage;   // Freund, dessen ✕ einmal geklickt wurde (zweiter Klick entfernt)
 	private String meldung = "";
 	private long meldungZeit;
 	private final long offenSeit = System.currentTimeMillis();
@@ -215,7 +222,7 @@ public class BambusMenuScreen extends Screen {
 		ih = ph - 34 - 32;
 		boolean suchleiste = tab == Tab.MODULE;
 		suchFeld.setVisible(suchleiste);
-		if (tab != Tab.MEHR) {
+		if (tab != Tab.FREUNDE) {
 			freundFeld.setVisible(false);
 		}
 		if (suchleiste) {
@@ -252,6 +259,7 @@ public class BambusMenuScreen extends Screen {
 			case MODULE -> karten(g, mx, my, moduleKarten(), ix, y0, ib);
 			case FUNKTIONEN -> funktionen(g, mx, my, ix, y0, ib);
 			case FADENKREUZ -> fadenkreuz(g, mx, my, ix, y0, ib);
+			case FREUNDE -> freunde(g, mx, my, ix, y0, ib);
 			case MEHR -> mehr(g, mx, my, ix, y0, ib);
 		};
 		if (wechsel < 1f) {
@@ -808,6 +816,184 @@ public class BambusMenuScreen extends Screen {
 		}
 	}
 
+	// ============================================================ Freunde
+
+	private boolean istFreund(String name) {
+		return cfg().freunde.stream().anyMatch(f -> f.equalsIgnoreCase(name));
+	}
+
+	private void freundHinzufuegen(String name) {
+		String n = name.trim();
+		if (!n.matches("[A-Za-z0-9_]{2,16}")) {
+			melde("Ungültiger Name – 2 bis 16 Zeichen, nur Buchstaben, Zahlen und _");
+			return;
+		}
+		if (istFreund(n)) {
+			melde(n + " ist schon dein Freund");
+			return;
+		}
+		cfg().freunde.add(n);
+		freundFeld.setValue("");
+		speichern();
+		melde("♥ " + n + " ist jetzt dein Freund");
+	}
+
+	/** Freunde-Liste: hinzufügen, online sehen, anschreiben, entfernen – und Spieler vom Server übernehmen. */
+	private int freunde(GuiGraphics g, int mx, int my, int x, int y, int b) {
+		BambusConfig c = cfg();
+		ClientPacketListener verbindung = minecraft.getConnection();
+		int zy = y;
+
+		Neon.text(g, font, "FREUND HINZUFÜGEN", x, zy, 0.75f, Farben.NEON, false);
+		zy += 12;
+		int feldB = Math.min(160, b - 90);
+		freundFeld.setX(x);
+		freundFeld.setY(zy);
+		freundFeld.setWidth(feldB);
+		freundFeld.setVisible(zy >= iy && zy + 14 <= iy + ih);   // scrollt mit – nur ganz sichtbar zeigen
+		kleinKnopf(g, mx, my, "+ HINZUFÜGEN", x + feldB + 4, zy, 76, () -> freundHinzufuegen(freundFeld.getValue()));
+		zy += 24;
+
+		// Online zuerst, dann nach Namen
+		List<String> liste = new ArrayList<>(c.freunde);
+		liste.sort(java.util.Comparator.<String, Boolean>comparing(f -> verbindung == null || verbindung.getPlayerInfo(f) == null)
+				.thenComparing(String.CASE_INSENSITIVE_ORDER));
+		long online = liste.stream().filter(f -> verbindung != null && verbindung.getPlayerInfo(f) != null).count();
+		Neon.text(g, font, "MEINE FREUNDE", x, zy, 0.75f, Farben.NEON, false);
+		String zahl = liste.size() + (liste.size() == 1 ? " Freund" : " Freunde") + (verbindung != null ? " · " + online + " online" : "");
+		Neon.text(g, font, zahl, x + (int) (font.width("MEINE FREUNDE") * 0.75f) + 8, zy, 0.75f, Farben.GRAU, false);
+		zy += 12;
+
+		if (liste.isEmpty()) {
+			Neon.flaeche(g, x, zy, b, 30, Farben.KARTE);
+			Neon.rahmen(g, x, zy, b, 30, Farben.LINIE);
+			Symbole.zeichne(g, "person", x + 8, zy + 11, 1, Farben.GRAU);
+			g.drawString(font, "Noch keine Freunde", x + 24, zy + 6, Farben.WEISS, false);
+			Neon.text(g, font, "Namen oben eintippen oder unten einen Spieler vom Server übernehmen.", x + 24, zy + 18, 0.6f, Farben.GRAU, false);
+			zy += 36;
+		} else {
+			int spalten = b >= 300 ? 2 : 1;
+			int kb = (b - (spalten - 1) * 6) / spalten, kh = 28;
+			for (int i = 0; i < liste.size(); i++) {
+				String f = liste.get(i);
+				int kx = x + (i % spalten) * (kb + 6), ky = zy + (i / spalten) * (kh + 4);
+				freundKarte(g, mx, my, f, verbindung == null ? null : verbindung.getPlayerInfo(f), kx, ky, kb, kh);
+			}
+			zy += (liste.size() + spalten - 1) / spalten * (kh + 4) + 4;
+		}
+
+		// Spieler auf dem aktuellen Server mit einem Klick übernehmen
+		if (verbindung != null) {
+			String ich = minecraft.player == null ? "" : minecraft.player.getName().getString();
+			List<String> andere = new ArrayList<>();
+			for (PlayerInfo info : verbindung.getOnlinePlayers()) {
+				String n = info.getProfile().name();
+				if (n != null && n.matches("[A-Za-z0-9_]{2,16}") && !n.equalsIgnoreCase(ich) && !istFreund(n)) andere.add(n);
+			}
+			andere.sort(String.CASE_INSENSITIVE_ORDER);
+			Neon.text(g, font, "SPIELER AUF DIESEM SERVER", x, zy, 0.75f, Farben.NEON, false);
+			zy += 12;
+			if (andere.isEmpty()) {
+				Neon.text(g, font, "Gerade niemand sonst hier.", x, zy + 2, 0.75f, Farben.GRAU, false);
+				zy += 14;
+			} else {
+				int fx = x, max = 60;
+				for (String n : andere.subList(0, Math.min(max, andere.size()))) {
+					int fb = font.width(n) + 20;
+					if (fx + fb > x + b) {
+						fx = x;
+						zy += 16;
+					}
+					boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, fx, zy, fb, 13);
+					g.fill(fx, zy, fx + fb, zy + 13, hover ? Farben.alpha(Farben.NEON, 60) : Farben.KARTE);
+					g.drawString(font, "+", fx + 4, zy + 3, Farben.NEON, false);
+					g.drawString(font, n, fx + 14, zy + 3, hover ? Farben.WEISS : 0xFFC8D2DE, false);
+					klick(fx, zy, fb, 13, () -> freundHinzufuegen(n), true);
+					fx += fb + 4;
+				}
+				zy += 16;
+				if (andere.size() > max) {
+					Neon.text(g, font, "… und " + (andere.size() - max) + " weitere – Namen oben eintippen", x, zy, 0.6f, Farben.GRAU, false);
+					zy += 10;
+				}
+			}
+			zy += 8;
+		}
+
+		Neon.text(g, font, "EINSTELLUNGEN", x, zy, 0.75f, Farben.NEON, false);
+		zy += 12;
+		zy += karten(g, mx, my, List.of(
+				new Karte("Online-Hinweis", "Meldung, wenn ein Freund auf deinen Server kommt", () -> c.freundHinweis,
+						() -> c.freundHinweis = !c.freundHinweis, Farben.NEON_CYAN),
+				new Karte("Freunde schützen", "Du kannst Freunde nicht aus Versehen schlagen", () -> c.freundSchutz,
+						() -> c.freundSchutz = !c.freundSchutz, Farben.NEON_PINK)),
+				x, zy, b, b >= 360 ? 2 : 1);
+		return zy - y;
+	}
+
+	private void freundKarte(GuiGraphics g, int mx, int my, String f, PlayerInfo info, int x, int y, int b, int h) {
+		boolean online = info != null;
+		boolean hover = imInhalt(mx, my) && Neon.ueber(mx, my, x, y, b, h);
+		Neon.flaeche(g, x, y, b, h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
+		Neon.rahmen(g, x, y, b, h, online ? Farben.alpha(Farben.NEON, 140) : Farben.LINIE);
+		g.fill(x, y + 3, x + 2, y + h - 3, online ? Farben.NEON : Farben.LINIE);
+
+		// Kopf: echter Skin, wenn er hier ist – sonst ein Platzhalter
+		if (online) {
+			PlayerFaceRenderer.draw(g, info.getSkin(), x + 6, y + 6, 16);
+		} else {
+			g.fill(x + 6, y + 6, x + 22, y + 22, 0xFF1A2230);
+			g.drawString(font, "?", x + 12, y + 10, Farben.GRAU, false);
+		}
+
+		int rechts = x + b - 4;
+		// ✕ entfernen (zweimal klicken)
+		boolean frage = f.equals(entfernenFrage);
+		String xText = frage ? "SICHER?" : "✕";
+		int xb = frage ? 46 : 14;
+		int xx = rechts - xb, by = y + (h - 14) / 2;
+		boolean xHover = imInhalt(mx, my) && Neon.ueber(mx, my, xx, by, xb, 14);
+		g.fill(xx, by, xx + xb, by + 14, frage ? Farben.alpha(0xFFFF4D6A, xHover ? 140 : 90) : xHover ? Farben.alpha(0xFFFF4D6A, 70) : 0x00000000);
+		Neon.text(g, font, xText, xx + (xb - (int) (font.width(xText) * 0.75f)) / 2, by + 4, 0.75f,
+				frage || xHover ? Farben.WEISS : Farben.GRAU, false);
+		klick(xx, by, xb, 14, () -> {
+			if (f.equals(entfernenFrage)) {
+				cfg().freunde.removeIf(n -> n.equalsIgnoreCase(f));
+				entfernenFrage = null;
+				speichern();
+				melde(f + " entfernt");
+			} else {
+				entfernenFrage = f;
+			}
+		}, true);
+		rechts = xx - 4;
+
+		// Nachricht schreiben (nur wenn er hier ist)
+		if (online) {
+			int nb = 52, nx = rechts - nb;
+			kleinKnopf(g, mx, my, "NACHRICHT", nx, by, nb, () -> minecraft.setScreen(new ChatScreen("/msg " + f + " ", false)));
+			rechts = nx - 4;
+		}
+
+		int tx = x + 28, platz = rechts - tx;
+		String name = online ? info.getProfile().name() : f;
+		g.drawString(font, font.plainSubstrByWidth(name, platz), tx, y + 5, Farben.WEISS, false);
+		String status;
+		int farbe;
+		if (online) {
+			Player p = minecraft.level == null ? null : minecraft.level.players().stream()
+					.filter(s -> s.getName().getString().equalsIgnoreCase(f)).findFirst().orElse(null);
+			status = p != null && minecraft.player != null && p != minecraft.player
+					? "● In der Nähe · " + Math.round(p.distanceTo(minecraft.player)) + " Blöcke"
+					: "● Online · " + info.getLatency() + " ms";
+			farbe = Farben.NEON;
+		} else {
+			status = minecraft.getConnection() == null ? "○ Offline – nicht verbunden" : "○ Nicht auf diesem Server";
+			farbe = Farben.GRAU;
+		}
+		Neon.text(g, font, font.plainSubstrByWidth(status, (int) (platz / 0.6f)), tx, y + 17, 0.6f, farbe, false);
+	}
+
 	/** MEHR: Design, Profile, Teilen, Tasten, Statistik und Extras. */
 	private int mehr(GuiGraphics g, int mx, int my, int x, int y, int b) {
 		BambusConfig c = cfg();
@@ -904,45 +1090,9 @@ public class BambusMenuScreen extends Screen {
 			{"Minemen Club", "eu.minemen.club", "PvP-Training · Practice"},
 	};
 
-	/** Freunde, Extras (Screenshots, Auto-Screenshot, Discord) und empfohlene Server. */
+	/** Extras (Screenshots, Auto-Screenshot, Discord) und empfohlene Server. */
 	private int extras(GuiGraphics g, int mx, int my, int x, int zy, int b) {
 		BambusConfig c = cfg();
-		Neon.text(g, font, "FREUNDE", x, zy, 0.75f, Farben.NEON, false);
-		zy += 12;
-		// Eingabefeld scrollt mit – nur zeigen, wenn es ganz im sichtbaren Bereich ist
-		freundFeld.setX(x);
-		freundFeld.setY(zy);
-		freundFeld.setVisible(zy >= iy && zy + 14 <= iy + ih);
-		kleinKnopf(g, mx, my, "+ FREUND", x + 124, zy, 56, () -> {
-			String n = freundFeld.getValue().trim();
-			if (n.matches("[A-Za-z0-9_]{2,16}") && c.freunde.stream().noneMatch(f -> f.equalsIgnoreCase(n))) {
-				c.freunde.add(n);
-				freundFeld.setValue("");
-				speichern();
-			}
-		});
-		zy += 20;
-		int fx = x;
-		for (String f : new ArrayList<>(c.freunde)) {
-			int fb = font.width(f) + 22;
-			if (fx + fb > x + b) {
-				fx = x;
-				zy += 16;
-			}
-			g.fill(fx, zy, fx + fb, zy + 13, Farben.alpha(Farben.NEON_PINK, 40));
-			g.drawString(font, f, fx + 4, zy + 3, Farben.WEISS, false);
-			g.drawString(font, "✕", fx + fb - 10, zy + 3, Farben.GRAU, false);
-			klick(fx + fb - 12, zy, 12, 13, () -> {
-				c.freunde.remove(f);
-				speichern();
-			}, true);
-			fx += fb + 4;
-		}
-		if (c.freunde.isEmpty()) {
-			Neon.text(g, font, "Noch keine Freunde – Name eintippen und + FREUND.", x, zy + 3, 0.75f, Farben.GRAU, false);
-		}
-		zy += 20;
-
 		Neon.text(g, font, "EXTRAS", x, zy, 0.75f, Farben.NEON, false);
 		zy += 12;
 		String discordText = DiscordStatus.moeglich() ? "Zeigt in Discord „Spielt Bambus Client“" : "Braucht eine Discord-App-ID (siehe Anleitung)";
@@ -1153,6 +1303,11 @@ public class BambusMenuScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(KeyEvent e) {
+		if (tab == Tab.FREUNDE && freundFeld.isVisible() && freundFeld.isFocused()
+				&& (e.key() == InputConstants.KEY_RETURN || e.key() == InputConstants.KEY_NUMPADENTER)) {
+			freundHinzufuegen(freundFeld.getValue());   // Enter im Namensfeld fügt hinzu
+			return true;
+		}
 		if (einstellungsZiel != null && (e.key() == InputConstants.KEY_ESCAPE || e.key() == InputConstants.KEY_TAB)) {
 			einstellungsZiel = null;   // ESC/Tab schließt erst das Einstellungsfenster
 			return true;

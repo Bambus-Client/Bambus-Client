@@ -81,6 +81,8 @@ public class BambusConfig {
 
 	// Extras
 	public java.util.List<String> freunde = new java.util.ArrayList<>();
+	public boolean freundHinweis = true;   // Meldung, wenn ein Freund auf den Server kommt
+	public boolean freundSchutz = false;   // Freunde lassen sich nicht schlagen
 	public boolean autoScreenshot = false;
 	public boolean discordAn = false;
 	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten

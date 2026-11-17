@@ -37,7 +37,7 @@ public final class EinstellungsTransfer {
 			"toggleSprint", "toggleSneak", "scrollZoom", "freelook", "fullbright", "capeAn", "bambusHauptmenue",
 			"scoreboardAn", "scoreboardGroesse", "bossbarAn", "bossbarGroesse", "tablisteGroesse", "chatGroesse",
 			"thema", "menueStil", "musikDurchsicht", "musikSchriftInsel", "musikSchriftWoerter", "musikWoerterOrt", "musikWoerterTempo", "emoteRad", "emoteMusik", "verlauf", "menueAnimation", "hinweise", "ladebildschirm", "menueHintergrund", "serverMenue",
-			"autoScreenshot", "helferAn",
+			"autoScreenshot", "helferAn", "freundHinweis", "freundSchutz",
 			"texturenAn", "lowFire", "lowFireStaerke", "lowShield", "lowShieldStaerke", "sideShield", "sideShieldDrehung",
 			"shortSword", "shortSwordGroesse", "keinKuerbisOverlay", "klaresWasser",
 			"gegnerLebenZahl", "zeitModus", "wetterModus", "trefferPartikel",
