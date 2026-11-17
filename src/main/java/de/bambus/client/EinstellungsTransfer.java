@@ -171,6 +171,31 @@ public final class EinstellungsTransfer {
 		return teile.isEmpty() ? "Nichts übernommen" : String.join(" und ", teile) + " übernommen";
 	}
 
+	/**
+	 * Übernimmt aus einer vollständigen bambus.json nur die Einstellungen (Module, HUD, Funktionen,
+	 * Farben …) – Blätter, Quests, Kosmetik und Freunde bleiben, wie sie sind.
+	 * Für Profile und Server-Profile: ein alter Schnappschuss darf keine Blätter zurückdrehen.
+	 */
+	public static boolean nurEinstellungen(Minecraft mc, String json) {
+		try {
+			JsonObject quelle = JsonParser.parseString(json).getAsJsonObject();
+			JsonObject alles = JsonParser.parseString(BambusClient.config.alsJson()).getAsJsonObject();
+			for (String k : BAMBUS) {
+				if (quelle.has(k)) alles.add(k, quelle.get(k));
+			}
+			BambusConfig neu = BambusConfig.ausJson(GSON.toJson(alles));
+			if (neu == null) return false;
+			BambusClient.config = neu;
+			neu.speichern();
+			BambusClient.toggleSprint().ausConfigUebernehmen(neu);
+			Funktionen.sprintUndSchleichenAnwenden(mc);
+			return true;
+		} catch (Exception e) {
+			BambusClient.LOGGER.warn("Einstellungen nicht übernommen", e);
+			return false;
+		}
+	}
+
 	/** options.txt als geordnete Liste „Name → Wert“ (Wert = alles nach dem ersten Doppelpunkt). */
 	private static Map<String, String> leseOptionen(Path datei) {
 		Map<String, String> m = new LinkedHashMap<>();

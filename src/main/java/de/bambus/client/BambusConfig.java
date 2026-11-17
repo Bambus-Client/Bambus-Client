@@ -127,6 +127,13 @@ public class BambusConfig {
 	public String spielTag = "";
 	public int spielBonusHeute = 0;     // schon vergebene Spiel-Blätter von heute
 	public String spielVerlauf = "";    // Spielzeit je Tag, z. B. „2026-11-14:35,2026-11-13:120“ (30 Tage)
+	// Wegpunkte: „Name|x|y|z|Farbe|Ort|Dimension|sichtbar“, Ort = Server-Adresse oder „sp:Weltname“
+	public java.util.List<String> wegpunkte = new java.util.ArrayList<>();
+	public boolean wegpunkteImKompass = true;
+	// Server-Profile: Adresse → Einstellungs-Profil (0 = PvP, 1 = Bauen, 2 = Eigenes)
+	public java.util.Map<String, Integer> serverProfile = new java.util.LinkedHashMap<>();
+	// Inventar sortieren: „name“, „art“ oder „menge“
+	public String sortierRegel = "art";
 	public String hartTag = "";         // Tag der aktuellen Herausforderungen
 	public String hartFertig = "";      // heute geschaffte Herausforderungen
 	public String hartStand = "";       // Zwischenstände, z. B. "kills5:2,sprint1000:640"

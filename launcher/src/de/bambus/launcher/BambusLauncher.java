@@ -344,8 +344,8 @@ public final class BambusLauncher extends JFrame {
 				g.setStroke(new java.awt.BasicStroke(1.6f));
 				g.setColor(blaetter < 0 ? NeonUI.CYAN : NeonUI.NEON);
 				g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-				java.awt.Color f = blaetter < 0 ? NeonUI.CYAN : NeonUI.NEON;
-				SeiteQuests.blatt(g, 24, getHeight() / 2 - 3, 16, f);
+				if (blaetter < 0) SeiteQuests.blatt(g, 24, getHeight() / 2 - 3, 16, NeonUI.CYAN);
+				else SeiteQuests.blattSaison(g, 24, getHeight() / 2 - 3, 16);
 				g.setFont(NeonUI.titel(16));
 				NeonUI.schattenText(g, (blaetter < 0 ? "−" + (-blaetter) : "+" + blaetter) + " " + Sprache.t("Blätter"),
 						44, getHeight() / 2 + 6, NeonUI.TEXT);
@@ -791,7 +791,7 @@ public final class BambusLauncher extends JFrame {
 			g.fillRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
 			g.setColor(ueber ? NeonUI.NEON : NeonUI.alpha(NeonUI.NEON, 110));
 			g.drawRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
-			SeiteQuests.blatt(g, 16, h / 2 - 3, 14, NeonUI.NEON);
+			SeiteQuests.blattSaison(g, 16, h / 2 - 3, 14);
 			g.setFont(NeonUI.mono(12));
 			g.setColor(NeonUI.TEXT);
 			g.drawString(String.valueOf(fortschritt.blaetter()), 30, h / 2 + 4);

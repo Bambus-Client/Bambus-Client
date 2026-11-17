@@ -88,6 +88,25 @@ final class SeiteQuests extends JPanel {
 		g.drawLine(x - gr / 2, y + gr / 2, x + gr / 2, y);
 	}
 
+	/** Blatt in der Farbe der Jahreszeit – im Winter mit Schnee auf der Oberkante. */
+	static void blattSaison(Graphics2D g, int x, int y, int gr) {
+		int monat = java.time.LocalDate.now().getMonthValue();
+		Color f = new Color(de.bambus.quests.Quests.blattFarbe(monat));
+		blatt(g, x, y, gr, f);
+		if (de.bambus.quests.Quests.blattVerschneit(monat)) {
+			g.setColor(Color.WHITE);
+			for (int i = gr / 4; i < gr - 1; i++) {
+				int w = (int) (Math.sin(Math.PI * i / (double) gr) * gr * 0.42);
+				g.fillRect(x + i - gr / 2, y + gr / 2 - i / 2 - w / 2, 1, 1);
+			}
+		}
+	}
+
+	/** Farbe der Blätter in dieser Jahreszeit. */
+	static Color blattFarbe() {
+		return new Color(de.bambus.quests.Quests.blattFarbe(java.time.LocalDate.now().getMonthValue()));
+	}
+
 	// ============================================================ Inhalt zum Scrollen
 
 	private final class Inhalt extends JPanel {

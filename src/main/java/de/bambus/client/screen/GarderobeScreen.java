@@ -177,7 +177,8 @@ public class GarderobeScreen extends Screen {
 				BambusClient.config.speichern();
 			});
 			String blaetter = de.bambus.client.Blaetter.blaetter() + " Blätter";
-			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(blaetter) * 0.75f), 18, 0.75f, Farben.NEON, false);
+			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(blaetter) * 0.75f), 18, 0.75f,
+					de.bambus.client.Blaetter.blattFarbe(), false);
 			emoteEditor(g, mx, my, x, b);
 			return;
 		}

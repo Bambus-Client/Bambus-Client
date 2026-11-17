@@ -54,6 +54,7 @@ public final class Symbole {
 			"signal", 0x03030F0F3F3FFFFFL,
 			"karte", 0xFF9195F18FA989FFL,
 			"helfer", 0x7E81A5817E302000L,
+			"blatt", 0x071F3F7E7CF84080L,
 			"textur", 0xCCCC3333CCCC3333L
 		};
 		for (int i = 0; i < daten.length; i += 2) BILDER.put((String) daten[i], (Long) daten[i + 1]);

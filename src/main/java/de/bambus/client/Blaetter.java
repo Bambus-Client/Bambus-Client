@@ -157,6 +157,11 @@ public final class Blaetter {
 		BambusClient.config.hartStufe = sb.toString();
 	}
 
+	/** Farbe der Blätter in dieser Jahreszeit (mit Alpha, für Hinweise und Anzeigen). */
+	public static int blattFarbe() {
+		return 0xFF000000 | Quests.blattFarbe(LocalDate.now().getMonthValue());
+	}
+
 	public static boolean fertig(String id) {
 		tagPruefen();
 		return menge("hartFertig").contains(id);
@@ -233,7 +238,7 @@ public final class Blaetter {
 		if (c.spielminuten % MINUTEN_PRO_BONUS == 0 && c.spielBonusHeute < BONUS_MAX_PRO_TAG) {
 			c.spielBonusHeute += BONUS;
 			gib(BONUS);
-			Hinweise.zeige("stern", "+" + BONUS + " Blätter", c.spielminuten + " Minuten gespielt", rangFarbe());
+			Hinweise.zeige("blatt", "+" + BONUS + " Blätter", c.spielminuten + " Minuten gespielt", blattFarbe());
 		}
 		c.speichern();
 	}

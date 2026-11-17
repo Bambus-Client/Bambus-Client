@@ -48,6 +48,10 @@ public class BambusAuswahlScreen extends Screen {
 		}
 		karten.add(new NeonKarte(0, 0, KARTE_B, h, "QUESTS", "BLÄTTER & SHOP", symbol("stern"),
 				() -> minecraft.setScreen(new QuestScreen(this))));
+		if (minecraft.player != null) {   // Wegpunkte gehören zu einer Welt
+			karten.add(new NeonKarte(0, 0, KARTE_B, h, "WEGPUNKTE", "ORTE MERKEN", symbol("karte"),
+					() -> minecraft.setScreen(new WegpunktScreen(this))));
+		}
 		if (BambusClient.config.helferAn) {
 			karten.add(new NeonKarte(0, 0, KARTE_B, h, "HELFER", "FRAGEN & TIPPS", symbol("helfer"),
 					() -> minecraft.setScreen(new HelferScreen(this))));

@@ -833,7 +833,9 @@ public class BambusMenuScreen extends Screen {
 				new Karte("Menü-Hintergrund: " + MenueHintergrund.name(c.menueHintergrund), "Klicken zum Wechseln (wie im Launcher)", () -> true,
 						() -> c.menueHintergrund = MenueHintergrund.naechste(c.menueHintergrund), Farben.NEON_CYAN),
 				new Karte("Bambus-Ladebildschirm", "Eigener Ladebildschirm beim Betreten einer Welt", () -> c.ladebildschirm, () -> c.ladebildschirm = !c.ladebildschirm, Farben.NEON_PINK),
-				new Karte("Bambus-Serverauswahl", "Serverliste mit Favoriten ★, Suche und Ping", () -> c.serverMenue, () -> c.serverMenue = !c.serverMenue, Farben.GELB)),
+				new Karte("Bambus-Serverauswahl", "Serverliste mit Favoriten ★, Suche und Ping", () -> c.serverMenue, () -> c.serverMenue = !c.serverMenue, Farben.GELB),
+				new Karte("Inventar sortieren: " + de.bambus.client.Sortieren.regelName(), "Knopf ⇅ neben Inventar und Truhe · klicken wechselt die Regel",
+						() -> true, de.bambus.client.Sortieren::naechsteRegel, Farben.NEON)),
 				x, zy, b, 2);
 
 		Neon.text(g, font, "PROFILE", x, zy + 2, 0.75f, Farben.NEON, false);
@@ -848,6 +850,23 @@ public class BambusMenuScreen extends Screen {
 			}
 		}
 		zy += 36;
+		// Server-Profil: dieses Profil automatisch laden, sobald man diesen Server betritt
+		String adresse = Profile.serverAdresse(minecraft);
+		if (adresse != null) {
+			int fest = Profile.fuerServer(adresse);
+			for (int i = 0; i < Profile.NAMEN.length; i++) {
+				if (!Profile.vorhanden(i)) continue;
+				final int slot = i;
+				int px0 = x + i * (b / 3);
+				boolean an = fest == slot;
+				kleinKnopf(g, mx, my, (an ? "✔ " : "") + "AUTO HIER", px0, zy - 8, 96, () -> {
+					Profile.zuordnen(adresse, an ? -1 : slot);
+					melde(an ? "Kein Auto-Profil mehr für " + adresse
+							: "„" + Profile.NAMEN[slot] + "“ lädt jetzt automatisch auf " + adresse);
+				});
+			}
+			zy += 16;
+		}
 
 		Neon.text(g, font, "TEILEN & STEUERUNG", x, zy, 0.75f, Farben.NEON, false);
 		zy += 12;

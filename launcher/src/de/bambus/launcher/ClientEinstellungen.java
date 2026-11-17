@@ -302,6 +302,30 @@ final class ClientEinstellungen {
 		return aus;
 	}
 
+	/** Einstellungs-Profil (0 PvP, 1 Bauen, 2 Eigenes), das die Mod auf diesem Server lädt; -1 = keins. */
+	int serverProfil(String adresse) {
+		Map<String, Object> m = Json.objekt(daten.get("serverProfile"));
+		Object v = m == null ? null : m.get(adresse.toLowerCase(java.util.Locale.ROOT));
+		return v instanceof Number ? ((Number) v).intValue() : -1;
+	}
+
+	void setzeServerProfil(String adresse, int slot) {
+		Map<String, Object> m = Json.objekt(daten.get("serverProfile"));
+		if (m == null) {
+			m = new java.util.LinkedHashMap<>();
+			daten.put("serverProfile", m);
+		}
+		String k = adresse.toLowerCase(java.util.Locale.ROOT);
+		if (slot < 0) m.remove(k);
+		else m.put(k, slot);
+		speichern();
+	}
+
+	/** Gibt es dieses Einstellungs-Profil schon (im Spiel unter Mod-Menü → MEHR → PROFILE gespeichert)? */
+	boolean profilVorhanden(int slot) {
+		return java.nio.file.Files.isRegularFile(datei.resolveSibling("bambus-profil-" + (slot + 1) + ".json"));
+	}
+
 	/** Mit ★ markierte Server (Adressen, klein geschrieben) – dieselbe Liste wie im Spiel. */
 	java.util.List<String> serverSterne() {
 		frisch(false);

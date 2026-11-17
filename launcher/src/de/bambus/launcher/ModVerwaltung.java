@@ -170,6 +170,25 @@ final class ModVerwaltung {
 	}
 
 	/** Mit diesem Profil wird gespielt. */
+	/** Mod-Profil, mit dem ein Server gespielt wird (null = das gerade aktive). */
+	String profilFuerServer(String adresse) {
+		Map<String, Object> m = Json.objekt(daten.get("serverProfile"));
+		Object id = m == null ? null : m.get(adresse.toLowerCase(java.util.Locale.ROOT));
+		return id instanceof String && alleProfile().containsKey(id) ? (String) id : null;
+	}
+
+	void setzeProfilFuerServer(String adresse, String profilId) {
+		Map<String, Object> m = Json.objekt(daten.get("serverProfile"));
+		if (m == null) {
+			m = new LinkedHashMap<>();
+			daten.put("serverProfile", m);
+		}
+		String k = adresse.toLowerCase(java.util.Locale.ROOT);
+		if (profilId == null) m.remove(k);
+		else m.put(k, profilId);
+		speichern();
+	}
+
 	String aktivesProfil() {
 		return (String) daten.get("aktiv");
 	}
