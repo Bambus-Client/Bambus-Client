@@ -226,6 +226,7 @@ public class GarderobeScreen extends Screen {
 	private boolean zugBewegt;
 	private float radX, radY;            // Lage des Rads (für Klicks und Ablegen)
 	private int radD;
+	private int emoteScroll, emoteMaxScroll, emoteListeOben, emoteListeUnten;
 
 	/** Rad in der Mitte, Emotes links und rechts – wie ein Kleiderschrank für Tänze. */
 	private void emoteEditor(GuiGraphics g, int mx, int my, int x, int b) {
@@ -240,8 +241,14 @@ public class GarderobeScreen extends Screen {
 		radY = oben + platz / 2f;
 		int spalte = Math.max(60, (int) ((b - radD) / 2f) - 10);
 		int haelfte = (alle.size() + 1) / 2;
-		int zh = Math.max(16, Math.min(30, (platz + 4) / haelfte - 4));
+		int zh = Math.max(20, Math.min(30, (platz + 4) / haelfte - 4));
 		float t = (System.currentTimeMillis() % 100_000L) / 1000f;
+		// passen nicht alle Emotes untereinander, lassen sich die Listen mit dem Mausrad scrollen
+		emoteListeOben = oben;
+		emoteListeUnten = unten;
+		emoteMaxScroll = Math.max(0, haelfte * (zh + 4) - 4 - platz);
+		emoteScroll = Math.max(0, Math.min(emoteScroll, emoteMaxScroll));
+		g.enableScissor(x, oben, x + b, unten);
 
 		// Feld des Rads unter der Maus; beim Ziehen zeigt es, wo das Emote landet
 		int radFeld = EmoteRadScreen.feld(radX, radY, radD, mx, my, true);
@@ -250,8 +257,9 @@ public class GarderobeScreen extends Screen {
 		for (int i = 0; i < alle.size(); i++) {
 			de.bambus.client.emote.Emote e = alle.get(i);
 			int zx = i < haelfte ? x : x + b - spalte;
-			int zy = oben + (i % haelfte) * (zh + 4);
-			boolean hover = gezogen == null && Neon.ueber(mx, my, zx, zy, spalte, zh);
+			int zy = oben + (i % haelfte) * (zh + 4) - emoteScroll;
+			if (zy + zh < oben || zy > unten) continue;   // außerhalb der sichtbaren Liste
+			boolean hover = gezogen == null && my >= oben && my < unten && Neon.ueber(mx, my, zx, zy, spalte, zh);
 			if (hover) hoverId = e.id();
 			int imRad = java.util.Arrays.asList(rad).indexOf(e.id());
 			boolean zu = de.bambus.client.emote.Emotes.gesperrt(e);
@@ -279,6 +287,15 @@ public class GarderobeScreen extends Screen {
 				Neon.text(g, font, String.valueOf(imRad + 1), zx + spalte - 10, zy + 5, 0.6f, Farben.NEON, false);
 			}
 			emoteZeilen.add(new EmoteZeile(zx, zy, spalte, zh, e.id()));
+		}
+		g.disableScissor();
+		if (emoteMaxScroll > 0) {   // Hinweis: es gibt mehr Emotes – Bildlaufleisten an beiden Listen
+			int balkenH = Math.max(12, platz * platz / (platz + emoteMaxScroll));
+			int balkenY = oben + (platz - balkenH) * emoteScroll / emoteMaxScroll;
+			for (int bx : new int[]{x + spalte + 2, x + b - spalte - 4}) {
+				g.fill(bx, oben, bx + 2, unten, Farben.LINIE);
+				g.fill(bx, balkenY, bx + 2, balkenY + balkenH, Farben.NEON);
+			}
 		}
 
 		// Vorschau in der Mitte: das Emote unter der Maus, sonst das gezogene, sonst das des gewählten Platzes
@@ -324,6 +341,7 @@ public class GarderobeScreen extends Screen {
 			return true;
 		}
 		if (e.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) return false;
+		if (e.y() < emoteListeOben || e.y() >= emoteListeUnten) return false;
 		for (EmoteZeile z : emoteZeilen) {
 			if (Neon.ueber(e.x(), e.y(), z.x(), z.y(), z.b(), z.h())) {
 				de.bambus.client.emote.Emote em = de.bambus.client.emote.Emotes.nachId(z.id());
@@ -546,6 +564,10 @@ public class GarderobeScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mx, double my, double horizontal, double vertikal) {
+		if (art == Garderobe.Art.EMOTES && emoteMaxScroll > 0) {
+			emoteScroll = Math.max(0, Math.min(emoteMaxScroll, emoteScroll - (int) (vertikal * 18)));
+			return true;
+		}
 		if (imRaster(mx, my)) {
 			scroll -= (int) (vertikal * 18);
 			scroll = Math.max(0, Math.min(scroll, Math.max(0, inhaltHoehe - rh)));
