@@ -39,6 +39,8 @@ ScreenEvents\.afterRender\( => ScreenEvents.afterExtract(
 Screens\.getButtons\( => Screens.getWidgets(
 
 # ---- Minecraft: neue Namen
+# Inventar-Klicks (Sortieren): ClickType heißt seit 26.1 ContainerInput
+\bClickType\b => ContainerInput
 \bmc\.resizeDisplay\(\) => mc.resizeGui()
 RenderTypes\.entityCutoutNoCull\( => RenderTypes.entityCutout(
 OptionsScreen\(this, minecraft\.options\) => OptionsScreen(this, minecraft.options, minecraft.level != null)
