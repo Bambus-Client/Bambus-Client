@@ -134,7 +134,7 @@ final class Sprache {
 		g("Noch keine Profile gespeichert – im Spiel: Mod-Menü → MEHR → PROFILE → SPEICHERN.", "No profiles saved yet – in game: mod menu → MORE → PROFILES → SAVE.");
 		g("Emote-Rad", "Emote wheel");
 		g("Wegpunkt setzen", "Set waypoint");
-		g("Wegpunkte im Spiel: N setzt einen, Rechts-Shift → WEGPUNKTE verwaltet sie, der Kompass zeigt die Entfernung", "Waypoints in game: N sets one, Right Shift → WAYPOINTS manages them, the compass shows the distance");
+		g("Wegpunkte im Spiel: N setzt einen, Mod-Menü → Module → Wegpunkte ⋮ verwaltet sie, der Kompass zeigt die Entfernung", "Waypoints in game: N sets one, mod menu → Modules → Waypoints ⋮ manages them, the compass shows the distance");
 		g("Inventar sortieren: Knopf ⇅ neben Inventar, Truhe und Shulkerkiste – nach Art, Name oder Menge", "Sort inventory: ⇅ button next to inventory, chest and shulker box – by type, name or amount");
 		g("Server-Profile: jedem Server ein Einstellungs-Profil und ein Mod-Profil zuordnen, ▶ startet direkt", "Server profiles: give each server a settings profile and a mod profile, ▶ starts right away");
 		g("Sicherung: alles in eine Datei packen und auf einem anderen PC wieder einspielen", "Backup: pack everything into one file and restore it on another PC");
