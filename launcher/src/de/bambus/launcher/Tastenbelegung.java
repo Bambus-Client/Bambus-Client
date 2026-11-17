@@ -28,6 +28,8 @@ final class Tastenbelegung {
 			{"key.bambus.musik_pause", "Musik: Pause / Weiter", "key.keyboard.unknown"},
 			{"key.bambus.musik_weiter", "Musik: nächstes Lied", "key.keyboard.unknown"},
 			{"key.bambus.musik_zurueck", "Musik: vorheriges Lied", "key.keyboard.unknown"},
+			{"key.bambus.emotes", "Emote-Rad", "key.keyboard.b"},
+			{"key.bambus.wegpunkt", "Wegpunkt setzen", "key.keyboard.n"},
 			{"key.forward", "Vorwärts", "key.keyboard.w"},
 			{"key.left", "Nach links", "key.keyboard.a"},
 			{"key.back", "Rückwärts", "key.keyboard.s"},
@@ -43,7 +45,7 @@ final class Tastenbelegung {
 	};
 
 	/** Ab hier sind es normale Minecraft-Tasten, davor die von Bambus. */
-	static final int MINECRAFT_AB = 8;
+	static final int MINECRAFT_AB = 10;
 
 	static final String FREI = "key.keyboard.unknown";
 

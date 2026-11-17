@@ -1,5 +1,5 @@
-BAMBUS – UPDATE HOCHLADEN (15 Dateien): MEIN SPIEL, Server, Aussehen
-=====================================================================
+BAMBUS – UPDATE HOCHLADEN (34 Dateien): Wegpunkte, Sortieren, Server-Profile, Sicherung + Aufraeumen
+=========================================================================================
 
 WICHTIG: Lade NICHT die ZIP-Datei hoch! Erst entpacken (Doppelklick),
 dann den INHALT des Ordners "Hochladen" hochladen.
@@ -11,24 +11,17 @@ SO GEHT'S (ein einziger Schritt)
      Du ziehst also: AENDERUNGEN.md, gemeinsam, launcher, src
   4. Warten, bis GitHub alles aufgelistet hat -> unten "Commit changes".
 
-WAS IN DIESEM UPDATE STECKT
-  Neue Seite MEIN SPIEL (links in der Navigation) mit vier Bereichen:
-    - BILDER     : deine Screenshots mit Vorschau, Klick oeffnet sie gross
-    - SPIELZEIT  : heute, letzte 7 Tage, insgesamt + Balken der letzten 14 Tage
-    - TASTEN     : Tastenbelegung aendern, ohne ins Spiel zu gehen
-    - PROBLEME   : letzter Absturz in klaren Saetzen erklaert
-  Server:
-    - Stern heftet einen Server oben an (gilt auch im Spiel)
-    - Ziehen am linken Rand aendert die Reihenfolge
-  Aussehen:
-    - Schriftgroesse A- / A / A+ in den EINSTELLUNGEN
-    - Eigene Farben mischen (achtes Farbthema EIGEN) - gilt auch im Spiel
-    - Startbildschirm mit Logo und Ladebalken beim Oeffnen
-
-  Diesmal ist auch die Mod dabei (zwei Dateien): sie zaehlt die Spielzeit
-  jetzt pro Tag mit, damit der Launcher die Balken zeigen kann.
+BITTE AUFRAEUMEN – diese Dateien liegen im Repo und gehoeren da nicht hin
+(anklicken -> Papierkorb -> "Commit changes"):
+    Bambus-Update (1).zip
+    Bambus-Update-Versionen.zip
+    Update-Texte.zip
+    Update-Hintergrundbilder.zip
+    SO GEHT'S – zuerst lesen.txt   (die alte im Repo)
 
 DANACH
   Oben auf "Actions" klicken. Der Bau laeuft 10-15 Minuten.
   Gruener Haken = fertig. Roter Kreis = Fehler -> Lauf anklicken,
   roten Schritt aufklappen, Screenshot an Claude schicken.
+  Diesmal steckt viel in der Mod – ein roter Kreis beim ersten Bau waere
+  nicht ungewoehnlich und schnell behoben.

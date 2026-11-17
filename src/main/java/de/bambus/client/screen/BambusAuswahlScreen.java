@@ -24,7 +24,7 @@ public class BambusAuswahlScreen extends Screen {
 			int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
 			int schein = (int) (16 + 18 * Farben.puls() + 30 * hover);
 			g.fill(cx - groesse / 2 - 8, cy - groesse / 2 - 8, cx + groesse / 2 + 8, cy + groesse / 2 + 8, Farben.alpha(Farben.NEON, schein));
-			Symbole.zeichne(g, name, cx - groesse / 2, cy - groesse / 2, px, Anim.mische(Farben.NEON_CYAN, Farben.NEON, hover));
+			Symbole.zeichne(g, name, cx - groesse / 2, cy - groesse / 2, px, Anim.mische(NeonKarte.ruhig(), Farben.NEON, hover));
 		};
 	}
 

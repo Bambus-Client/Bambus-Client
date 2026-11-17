@@ -54,6 +54,7 @@ public final class Symbole {
 			"signal", 0x03030F0F3F3FFFFFL,
 			"karte", 0xFF9195F18FA989FFL,
 			"helfer", 0x7E81A5817E302000L,
+			"blatt", 0x071F3F7E7CF84080L,
 			"textur", 0xCCCC3333CCCC3333L
 		};
 		for (int i = 0; i < daten.length; i += 2) BILDER.put((String) daten[i], (Long) daten[i + 1]);
@@ -91,7 +92,7 @@ public final class Symbole {
 				{"freelook", "auge"}, {"fullbright", "sonne"}, {"hell", "sonne"}, {"fadenkreuz", "fadenkreuz"},
 				{"partikel", "kosmetik"}, {"cape", "kosmetik"}, {"flügel", "kosmetik"}, {"low-end", "blitz"},
 				{"fps", "blitz"}, {"leben", "herz"}, {"screenshot", "kamera"}, {"discord", "person"},
-				{"freund", "person"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
+				{"freund", "person"}, {"wegpunkt", "karte"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
 				{"bossbar", "hud"}, {"tab", "hud"}, {"chat", "hud"}, {"hauptmenü", "hud"}, {"menü", "mehr"},
 				{"verlauf", "kosmetik"}, {"benachrichtigung", "update"}, {"lade", "update"}, {"treffer", "ziel"},
 				{"textur", "textur"}, {"fire", "textur"}, {"shield", "ruestung"}, {"sword", "pvp"}, {"kürbis", "auge"}, {"wasser", "auge"},

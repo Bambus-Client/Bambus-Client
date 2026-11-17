@@ -84,17 +84,6 @@ final class SeiteServer extends JPanel {
 		new Timer(30_000, e -> { if (isShowing()) abfragen(); }).start();
 	}
 
-	// nur für Tests im Bauordner
-	java.awt.Component karteFuerTest(int i) {
-		return karten.get(i);
-	}
-
-	List<String> reihenfolgeFuerTest() {
-		List<String> aus = new ArrayList<>();
-		for (ServerKarte k : karten) aus.add(k.eintrag);
-		return aus;
-	}
-
 	/** Beim Öffnen der Seite. */
 	void aktualisiere() {
 		if (System.currentTimeMillis() - zuletzt > 10_000) abfragen();
@@ -162,6 +151,72 @@ final class SeiteServer extends JPanel {
 		return aus;
 	}
 
+	private static final String[] PROFIL_NAMEN = {"PvP", "Bauen", "Eigenes"};
+
+	/** Kleines Schild mit Rahmen (für die Profil-Auswahl unten auf der Karte). */
+	private static void schild(Graphics2D g, int x, int y, int b, String text, Color farbe, boolean ueber) {
+		g.setColor(ueber ? NeonUI.alpha(farbe, 40) : NeonUI.alpha(farbe, 16));
+		g.fillRoundRect(x, y, b, 18, 6, 6);
+		g.setColor(ueber ? farbe : NeonUI.alpha(farbe, 130));
+		g.drawRoundRect(x, y, b, 18, 6, 6);
+		g.setFont(NeonUI.mono(9));
+		g.setColor(farbe);
+		NeonUI.zentriert(g, NeonUI.passend(g, text, b - 8), x, y, b, 18);
+	}
+
+	/** Einstellungs-Profil weiterschalten: – → PvP → Bauen → Eigenes → –. Nur Profile, die es gibt. */
+	private void naechstesEinstProfil(String eintrag) {
+		String adr = adresse(eintrag);
+		int jetzt = l.client.serverProfil(adr);
+		int neu = -1;
+		for (int i = jetzt + 1; i < PROFIL_NAMEN.length; i++) {
+			if (l.client.profilVorhanden(i)) {
+				neu = i;
+				break;
+			}
+		}
+		l.client.setzeServerProfil(adr, neu);
+		hinweis = neu < 0 ? adr + ": kein Auto-Profil."
+				: adr + ": Profil „" + PROFIL_NAMEN[neu] + "“ lädt beim Betreten automatisch.";
+		if (neu < 0 && jetzt < 0 && !l.client.profilVorhanden(0) && !l.client.profilVorhanden(1) && !l.client.profilVorhanden(2)) {
+			hinweis = "Noch keine Profile gespeichert – im Spiel: Mod-Menü → MEHR → PROFILE → SPEICHERN.";
+		}
+		repaint();
+		liste.repaint();
+	}
+
+	/** Mod-Profil weiterschalten: aktives → Profil 1 → Profil 2 … → aktives. */
+	private void naechstesModProfil(String eintrag) {
+		String adr = adresse(eintrag);
+		String jetzt = l.mods.profilFuerServer(adr);
+		List<ModVerwaltung.Profil> alle = l.mods.profile();
+		String neu = null;
+		if (jetzt == null) {
+			neu = alle.isEmpty() ? null : alle.get(0).id;
+		} else {
+			for (int i = 0; i < alle.size(); i++) {
+				if (alle.get(i).id.equals(jetzt)) {
+					neu = i + 1 < alle.size() ? alle.get(i + 1).id : null;
+					break;
+				}
+			}
+		}
+		l.mods.setzeProfilFuerServer(adr, neu);
+		String name = "dem gerade aktiven Profil";
+		for (ModVerwaltung.Profil p : alle) if (p.id.equals(neu)) name = "„" + p.name + "“";
+		hinweis = adr + ": ▶ startet mit " + name + ".";
+		repaint();
+		liste.repaint();
+	}
+
+	/** Mod-Profil dieses Servers aktivieren und Minecraft starten. */
+	private void starte(String eintrag) {
+		String id = l.mods.profilFuerServer(adresse(eintrag));
+		if (id != null) l.mods.setzeAktivesProfil(id);
+		l.zeige("start");
+		l.spielen();
+	}
+
 	/** Stern an oder aus – dieselbe Liste benutzt die Serverauswahl im Spiel. */
 	private void stern(String eintrag) {
 		List<String> sterne = l.client.serverSterne();
@@ -202,7 +257,7 @@ final class SeiteServer extends JPanel {
 		karten.clear();
 		List<String> fav = reihenfolge();
 		for (int i = 0; i < fav.size(); i++) {
-			ServerKarte k = new ServerKarte(fav.get(i), i);
+			ServerKarte k = new ServerKarte(fav.get(i));
 			k.setBounds(4, i * (KARTE_H + 10), B, KARTE_H);
 			karten.add(k);
 			liste.add(k);
@@ -244,16 +299,15 @@ final class SeiteServer extends JPanel {
 
 	private final class ServerKarte extends JComponent {
 		final String eintrag;
-		final int platz;
 		volatile ServerStatus.Ergebnis status;
 		volatile boolean laedt;
 		private boolean ueber, ueberX, ueberStern;
+		private int ueberUnten;   // 1 Einstellungen, 2 Mods, 3 Start
 		private int greifY = -1;      // y beim Anfassen; -1 = wird nicht gezogen
 		private int ruheY;
 
-		ServerKarte(String eintrag, int platz) {
+		ServerKarte(String eintrag) {
 			this.eintrag = eintrag;
-			this.platz = platz;
 			addMouseListener(new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
 				@Override public void mouseExited(MouseEvent e) {
@@ -264,7 +318,7 @@ final class SeiteServer extends JPanel {
 				}
 
 				@Override public void mousePressed(MouseEvent e) {
-					if (aufX(e.getX(), e.getY()) || aufStern(e.getX(), e.getY())) return;
+					if (aufKnopf(e.getX(), e.getY())) return;
 					greifY = e.getY();
 					ruheY = getY();
 					liste.setComponentZOrder(ServerKarte.this, 0);   // beim Ziehen nach vorn
@@ -281,16 +335,25 @@ final class SeiteServer extends JPanel {
 				@Override public void mouseClicked(MouseEvent e) {
 					if (aufX(e.getX(), e.getY())) entfernen(eintrag);
 					else if (aufStern(e.getX(), e.getY())) stern(eintrag);
+					else if (aufEinst(e.getX(), e.getY())) naechstesEinstProfil(eintrag);
+					else if (aufMods(e.getX(), e.getY())) naechstesModProfil(eintrag);
+					else if (aufStart(e.getX(), e.getY())) starte(eintrag);
 				}
 			});
 			addMouseMotionListener(new MouseAdapter() {
 				@Override public void mouseMoved(MouseEvent e) {
 					boolean x = aufX(e.getX(), e.getY());
 					boolean st = aufStern(e.getX(), e.getY());
-					if (x != ueberX || st != ueberStern) {
+					int unten = aufEinst(e.getX(), e.getY()) ? 1 : aufMods(e.getX(), e.getY()) ? 2
+							: aufStart(e.getX(), e.getY()) ? 3 : 0;
+					if (x != ueberX || st != ueberStern || unten != ueberUnten) {
 						ueberX = x;
 						ueberStern = st;
-						setCursor(Cursor.getPredefinedCursor(x || st ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+						ueberUnten = unten;
+						setCursor(Cursor.getPredefinedCursor(x || st || unten > 0 ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+						setToolTipText(unten == 1 ? Sprache.t("Diese Einstellungen (HUD, Module, Ressourcenpakete) lädt Bambus automatisch, wenn du den Server betrittst.")
+								: unten == 2 ? Sprache.t("Mit diesen Mods startet ▶ Minecraft für diesen Server.")
+								: unten == 3 ? Sprache.t("Minecraft mit den Mods für diesen Server starten") : null);
 						repaint();
 					}
 				}
@@ -311,6 +374,23 @@ final class SeiteServer extends JPanel {
 
 		private boolean aufStern(int x, int y) {
 			return x > getWidth() - 62 && x <= getWidth() - 34 && y < 30;
+		}
+
+		// unten rechts: Einstellungs-Profil, Mod-Profil, Start
+		private boolean aufEinst(int x, int y) {
+			return x >= getWidth() - 330 && x < getWidth() - 236 && y >= 56 && y < 74;
+		}
+
+		private boolean aufMods(int x, int y) {
+			return x >= getWidth() - 232 && x < getWidth() - 110 && y >= 56 && y < 74;
+		}
+
+		private boolean aufStart(int x, int y) {
+			return x >= getWidth() - 106 && x < getWidth() - 74 && y >= 56 && y < 74;
+		}
+
+		private boolean aufKnopf(int x, int y) {
+			return aufX(x, y) || aufStern(x, y) || aufEinst(x, y) || aufMods(x, y) || aufStart(x, y);
 		}
 
 		@Override
@@ -365,7 +445,7 @@ final class SeiteServer extends JPanel {
 			if (s != null && s.online && !s.version.isEmpty()) {
 				g.setFont(NeonUI.mono(10));
 				g.setColor(NeonUI.alpha(NeonUI.GRAU, 200));
-				g.drawString(kuerzen(g.getFontMetrics(), s.version, 300), 82, 68);
+				g.drawString(kuerzen(g.getFontMetrics(), s.version, 270), 82, 68);
 			}
 
 			// rechts: Spieler und Ping
@@ -392,6 +472,16 @@ final class SeiteServer extends JPanel {
 			g.setColor(pf);
 			String ps = laedt ? "…" : ping >= 0 ? ping + " ms" : "–";
 			g.drawString(ps, b - 64, 66);
+
+			// unten rechts: Profil-Schilder und Start
+			String adr = adresse(eintrag);
+			int ep = l.client.serverProfil(adr);
+			String modId = l.mods.profilFuerServer(adr);
+			String modName = "aktives";
+			for (ModVerwaltung.Profil p : l.mods.profile()) if (p.id.equals(modId)) modName = p.name;
+			schild(g, b - 330, 56, 94, ep < 0 ? "PROFIL: –" : "PROFIL: " + PROFIL_NAMEN[ep], ep >= 0 ? NeonUI.NEON : NeonUI.GRAU, ueberUnten == 1);
+			schild(g, b - 232, 56, 122, "MODS: " + modName, modId != null ? NeonUI.CYAN : NeonUI.GRAU, ueberUnten == 2);
+			schild(g, b - 106, 56, 32, "▶", NeonUI.NEON, ueberUnten == 3);
 
 			// Anheften
 			boolean fest = hatStern(eintrag);

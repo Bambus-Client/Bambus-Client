@@ -141,6 +141,22 @@ public final class Quests {
 
 	public static String rangName(int gesammelt) { return RAENGE[rangNummer(gesammelt)][0]; }
 
+	/**
+	 * Farbe der Blätter je nach Jahreszeit (RGB ohne Alpha): Frühling hellgrün, Sommer sattgrün,
+	 * Herbst golden-orange, Winter eisig hell. Launcher und Spiel zeigen dieselbe.
+	 */
+	public static int blattFarbe(int monat) {
+		if (monat >= 3 && monat <= 5) return 0xC2FF4D;    // Frühling (gelbgrün)
+		if (monat >= 6 && monat <= 8) return 0x3DFF8A;    // Sommer
+		if (monat >= 9 && monat <= 11) return 0xFFAA3D;   // Herbst
+		return 0xCDEBFF;                                  // Winter
+	}
+
+	/** true im Winter – dann bekommen die Blätter eine Schneekappe. */
+	public static boolean blattVerschneit(int monat) {
+		return monat == 12 || monat <= 2;
+	}
+
 	public static int rangFarbe(int gesammelt) {
 		return 0xFF000000 | Integer.parseInt(RAENGE[rangNummer(gesammelt)][2], 16);
 	}

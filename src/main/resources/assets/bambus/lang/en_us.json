@@ -8,5 +8,6 @@
 	"key.bambus.musik_pause": "Music: play / pause",
 	"key.bambus.musik_weiter": "Music: next song",
 	"key.bambus.musik_zurueck": "Music: previous song",
-	"key.bambus.emotes": "Emote wheel"
+	"key.bambus.emotes": "Emote wheel",
+	"key.bambus.wegpunkt": "Set waypoint"
 }

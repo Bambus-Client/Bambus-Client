@@ -97,6 +97,7 @@ public class BambusClient implements ClientModInitializer {
 	);
 
 	private static KeyMapping menuTaste;
+	private static KeyMapping wegpunktTaste;
 	private static KeyMapping zoomTaste;
 	private static KeyMapping freelookTaste;
 	private static KeyMapping hudTaste;
@@ -127,11 +128,15 @@ public class BambusClient implements ClientModInitializer {
 		musikWeiter = taste("musik_weiter", InputConstants.UNKNOWN.getValue(), kategorie);
 		musikZurueck = taste("musik_zurueck", InputConstants.UNKNOWN.getValue(), kategorie);
 		emoteTaste = taste("emotes", InputConstants.KEY_B, kategorie);
+		wegpunktTaste = taste("wegpunkt", InputConstants.KEY_N, kategorie);
 
 		ClientTickEvents.END_CLIENT_TICK.register(BambusClient::tick);
 
 		// Quests: Welt betreten und Nachrichten mitlesen (Siege erkennen)
-		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> Blaetter.weltBetreten());
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+			Blaetter.weltBetreten();
+			client.execute(() -> Profile.serverBetreten(client));   // Server-Profil laden (im Spiel-Faden)
+		});
 		ClientReceiveMessageEvents.GAME.register((nachricht, ueberlagerung) -> Blaetter.nachricht(nachricht.getString()));
 		ClientReceiveMessageEvents.CHAT.register((nachricht, unterschrieben, absender, art, zeit) ->
 				Blaetter.nachricht(nachricht.getString()));
@@ -147,6 +152,9 @@ public class BambusClient implements ClientModInitializer {
 		// Eigene Treffer auswerten (Combo, Reach, Target-HUD, Kills) – nur lesen, nichts verändern
 		AttackEntityCallback.EVENT.register((spieler, welt, hand, entity, treffer) -> {
 			if (welt.isClientSide()) {
+				if (Kampf.schuetzeFreund(spieler, entity)) {
+					return InteractionResult.FAIL;   // Schlag gar nicht erst schicken
+				}
 				Kampf.angriff(spieler, entity);
 			}
 			return InteractionResult.PASS;
@@ -180,6 +188,8 @@ public class BambusClient implements ClientModInitializer {
 
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) ->
 				ScreenEvents.afterRender(screen).register((s, grafik, mausX, mausY, d) -> Hinweise.zeichne(grafik, client)));
+		// Inventar, Truhe, Shulkerkiste: Sortier-Knopf an die Seite
+		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> Sortieren.knopfAnbringen(client, screen, breite, hoehe));
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> {
 			if (screen instanceof TitleScreen) {
 				Screens.getButtons(screen).add(Button.builder(Component.literal("§bBAMBUS"),
@@ -334,6 +344,16 @@ public class BambusClient implements ClientModInitializer {
 			if (mc.screen == null && mc.player != null) mc.setScreen(new de.bambus.client.screen.EmoteRadScreen());
 		}
 		de.bambus.client.emote.Emotes.tick(mc);
+		Sortieren.tick(mc);
+		while (wegpunktTaste.consumeClick()) {
+			if (mc.screen == null && mc.player != null) {
+				Wegpunkte.Punkt p = Wegpunkte.hierSetzen(mc, null);
+				if (p != null) {
+					Hinweise.zeige("karte", "Wegpunkt gesetzt: " + p.name,
+							p.x + " / " + p.y + " / " + p.z + " · Mod-Menü → Module → Wegpunkte", 0xFF000000 | p.farbe);
+				}
+			}
+		}
 		while (koordinatenTaste.consumeClick()) {
 			String k = KoordinatenModul.alsText(mc);
 			if (!k.isEmpty()) {

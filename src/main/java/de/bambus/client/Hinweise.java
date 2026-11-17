@@ -84,7 +84,7 @@ public final class Hinweise {
 			boolean online = verbindung.getPlayerInfo(f) != null;
 			String k = f.toLowerCase(java.util.Locale.ROOT);
 			if (online && FREUNDE_ONLINE.add(k)) {
-				if (!f.equalsIgnoreCase(mc.player.getName().getString())) {
+				if (BambusClient.config.freundHinweis && !f.equalsIgnoreCase(mc.player.getName().getString())) {
 					zeige("person", "Freund online", f, Farben.NEON_CYAN);
 				}
 			} else if (!online) {

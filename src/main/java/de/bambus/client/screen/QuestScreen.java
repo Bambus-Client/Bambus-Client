@@ -1,7 +1,6 @@
 package de.bambus.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.bambus.client.BambusClient;
 import de.bambus.client.Blaetter;
 import de.bambus.client.Farben;
 import de.bambus.client.Garderobe;
@@ -76,7 +75,8 @@ public class QuestScreen extends Screen {
 		// Guthaben rechts oben
 		String bl = Blaetter.blaetter() + " Blätter";
 		int bb = font.width(bl);
-		Neon.text(g, font, bl, px + pb - 12 - bb, py + 11, 1f, Farben.NEON, true);
+		Neon.text(g, font, bl, px + pb - 12 - bb, py + 11, 1f, Blaetter.blattFarbe(), true);
+		Symbole.zeichne(g, "blatt", px + pb - 26 - bb, py + 11, 1, Blaetter.blattFarbe());
 
 		// Rangleiste
 		int rx = px + 10, ry = py + 34, rb = pb - 20, rh = 16;

@@ -41,6 +41,7 @@ final class SeiteMeinSpiel extends JPanel {
 	private static final int X = 40, B = 696;
 	private static final String[][] BEREICHE = {
 			{"bilder", "BILDER"}, {"zeit", "SPIELZEIT"}, {"tasten", "TASTEN"}, {"hilfe", "PROBLEME"},
+			{"sicherung", "SICHERUNG"},
 	};
 
 	private final BambusLauncher l;
@@ -53,6 +54,7 @@ final class SeiteMeinSpiel extends JPanel {
 	private final Spielzeit zeit;
 	private final Tasten tasten;
 	private final Hilfe hilfe;
+	private final SicherungTeil sicherung;
 
 	SeiteMeinSpiel(BambusLauncher l) {
 		this.l = l;
@@ -62,7 +64,7 @@ final class SeiteMeinSpiel extends JPanel {
 		for (int i = 0; i < BEREICHE.length; i++) {
 			final String id = BEREICHE[i][0];
 			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(BEREICHE[i][1], id.equals(offen) ? NeonUI.NEON : NeonUI.GRAU);
-			k.setBounds(X + i * 150, 100, 142, 34);
+			k.setBounds(X + i * 140, 100, 132, 34);
 			k.addActionListener(e -> zeigeBereich(id));
 			reiter.add(k);
 			add(k);
@@ -78,6 +80,8 @@ final class SeiteMeinSpiel extends JPanel {
 		inhalt.add(zeit, "zeit");
 		inhalt.add(tasten, "tasten");
 		inhalt.add(hilfe, "hilfe");
+		sicherung = new SicherungTeil();
+		inhalt.add(sicherung, "sicherung");
 		add(inhalt);
 	}
 
@@ -108,6 +112,7 @@ final class SeiteMeinSpiel extends JPanel {
 		g.setColor(NeonUI.GRAU);
 		String unter = offen.equals("bilder") ? "Deine Screenshots aus dem Spiel – anklicken zum Vergrößern."
 				: offen.equals("zeit") ? "Wie lange du gespielt hast. Zählt nur, während Bambus läuft."
+				: offen.equals("sicherung") ? "Alles in eine Datei packen und auf einem anderen PC wieder einspielen."
 				: offen.equals("tasten") ? "Tastenbelegung ändern, ohne erst ins Spiel zu gehen."
 				: "Wenn Minecraft abgestürzt ist, steht hier im Klartext, woran es lag.";
 		g.drawString(NeonUI.passend(g, unter, B), X, 86);
@@ -532,6 +537,133 @@ final class SeiteMeinSpiel extends JPanel {
 				if (Tastenbelegung.AKTIONEN[i] == aktion) return i;
 			}
 			return 99;
+		}
+	}
+
+	// ============================================================ 5) Sicherung
+
+	private final class SicherungTeil extends JPanel {
+		private String meldung = "";
+		private boolean fehler;
+
+		SicherungTeil() {
+			setOpaque(false);
+			setLayout(null);
+			NeonUI.UmrissKnopf raus = new NeonUI.UmrissKnopf("ALLES EXPORTIEREN", NeonUI.NEON);
+			raus.setBounds(4, 228, 228, 40);
+			raus.addActionListener(e -> exportieren());
+			add(raus);
+			NeonUI.UmrissKnopf rein = new NeonUI.UmrissKnopf("SICHERUNG EINSPIELEN", NeonUI.CYAN);
+			rein.setBounds(244, 228, 228, 40);
+			rein.addActionListener(e -> importieren());
+			add(rein);
+		}
+
+		private void exportieren() {
+			javax.swing.JFileChooser wahl = new javax.swing.JFileChooser();
+			wahl.setDialogTitle(Sprache.t("Sicherung speichern"));
+			wahl.setSelectedFile(new java.io.File(System.getProperty("user.home"),
+					"Bambus-Sicherung-" + LocalDate.now() + Sicherung.ENDUNG));
+			if (wahl.showSaveDialog(l) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+			Path ziel = wahl.getSelectedFile().toPath();
+			if (!ziel.getFileName().toString().endsWith(Sicherung.ENDUNG)) {
+				ziel = ziel.resolveSibling(ziel.getFileName() + Sicherung.ENDUNG);
+			}
+			try {
+				int n = Sicherung.exportiere(l.installer.spielOrdner, ziel);
+				fehler = false;
+				meldung = n + " Dateien gesichert: " + ziel.getFileName();
+			} catch (Exception ex) {
+				fehler = true;
+				meldung = "Speichern ging nicht: " + ex.getMessage();
+			}
+			repaint();
+		}
+
+		private void importieren() {
+			javax.swing.JFileChooser wahl = new javax.swing.JFileChooser();
+			wahl.setDialogTitle(Sprache.t("Sicherung auswählen"));
+			wahl.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Bambus-Sicherung", "bambus"));
+			if (wahl.showOpenDialog(l) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+			try {
+				Map<String, byte[]> daten = Sicherung.lies(wahl.getSelectedFile().toPath());
+				if (daten == null) {
+					fehler = true;
+					meldung = "Das ist keine Bambus-Sicherung.";
+					repaint();
+					return;
+				}
+				Sicherung.Inhalt i = Sicherung.ueberblick(daten);
+				String frage = Sprache.t("Sicherung vom") + " " + i.datum + "\n"
+						+ (i.blaetter >= 0 ? i.blaetter + " " + Sprache.t("Blätter") + "\n" : "")
+						+ (i.module >= 0 ? i.module + " " + Sprache.t("Module mit HUD-Anordnung") + "\n" : "")
+						+ i.dateien.size() + " " + Sprache.t("Dateien") + "\n\n"
+						+ Sprache.t("Das ersetzt Einstellungen, Kosmetik und Blätter auf diesem PC.") + "\n"
+						+ Sprache.t("Der jetzige Stand wird vorher automatisch gesichert.") + "\n\n"
+						+ Sprache.t("Jetzt einspielen?");
+				if (javax.swing.JOptionPane.showConfirmDialog(l, frage, Sprache.t("Sicherung einspielen"),
+						javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE)
+						!= javax.swing.JOptionPane.YES_OPTION) {
+					return;
+				}
+				Path vorher = Sicherung.spieleEin(l.installer.spielOrdner, daten);
+				javax.swing.JOptionPane.showMessageDialog(l,
+						Sprache.t("Eingespielt. Der Launcher startet jetzt neu.") + "\n\n"
+								+ Sprache.t("Dein alter Stand liegt hier:") + "\n" + vorher.getFileName(),
+						Sprache.t("Sicherung einspielen"), javax.swing.JOptionPane.INFORMATION_MESSAGE);
+				if (Updater.neuStarten()) {
+					System.exit(0);
+				}
+				fehler = false;
+				meldung = "Eingespielt – bitte den Launcher einmal schließen und neu öffnen.";
+			} catch (Exception ex) {
+				fehler = true;
+				meldung = "Einspielen ging nicht: " + ex.getMessage();
+			}
+			repaint();
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g = NeonUI.glatt(graphics);
+			RoundRectangle2D form = new RoundRectangle2D.Float(2, 0, B, 206, 14, 14);
+			g.setColor(NeonUI.KARTE);
+			g.fill(form);
+			g.setStroke(new BasicStroke(1.2f));
+			g.setColor(NeonUI.LINIE);
+			g.draw(form);
+
+			g.setFont(NeonUI.mono(10));
+			g.setColor(NeonUI.NEON);
+			g.drawString(Sprache.t("DRIN"), 20, 28);
+			g.setFont(NeonUI.normal(12));
+			g.setColor(NeonUI.TEXT);
+			String[] drin = {
+					"Einstellungen, Module und HUD-Anordnung",
+					"Blätter, Rang, Quests und Serie",
+					"Freigeschaltete und selbst gemachte Kosmetik",
+					"Mod-Profile, Server-Liste und Einstellungs-Profile",
+					"Tastenbelegung, Farben, Schriftgröße, Hintergrundbild",
+			};
+			for (int i = 0; i < drin.length; i++) g.drawString("✓  " + Sprache.t(drin[i]), 20, 52 + i * 21);
+
+			g.setFont(NeonUI.mono(10));
+			g.setColor(NeonUI.alpha(NeonUI.GRAU, 230));
+			g.drawString(Sprache.t("NICHT DRIN"), 20, 168);
+			g.setFont(NeonUI.normal(12));
+			g.setColor(NeonUI.GRAU);
+			g.drawString(NeonUI.passend(g, Sprache.t("Welten, Screenshots, Mods (lädt der Launcher neu), Microsoft-Konto"), B - 40), 20, 190);
+
+			g.setFont(NeonUI.normal(11));
+			g.setColor(NeonUI.alpha(NeonUI.GRAU, 210));
+			g.drawString(NeonUI.passend(g, "So geht's: hier exportieren, Datei auf den anderen PC bringen (USB-Stick, Signal, Mail), dort einspielen.", B), 4, 300);
+
+			if (!meldung.isEmpty()) {
+				g.setFont(NeonUI.normal(12));
+				g.setColor(fehler ? new Color(0xFFB0C4) : NeonUI.NEON);
+				g.drawString(NeonUI.passend(g, meldung, B), 4, 330);
+			}
+			g.dispose();
 		}
 	}
 
