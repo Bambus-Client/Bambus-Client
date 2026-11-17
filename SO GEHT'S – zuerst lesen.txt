@@ -1,4 +1,4 @@
-BAMBUS – UPDATE HOCHLADEN (29 Dateien): Wegpunkte, Sortieren, Server-Profile, Sicherung
+BAMBUS – UPDATE HOCHLADEN (34 Dateien): Wegpunkte, Sortieren, Server-Profile, Sicherung + Aufraeumen
 =========================================================================================
 
 WICHTIG: Lade NICHT die ZIP-Datei hoch! Erst entpacken (Doppelklick),

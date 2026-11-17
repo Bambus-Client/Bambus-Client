@@ -11,8 +11,6 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.RoundRectangle2D;
-import java.util.ArrayList;
-import java.util.List;
 
 /** NEUIGKEITEN: Was in den letzten Versionen dazugekommen ist – und ob ein Update wartet. */
 final class SeiteNeu extends JPanel {

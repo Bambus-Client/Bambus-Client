@@ -84,17 +84,6 @@ final class SeiteServer extends JPanel {
 		new Timer(30_000, e -> { if (isShowing()) abfragen(); }).start();
 	}
 
-	// nur für Tests im Bauordner
-	java.awt.Component karteFuerTest(int i) {
-		return karten.get(i);
-	}
-
-	List<String> reihenfolgeFuerTest() {
-		List<String> aus = new ArrayList<>();
-		for (ServerKarte k : karten) aus.add(k.eintrag);
-		return aus;
-	}
-
 	/** Beim Öffnen der Seite. */
 	void aktualisiere() {
 		if (System.currentTimeMillis() - zuletzt > 10_000) abfragen();
@@ -268,7 +257,7 @@ final class SeiteServer extends JPanel {
 		karten.clear();
 		List<String> fav = reihenfolge();
 		for (int i = 0; i < fav.size(); i++) {
-			ServerKarte k = new ServerKarte(fav.get(i), i);
+			ServerKarte k = new ServerKarte(fav.get(i));
 			k.setBounds(4, i * (KARTE_H + 10), B, KARTE_H);
 			karten.add(k);
 			liste.add(k);
@@ -310,7 +299,6 @@ final class SeiteServer extends JPanel {
 
 	private final class ServerKarte extends JComponent {
 		final String eintrag;
-		final int platz;
 		volatile ServerStatus.Ergebnis status;
 		volatile boolean laedt;
 		private boolean ueber, ueberX, ueberStern;
@@ -318,9 +306,8 @@ final class SeiteServer extends JPanel {
 		private int greifY = -1;      // y beim Anfassen; -1 = wird nicht gezogen
 		private int ruheY;
 
-		ServerKarte(String eintrag, int platz) {
+		ServerKarte(String eintrag) {
 			this.eintrag = eintrag;
-			this.platz = platz;
 			addMouseListener(new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
 				@Override public void mouseExited(MouseEvent e) {

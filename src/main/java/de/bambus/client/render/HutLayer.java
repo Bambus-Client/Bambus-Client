@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Mth;
 
 /**
  * Hüte und Kopf-Kosmetik (Krone, Zylinder, Heiligenschein, Hörner, Katzenohren, Partyhut, Bandana, Neon-Visier).

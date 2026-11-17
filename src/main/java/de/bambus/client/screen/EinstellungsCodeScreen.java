@@ -1,6 +1,5 @@
 package de.bambus.client.screen;
 
-import de.bambus.client.BambusClient;
 import de.bambus.client.EinstellungsTransfer;
 import de.bambus.client.Farben;
 import net.minecraft.client.gui.GuiGraphics;

@@ -1,7 +1,6 @@
 package de.bambus.client.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import de.bambus.helfer.HelferWissen;
 import de.bambus.helfer.Rezepte;
