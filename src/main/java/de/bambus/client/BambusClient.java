@@ -350,7 +350,7 @@ public class BambusClient implements ClientModInitializer {
 				Wegpunkte.Punkt p = Wegpunkte.hierSetzen(mc, null);
 				if (p != null) {
 					Hinweise.zeige("karte", "Wegpunkt gesetzt: " + p.name,
-							p.x + " / " + p.y + " / " + p.z + " · Rechts-Shift → WEGPUNKTE", 0xFF000000 | p.farbe);
+							p.x + " / " + p.y + " / " + p.z + " · Mod-Menü → Module → Wegpunkte", 0xFF000000 | p.farbe);
 				}
 			}
 		}

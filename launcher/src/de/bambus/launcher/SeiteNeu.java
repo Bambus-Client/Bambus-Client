@@ -29,7 +29,7 @@ final class SeiteNeu extends JPanel {
 					"Neue Einzel-Module: FPS, CPS, Bambus-Schriftzug, Item in der Hand und Ingame-Tag",
 					"Menü-Stil im Spiel wählbar: Bambus, Clean oder Kompakt",
 					"Musik-Modul: Song mit Cover, Songtext als Karaoke und große 3D-Wörter in der Welt",
-					"Wegpunkte im Spiel: N setzt einen, Rechts-Shift → WEGPUNKTE verwaltet sie, der Kompass zeigt die Entfernung",
+					"Wegpunkte im Spiel: N setzt einen, Mod-Menü → Module → Wegpunkte ⋮ verwaltet sie, der Kompass zeigt die Entfernung",
 					"Inventar sortieren: Knopf ⇅ neben Inventar, Truhe und Shulkerkiste – nach Art, Name oder Menge",
 					"Server-Profile: jedem Server ein Einstellungs-Profil und ein Mod-Profil zuordnen, ▶ startet direkt",
 					"Sicherung: alles in eine Datei packen und auf einem anderen PC wieder einspielen",

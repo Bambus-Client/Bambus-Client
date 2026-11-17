@@ -393,6 +393,7 @@ public class BambusMenuScreen extends Screen {
 			}
 		}
 		texturKarte(k, suche, c);
+		wegpunkteKarte(k, suche, c);
 		if (!suche.isEmpty() || !kategorie.equals("ALLE")) {
 			k.remove(0); // "HUD (alles)" nur in der vollen Liste
 		}
@@ -401,17 +402,30 @@ public class BambusMenuScreen extends Screen {
 
 	/** Das Textur-Modul als Karte (Kategorie PVP) – als Favorit oben, sonst am Ende der Liste. */
 	private void texturKarte(List<Karte> k, String suche, BambusConfig c) {
-		String id = "texturen", name = "Texturen", text = "Low Fire, Low Shield, Short Sword …";
-		boolean passt = suche.isEmpty() || name.toLowerCase(java.util.Locale.ROOT).contains(suche)
-				|| text.toLowerCase(java.util.Locale.ROOT).contains(suche)
-				|| "low fire shield side short sword kürbis wasser".contains(suche);
+		extraKarte(k, suche, c, "PVP", "low fire shield side short sword kürbis wasser",
+				new Karte("Texturen", "Low Fire, Low Shield, Short Sword …", () -> c.texturenAn, () -> c.texturenAn = !c.texturenAn,
+						Farben.NEON_PINK, "texturen", () -> oeffneEinstellungen(Texturen.MODUL)));
+	}
+
+	/** Wegpunkte als Karte (Kategorie INFO): Schalter = im Kompass zeigen, ⋮ = Wegpunkte verwalten. */
+	private void wegpunkteKarte(List<Karte> k, String suche, BambusConfig c) {
+		int anzahl = minecraft.player == null ? -1 : de.bambus.client.Wegpunkte.hier(minecraft).size();
+		String text = (anzahl > 0 ? anzahl + " hier · " : "") + "Orte merken · Taste N setzt einen";
+		extraKarte(k, suche, c, "INFO", "waypoint orte merken basis kompass koordinaten",
+				new Karte("Wegpunkte", text, () -> c.wegpunkteImKompass, () -> c.wegpunkteImKompass = !c.wegpunkteImKompass,
+						Farben.NEON, "wegpunkte", () -> minecraft.setScreen(new WegpunktScreen(this))));
+	}
+
+	/** Eine Karte, die kein HUD-Modul ist, nach Suche/Kategorie einsortieren – als Favorit oben, sonst ans Ende. */
+	private void extraKarte(List<Karte> k, String suche, BambusConfig c, String kat, String suchWorte, Karte karte) {
+		String id = karte.fav();
+		boolean passt = suche.isEmpty() || karte.name().toLowerCase(java.util.Locale.ROOT).contains(suche)
+				|| karte.text().toLowerCase(java.util.Locale.ROOT).contains(suche) || suchWorte.contains(suche);
 		boolean fav = c.favoriten.contains(id);
-		boolean kat = kategorie.equals("ALLE") || kategorie.equals("PVP") || (kategorie.equals("★") && fav);
-		if (!passt || !kat) {
+		boolean drin = kategorie.equals("ALLE") || kategorie.equals(kat) || (kategorie.equals("★") && fav);
+		if (!passt || !drin) {
 			return;
 		}
-		Karte karte = new Karte(name, text, () -> c.texturenAn, () -> c.texturenAn = !c.texturenAn, Farben.NEON_PINK, id,
-				() -> oeffneEinstellungen(Texturen.MODUL));
 		int favoriten = 0;
 		for (Karte x : k) {
 			if (x.fav() != null && c.favoriten.contains(x.fav())) favoriten++;

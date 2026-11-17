@@ -68,7 +68,7 @@ public class WegpunktScreen extends Screen {
 		g.fill(px, py, px + pb, py + ph, Farben.PANEL);
 		Neon.gitter(g, px, py, pb, ph, 16, Farben.alpha(Farben.NEON, 6));
 		Neon.leuchtRahmen(g, px, py, pb, ph, Farben.NEON, 0.55f + 0.45f * Farben.puls());
-		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.NEON_CYAN);
+		Neon.ecken(g, px - 5, py - 5, pb + 10, ph + 10, 12, Farben.NEON);
 
 		Symbole.zeichne(g, "karte", px + 12, py + 10, 2, Farben.NEON);
 		Neon.leuchtText(g, font, "WEGPUNKTE", px + 34, py + 10, 1f, Farben.NEON);
@@ -79,7 +79,7 @@ public class WegpunktScreen extends Screen {
 
 		// Eingabe + Setzen
 		g.fill(px + 10, py + 40, px + pb - 132, py + 58, 0xFF0B1220);
-		g.renderOutline(px + 10, py + 40, pb - 142, 18, name.isFocused() ? Farben.NEON_CYAN : Farben.LINIE);
+		g.renderOutline(px + 10, py + 40, pb - 142, 18, name.isFocused() ? Farben.NEON : Farben.LINIE);
 		knopf(g, mx, my, "+ HIER SETZEN", px + pb - 126, py + 40, 116, 18, Farben.NEON, this::setzen);
 
 		// Liste
@@ -112,7 +112,7 @@ public class WegpunktScreen extends Screen {
 					BambusClient.config.speichern();
 				});
 		if (!kompassAn) {
-			knopf(g, mx, my, "KOMPASS-BALKEN EINSCHALTEN", px + 136, fy, 170, 18, Farben.NEON_CYAN, () -> {
+			knopf(g, mx, my, "KOMPASS-BALKEN EINSCHALTEN", px + 136, fy, 170, 18, Farben.NEON, () -> {
 				BambusConfig.ModulPos k = BambusClient.config.modul("kompass", 160, 2, false);
 				k.an = true;
 				BambusClient.config.speichern();
@@ -172,7 +172,7 @@ public class WegpunktScreen extends Screen {
 
 	private void knopfKlein(GuiGraphics g, int mx, int my, String zeichen, int x, int y, Runnable r) {
 		boolean ueber = Neon.ueber(mx, my, x, y, 16, 13) && Neon.ueber(mx, my, px, ly, pb, lh);
-		g.drawString(font, zeichen, x + 4, y + 2, ueber ? Farben.NEON_CYAN : Farben.GRAU, false);
+		g.drawString(font, zeichen, x + 4, y + 2, ueber ? Farben.NEON : Farben.GRAU, false);
 		bereich(x, y, 16, 13, r);
 	}
 
