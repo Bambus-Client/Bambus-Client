@@ -117,6 +117,11 @@ public final class BambusLauncher extends JFrame {
 			l.setVisible(true);
 			Startbild.schliesse();
 			Selbststart.gestartet();   // die geladene Version läuft – Sicherheitsnetz zurücksetzen
+			// Erst das Rechtliche lesen und zustimmen – ohne Zustimmung geht es nicht weiter
+			if (args.length == 0 && !Zustimmung.pruefe(l)) {
+				System.exit(0);
+				return;
+			}
 			if (args.length > 0) {
 				l.zeige(args[0]); // für Screenshots: start, module, kosmetik, einstellungen
 			}

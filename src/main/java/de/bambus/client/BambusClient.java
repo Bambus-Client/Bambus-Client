@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.hud.*;
 import de.bambus.client.screen.BambusMenuScreen;
 import de.bambus.client.screen.BambusTitelScreen;
+import de.bambus.client.screen.RechtlichesScreen;
 import de.bambus.client.screen.BambusAuswahlScreen;
 import de.bambus.client.screen.GarderobeScreen;
 import de.bambus.client.screen.NeonKarte;
@@ -98,6 +99,7 @@ public class BambusClient implements ClientModInitializer {
 
 	private static KeyMapping menuTaste;
 	private static KeyMapping wegpunktTaste;
+	private static boolean rechtlichGezeigt;
 	private static KeyMapping zoomTaste;
 	private static KeyMapping freelookTaste;
 	private static KeyMapping hudTaste;
@@ -290,6 +292,15 @@ public class BambusClient implements ClientModInitializer {
 		}
 
 		// Eigenes Bambus-Hauptmenü statt des Minecraft-Titelbildschirms – erst wenn fertig geladen ist
+		// Vor dem Hauptmenü: erst das Rechtliche lesen und zustimmen (falls noch nicht im Launcher geschehen)
+		if (!rechtlichGezeigt && mc.getOverlay() == null
+				&& (mc.screen instanceof TitleScreen || mc.screen instanceof BambusTitelScreen)) {
+			rechtlichGezeigt = true;
+			if (!RechtlichesScreen.liegtVor()) {
+				mc.setScreen(new RechtlichesScreen(mc.screen, false));
+				return;
+			}
+		}
 		if (mc.screen instanceof TitleScreen && mc.getOverlay() == null && config.bambusHauptmenue && !BambusTitelScreen.vanillaGewuenscht) {
 			mc.setScreen(new BambusTitelScreen());
 		}

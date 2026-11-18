@@ -6,6 +6,14 @@ Minecraft ist eine Marke von Mojang AB / Microsoft.
 Diese Seite erklärt, wie der Bambus Client die Regeln von Mojang einhält und warum er sicher ist.
 (Keine Rechtsberatung – im Zweifel die Originaltexte lesen, Links unten.)
 
+## 0. Zustimmung vor der ersten Nutzung
+
+Launcher und Client zeigen vor der ersten Nutzung eine verständliche Fassung für Spieler (Deutsch und Englisch)
+und lassen erst nach dem Lesen bis zum Ende und einem Haken zustimmen. Der Text steht in
+`gemeinsam/src/de/bambus/recht/Rechtstext.java`. **Bei inhaltlichen Änderungen `Rechtstext.VERSION` erhöhen** –
+dann fragen Launcher und Client beim nächsten Start erneut. Die Zustimmung steht in `config/bambus.json`
+(`rechtlichZugestimmt` = Version, `rechtlichDatum`) und gilt für beide gemeinsam.
+
 ## 1. Anmeldung: nur über Microsoft – nie über Bambus
 
 - Der Bambus Launcher fragt **niemals** nach E-Mail-Adresse oder Passwort.

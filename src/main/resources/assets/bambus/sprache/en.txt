@@ -1455,3 +1455,7 @@ Willkommens-Seite beim ersten Start – und der Launcher spricht jetzt auch Engl
 ~Adresse nicht gefunden => Address not found
 ~Nicht erreichbar => Not reachable
 ~Keine Antwort => No answer
+
+// Rechtliches
+Rechtliches => Legal
+EULA, Server-Regeln, Datenschutz – noch einmal lesen => EULA, server rules, privacy – read again

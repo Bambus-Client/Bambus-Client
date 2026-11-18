@@ -1047,7 +1047,9 @@ public class BambusMenuScreen extends Screen {
 				new Karte("Bambus-Ladebildschirm", "Eigener Ladebildschirm beim Betreten einer Welt", () -> c.ladebildschirm, () -> c.ladebildschirm = !c.ladebildschirm, Farben.NEON_PINK),
 				new Karte("Bambus-Serverauswahl", "Serverliste mit Favoriten ★, Suche und Ping", () -> c.serverMenue, () -> c.serverMenue = !c.serverMenue, Farben.GELB),
 				new Karte("Inventar sortieren: " + de.bambus.client.Sortieren.regelName(), "Knopf ⇅ neben Inventar und Truhe · klicken wechselt die Regel",
-						() -> true, de.bambus.client.Sortieren::naechsteRegel, Farben.NEON)),
+						() -> true, de.bambus.client.Sortieren::naechsteRegel, Farben.NEON),
+				new Karte("Rechtliches", "EULA, Server-Regeln, Datenschutz – noch einmal lesen",
+						() -> true, () -> minecraft.setScreen(new RechtlichesScreen(this, true)), Farben.GRAU)),
 				x, zy, b, 2);
 
 		Neon.text(g, font, "PROFILE", x, zy + 2, 0.75f, Farben.NEON, false);

@@ -116,14 +116,19 @@ final class SeiteEinstellungen extends JPanel {
 		Farbwahl farben = new Farbwahl();
 		farben.setBounds(X, 452, 696, 36);
 		add(farben);
-		zuruecksetzen.setBounds(X, 532, 330, 40);
+		zuruecksetzen.setBounds(X, 532, 250, 40);
 		zuruecksetzen.addActionListener(e -> zuruecksetzen());
 		add(zuruecksetzen);
+		NeonUI.UmrissKnopf recht = new NeonUI.UmrissKnopf("RECHTLICHES", NeonUI.GRAU);
+		recht.setBounds(X + 258, 532, 112, 40);
+		recht.setToolTipText(Sprache.t("Das Rechtliche noch einmal lesen"));
+		recht.addActionListener(e -> Zustimmung.zeigen(l));
+		add(recht);
 
 		// Updates
 		NeonUI.UmrissKnopf auto = new NeonUI.UmrissKnopf("", NeonUI.NEON);
 		auto.setText(l.autoUpdate ? "AUTO-UPDATE: AN" : "AUTO-UPDATE: AUS");
-		auto.setBounds(X + 344, 532, 180, 40);
+		auto.setBounds(X + 378, 532, 170, 40);
 		auto.addActionListener(e -> {
 			l.autoUpdate = !l.autoUpdate;
 			l.speichereLauncherEinstellungen();
@@ -132,7 +137,7 @@ final class SeiteEinstellungen extends JPanel {
 		auto.setVisible(Updater.aktiv());
 		add(auto);
 		NeonUI.UmrissKnopf jetzt = new NeonUI.UmrissKnopf("JETZT PRÜFEN", NeonUI.CYAN);
-		jetzt.setBounds(X + 536, 532, 150, 40);
+		jetzt.setBounds(X + 556, 532, 140, 40);
 		jetzt.addActionListener(e -> l.pruefeUpdates(true));
 		jetzt.setVisible(Updater.aktiv());
 		add(jetzt);
