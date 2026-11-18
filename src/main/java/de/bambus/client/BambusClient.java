@@ -36,7 +36,7 @@ import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import de.bambus.client.render.CapeLayer;
-import de.bambus.client.render.FluegelLayer;
+import de.bambus.client.render.FlügelLayer;
 import de.bambus.client.render.HutLayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -73,7 +73,7 @@ public class BambusClient implements ClientModInitializer {
 			new ServerModul(),
 			new PingModul(),
 			new ToggleSprintModul(),
-			new RuestungModul(),
+			new RüstungModul(),
 			new HandModul(),
 			new EffekteModul(),
 			new ZielModul(),
@@ -134,12 +134,12 @@ public class BambusClient implements ClientModInitializer {
 
 		// Quests: Welt betreten und Nachrichten mitlesen (Siege erkennen)
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-			Blaetter.weltBetreten();
+			Blätter.weltBetreten();
 			client.execute(() -> Profile.serverBetreten(client));   // Server-Profil laden (im Spiel-Faden)
 		});
-		ClientReceiveMessageEvents.GAME.register((nachricht, ueberlagerung) -> Blaetter.nachricht(nachricht.getString()));
+		ClientReceiveMessageEvents.GAME.register((nachricht, ueberlagerung) -> Blätter.nachricht(nachricht.getString()));
 		ClientReceiveMessageEvents.CHAT.register((nachricht, unterschrieben, absender, art, zeit) ->
-				Blaetter.nachricht(nachricht.getString()));
+				Blätter.nachricht(nachricht.getString()));
 		Statistik.laden();
 		Kampf.killHoerer = (opfer, spieler) -> {
 			Kosmetik.killEffekt(opfer);
@@ -213,7 +213,7 @@ public class BambusClient implements ClientModInitializer {
 										   EntityRendererProvider.Context kontext) {
 		if (renderer instanceof AvatarRenderer) {
 			helfer.register(new CapeLayer((AvatarRenderer) renderer));
-			helfer.register(new FluegelLayer((AvatarRenderer) renderer));
+			helfer.register(new FlügelLayer((AvatarRenderer) renderer));
 			helfer.register(new HutLayer((AvatarRenderer) renderer));
 		}
 	}
@@ -286,7 +286,7 @@ public class BambusClient implements ClientModInitializer {
 			}
 		}
 		if (mc.level != null && mc.player != null) {
-			Blaetter.tick(mc);   // Spielzeit, Blätter und die Herausforderungen des Tages
+			Blätter.tick(mc);   // Spielzeit, Blätter und die Herausforderungen des Tages
 		}
 
 		// Eigenes Bambus-Hauptmenü statt des Minecraft-Titelbildschirms – erst wenn fertig geladen ist

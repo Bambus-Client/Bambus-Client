@@ -205,7 +205,7 @@ final class NeonUI {
 				pixelSchrift() != null ? RenderingHints.VALUE_TEXT_ANTIALIAS_OFF : RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		return new UebersetzteGrafik(g);   // Sprache + eckige Kästen (Pixel-Look)
+		return new ÜbersetzteGrafik(g);   // Sprache + eckige Kästen (Pixel-Look)
 	}
 
 	/** Neon-Leuchten um eine Form. */

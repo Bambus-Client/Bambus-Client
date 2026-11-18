@@ -62,7 +62,7 @@ public class HandModul extends HudModul {
 			int zy = y + i * 17;
 			g.renderItem(s, x, zy);
 			g.renderItemDecorations(mc.font, s, x, zy);
-			g.drawString(mc.font, Sprache.t(text(s)), x + 19, zy + 4, RuestungModul.farbe(s), true);
+			g.drawString(mc.font, Sprache.t(text(s)), x + 19, zy + 4, RüstungModul.farbe(s), true);
 		}
 	}
 }

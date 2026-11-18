@@ -5,8 +5,8 @@ nimmt jeweils die Südseite (von hinten gesehen) und setzt sie zu einem quadrati
 Gelenk/Schulter oben links, Flügel nach rechts – das Format, das Launcher und Mod für
 quadratische Flügelbilder erwarten (der linke Flügel wird gespiegelt).
 
-Aufruf: python3 fluegel_aus_bbmodel.py <zielordner> <datei.bbmodel>=<id> [...]
-Beispiel: python3 fluegel_aus_bbmodel.py src/main/resources/assets/bambus/textures/fluegel \\
+Aufruf: python3 werkzeuge/flügel_aus_bbmodel.py <zielordner> <datei.bbmodel>=<id> [...]
+Beispiel: python3 werkzeuge/flügel_aus_bbmodel.py src/main/resources/assets/bambus/textures/fluegel \\
           angel_wings.bbmodel=engel_classic
 """
 import base64, io, json, sys

@@ -21,7 +21,7 @@ import java.util.Set;
  * Herausforderungen des Tages und kennt Rang und freigeschaltete Shop-Kosmetik.
  * Es geht nie um echtes Geld – alles bleibt auf diesem Computer.
  */
-public final class Blaetter {
+public final class Blätter {
 
 	private static final int MINUTEN_PRO_BONUS = 10;
 	private static final int BONUS = 5;
@@ -34,7 +34,7 @@ public final class Blaetter {
 	private static boolean leiterDabei, eimerDabei;
 	private static int killsBeiWeltstart;
 
-	private Blaetter() {}
+	private Blätter() {}
 
 	// ============================================================ Rang und Guthaben
 

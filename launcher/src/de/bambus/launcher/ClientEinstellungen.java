@@ -106,7 +106,7 @@ final class ClientEinstellungen {
 			{"aurora", "Aurora", "3DFFC8"},
 			{"sakura", "Sakura", "FF8CC0"},
 			{"bambus", "Bambus", "7BD65C"},
-			// Flügel-Paket 1 (Pixel-Look, quadratische Bilder aus werkzeuge/fluegel_aus_bbmodel.py)
+			// Flügel-Paket 1 (Pixel-Look, quadratische Bilder aus werkzeuge/flügel_aus_bbmodel.py)
 			{"engel_classic", "Engel Classic", "E6ECF5"},
 			{"drache_classic", "Drache Classic", "C0303C"},
 			{"fee", "Fee", "8A6BFF"},

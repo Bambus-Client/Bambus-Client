@@ -6,18 +6,18 @@ import de.bambus.client.Farben;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
-/** Zeichenhilfen für den Neon-Look – jede Hilfe richtet sich nach dem Menü-Stil ({@link MenueStil}). */
+/** Zeichenhilfen für den Neon-Look – jede Hilfe richtet sich nach dem Menü-Stil ({@link MenüStil}). */
 public final class Neon {
 
 	private Neon() {}
 
 	/** Rahmen mit weichem Leuchten nach außen. */
 	public static void leuchtRahmen(GuiGraphics g, int x, int y, int b, int h, int farbe, float staerke) {
-		if (MenueStil.clean()) {          // kein Leuchten, nur ein weicher Rand
+		if (MenüStil.clean()) {          // kein Leuchten, nur ein weicher Rand
 			rahmen(g, x, y, b, h, Farben.alpha(farbe, 150));
 			return;
 		}
-		if (MenueStil.kompakt()) {        // harte Kante, Akzent oben
+		if (MenüStil.kompakt()) {        // harte Kante, Akzent oben
 			g.renderOutline(x, y, b, h, farbe);
 			g.fill(x, y, x + b, y + 2, farbe);
 			return;
@@ -33,7 +33,7 @@ public final class Neon {
 
 	/** Futuristische Ecken statt eines vollen Rahmens. */
 	public static void ecken(GuiGraphics g, int x, int y, int b, int h, int laenge, int farbe) {
-		if (!MenueStil.bambus()) return;   // Sci-Fi-Ecken nur im Bambus-Stil
+		if (!MenüStil.bambus()) return;   // Sci-Fi-Ecken nur im Bambus-Stil
 		g.fill(x, y, x + laenge, y + 1, farbe);
 		g.fill(x, y, x + 1, y + laenge, farbe);
 		g.fill(x + b - laenge, y, x + b, y + 1, farbe);
@@ -46,7 +46,7 @@ public final class Neon {
 
 	/** Gitter-Hintergrund wie in einem Sci-Fi-Interface. */
 	public static void gitter(GuiGraphics g, int x, int y, int b, int h, int abstand, int farbe) {
-		if (!MenueStil.bambus()) return;
+		if (!MenüStil.bambus()) return;
 		for (int gx = x; gx < x + b; gx += abstand) {
 			g.fill(gx, y, gx + 1, y + h, farbe);
 		}
@@ -57,7 +57,7 @@ public final class Neon {
 
 	/** Ein-/Aus-Schalter, dessen Knopf weich hinübergleitet (schluessel = welcher Schalter). */
 	public static void schalter(GuiGraphics g, int x, int y, boolean an, String schluessel) {
-		if (!MenueStil.bambus()) {
+		if (!MenüStil.bambus()) {
 			stilSchalter(g, x, y, Anim.zu("schalter:" + schluessel, an ? 1f : 0f, Anim.HOVER));
 			return;
 		}
@@ -82,7 +82,7 @@ public final class Neon {
 	private static void stilSchalter(GuiGraphics g, int x, int y, float k) {
 		if (!de.bambus.client.BambusClient.config.menueAnimation) k = k > 0.5f ? 1f : 0f;
 		int b = 18, h = 9;
-		if (MenueStil.clean()) {
+		if (MenüStil.clean()) {
 			int spur = Anim.mische(0xFF3A3F46, Farben.NEON_CYAN, k);
 			flaeche(g, x, y, b, h, spur);
 			int kx = x + 1 + Math.round((b - h) * k);
@@ -97,7 +97,7 @@ public final class Neon {
 
 	/** Fläche – im Clean-Stil mit leicht abgerundeten Ecken. */
 	public static void flaeche(GuiGraphics g, int x, int y, int b, int h, int farbe) {
-		if (!MenueStil.clean() || b < 6 || h < 6) {
+		if (!MenüStil.clean() || b < 6 || h < 6) {
 			g.fill(x, y, x + b, y + h, farbe);
 			return;
 		}
@@ -110,7 +110,7 @@ public final class Neon {
 
 	/** Rahmen – im Clean-Stil mit abgerundeten Ecken. */
 	public static void rahmen(GuiGraphics g, int x, int y, int b, int h, int farbe) {
-		if (!MenueStil.clean() || b < 6 || h < 6) {
+		if (!MenüStil.clean() || b < 6 || h < 6) {
 			g.renderOutline(x, y, b, h, farbe);
 			return;
 		}
@@ -126,7 +126,7 @@ public final class Neon {
 
 	/** Ein-/Aus-Schalter in Pillenform. */
 	public static void schalter(GuiGraphics g, int x, int y, boolean an) {
-		if (!MenueStil.bambus()) {
+		if (!MenüStil.bambus()) {
 			stilSchalter(g, x, y, an ? 1f : 0f);
 			return;
 		}
@@ -152,7 +152,7 @@ public final class Neon {
 
 	/** Text mit Neon-Schimmer (leicht versetzte, durchsichtige Kopie). */
 	public static void leuchtText(GuiGraphics g, Font font, String text, int x, int y, float groesse, int farbe) {
-		if (!MenueStil.bambus()) {
+		if (!MenüStil.bambus()) {
 			text(g, font, text, x, y, groesse, farbe, false);
 			return;
 		}

@@ -13,7 +13,7 @@ public final class Farben {
 	public static final int GRUEN_GEDRUECKT = 0xC03DFF8A;
 
 	// Flächen
-	// Flächen – nicht final, weil der Menü-Stil (screen.MenueStil) sie ändern kann
+	// Flächen – nicht final, weil der Menü-Stil (screen.MenüStil) sie ändern kann
 	public static int HINTERGRUND = 0xA0060B10;
 	public static int PANEL = 0xE00A0F17;
 	public static int KARTE = 0xFF101824;

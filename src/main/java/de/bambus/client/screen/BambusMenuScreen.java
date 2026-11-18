@@ -176,15 +176,15 @@ public class BambusMenuScreen extends Screen {
 		if (liveAnsicht()) {
 			return;   // freie Sicht aufs Spiel
 		}
-		MenueStil.anwenden();
-		g.fill(0, 0, width, height, MenueStil.bambus() ? 0xC0020407 : Farben.HINTERGRUND);
+		MenüStil.anwenden();
+		g.fill(0, 0, width, height, MenüStil.bambus() ? 0xC0020407 : Farben.HINTERGRUND);
 		Neon.gitter(g, 0, 0, width, height, 24, Farben.alpha(Farben.NEON, 7));
 	}
 
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		if (liveAnsicht()) {
 			suchFeld.setVisible(false);
 			freundFeld.setVisible(false);
@@ -233,10 +233,10 @@ public class BambusMenuScreen extends Screen {
 		}
 
 		// Grundfläche je nach Menü-Stil
-		if (MenueStil.clean()) {          // weich gerundet, feiner heller Rand
+		if (MenüStil.clean()) {          // weich gerundet, feiner heller Rand
 			Neon.flaeche(g, px, py, pb, ph, Farben.PANEL);
 			Neon.rahmen(g, px, py, pb, ph, 0x2EFFFFFF);
-		} else if (MenueStil.kompakt()) { // kantig, Akzentleiste oben
+		} else if (MenüStil.kompakt()) { // kantig, Akzentleiste oben
 			g.fill(px, py, px + pb, py + ph, Farben.PANEL);
 			g.renderOutline(px, py, pb, ph, Farben.LINIE);
 			g.fill(px, py, px + pb, py + 2, Farben.NEON);
@@ -309,10 +309,10 @@ public class BambusMenuScreen extends Screen {
 	private void seitenleiste(GuiGraphics g, int mx, int my) {
 		int x = px, b = leiste;
 		boolean weich = cfg().menueAnimation;
-		if (MenueStil.clean()) {
+		if (MenüStil.clean()) {
 			Neon.flaeche(g, x, py, b, ph, 0x0AFFFFFF);
 			g.fill(x + b - 1, py + 8, x + b, py + ph - 8, Farben.LINIE);
-		} else if (MenueStil.kompakt()) {
+		} else if (MenüStil.kompakt()) {
 			g.fill(x, py + 2, x + b, py + ph, 0x66000000);
 			g.fill(x + b - 1, py + 2, x + b, py + ph, Farben.LINIE);
 		} else {
@@ -329,9 +329,9 @@ public class BambusMenuScreen extends Screen {
 		int y0 = py + 40, eh = 28, abstand = 2;
 		float ziel = tab.ordinal() * (eh + abstand);
 		int markY = y0 + (weich ? Math.round(Anim.zu("menue-markierung", ziel, Anim.GLEITEN)) : (int) ziel);
-		if (MenueStil.clean()) {           // ruhige helle Fläche statt Leiste
+		if (MenüStil.clean()) {           // ruhige helle Fläche statt Leiste
 			Neon.flaeche(g, x + 4, markY, b - 9, eh, 0x1AFFFFFF);
-		} else if (MenueStil.kompakt()) {
+		} else if (MenüStil.kompakt()) {
 			g.fill(x + 4, markY, x + b - 5, markY + eh, Farben.alpha(Farben.NEON, 34));
 			g.fill(x + 4, markY, x + 7, markY + eh, Farben.NEON);
 		} else {
@@ -520,10 +520,10 @@ public class BambusMenuScreen extends Screen {
 
 			float hk = cfg().menueAnimation ? Anim.zu("karte:" + k.name(), hover ? 1f : 0f, Anim.HOVER) : (hover ? 1f : 0f);
 			Neon.flaeche(g, kx, ky, kb, kh, Anim.mische(Farben.KARTE, Farben.KARTE_HOVER, hk));
-			int randHover = MenueStil.clean() ? 0x55FFFFFF : MenueStil.kompakt() ? Farben.alpha(Farben.NEON, 150) : 0xFF2E4058;
+			int randHover = MenüStil.clean() ? 0x55FFFFFF : MenüStil.kompakt() ? Farben.alpha(Farben.NEON, 150) : 0xFF2E4058;
 			Neon.rahmen(g, kx, ky, kb, kh, Anim.mische(Farben.LINIE, randHover, hk));
-			if (an && !MenueStil.clean()) {   // ein Balken zeigt „an“ – der Schalter sagt den Rest (Clean: nur der Schalter)
-				g.fill(kx, ky + 1, kx + (MenueStil.kompakt() ? 3 : 2), ky + kh - 1, k.akzent());
+			if (an && !MenüStil.clean()) {   // ein Balken zeigt „an“ – der Schalter sagt den Rest (Clean: nur der Schalter)
+				g.fill(kx, ky + 1, kx + (MenüStil.kompakt() ? 3 : 2), ky + kh - 1, k.akzent());
 			}
 
 			Symbole.zeichne(g, Symbole.fuer(k.fav() != null ? k.fav() : k.name()), kx + 8, ky + 7, 1, an ? k.akzent() : 0xFF4A5A6E);
@@ -602,7 +602,7 @@ public class BambusMenuScreen extends Screen {
 		int fx = (width - fb) / 2;
 		int fy = 36;   // unter den Minecraft-Einblendungen oben rechts (Tutorial, Erfolge)
 
-		Neon.flaeche(g, fx, fy, fb, fh, MenueStil.bambus() ? 0xE60A0F17 : Farben.PANEL);
+		Neon.flaeche(g, fx, fy, fb, fh, MenüStil.bambus() ? 0xE60A0F17 : Farben.PANEL);
 		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
 		Symbole.zeichne(g, Symbole.fuer(ziel.symbol()), fx + 8, fy + 8, 1, Farben.NEON);
 		Neon.leuchtText(g, font, ziel.titel(), fx + 20, fy + 7, 1f, Farben.NEON);
@@ -635,8 +635,8 @@ public class BambusMenuScreen extends Screen {
 		int fh = Math.min(ph - 16, 34 + Math.max(zeilen.size() * zeile, ziel == Texturen.MODUL ? 150 : 96) + 30);
 		int fx = px + (pb - fb) / 2;
 		int fy = py + (ph - fh) / 2;
-		Neon.flaeche(g, px, py, pb, ph, MenueStil.bambus() ? 0xB0020407 : 0xA0000000);
-		Neon.flaeche(g, fx, fy, fb, fh, MenueStil.bambus() ? 0xF20A0F17 : Farben.alpha(Farben.PANEL, MenueStil.clean() ? 225 : 250));
+		Neon.flaeche(g, px, py, pb, ph, MenüStil.bambus() ? 0xB0020407 : 0xA0000000);
+		Neon.flaeche(g, fx, fy, fb, fh, MenüStil.bambus() ? 0xF20A0F17 : Farben.alpha(Farben.PANEL, MenüStil.clean() ? 225 : 250));
 		Neon.leuchtRahmen(g, fx, fy, fb, fh, Farben.NEON, 0.8f);
 		Neon.ecken(g, fx - 3, fy - 3, fb + 6, fh + 6, 8, Farben.NEON_CYAN);
 
@@ -1028,7 +1028,7 @@ public class BambusMenuScreen extends Screen {
 				() -> c.thema = Math.floorMod(c.thema - 1, Farben.THEMEN.length),
 				() -> c.thema = Math.floorMod(c.thema + 1, Farben.THEMEN.length));
 		zy += 22;
-		MenueStil stil = MenueStil.von(c.menueStil);
+		MenüStil stil = MenüStil.von(c.menueStil);
 		auswahl(g, mx, my, "MENÜ-STIL", stil.name, x, zy, hb,
 				() -> c.menueStil = stil.naechster(-1).id,
 				() -> c.menueStil = stil.naechster(1).id);
@@ -1042,8 +1042,8 @@ public class BambusMenuScreen extends Screen {
 				new Karte("Farbverlauf", "HUD-Kästen mit Verlauf statt einer Farbe", () -> c.verlauf, () -> c.verlauf = !c.verlauf, Farben.NEON_CYAN),
 				new Karte("Weiche Animationen", "Menü, Schalter und Tabs gleiten weich", () -> c.menueAnimation, () -> c.menueAnimation = !c.menueAnimation, Farben.NEON),
 				new Karte("Benachrichtigungen", "Neon-Karten für Updates, Freunde, Screenshots", () -> c.hinweise, () -> c.hinweise = !c.hinweise, Farben.NEON_CYAN),
-				new Karte("Menü-Hintergrund: " + MenueHintergrund.name(c.menueHintergrund), "Klicken zum Wechseln (wie im Launcher)", () -> true,
-						() -> c.menueHintergrund = MenueHintergrund.naechste(c.menueHintergrund), Farben.NEON_CYAN),
+				new Karte("Menü-Hintergrund: " + MenüHintergrund.name(c.menueHintergrund), "Klicken zum Wechseln (wie im Launcher)", () -> true,
+						() -> c.menueHintergrund = MenüHintergrund.naechste(c.menueHintergrund), Farben.NEON_CYAN),
 				new Karte("Bambus-Ladebildschirm", "Eigener Ladebildschirm beim Betreten einer Welt", () -> c.ladebildschirm, () -> c.ladebildschirm = !c.ladebildschirm, Farben.NEON_PINK),
 				new Karte("Bambus-Serverauswahl", "Serverliste mit Favoriten ★, Suche und Ping", () -> c.serverMenue, () -> c.serverMenue = !c.serverMenue, Farben.GELB),
 				new Karte("Inventar sortieren: " + de.bambus.client.Sortieren.regelName(), "Knopf ⇅ neben Inventar und Truhe · klicken wechselt die Regel",
@@ -1238,7 +1238,7 @@ public class BambusMenuScreen extends Screen {
 	}
 
 	private void vorschauBox(GuiGraphics g, int x, int y, int b, int h) {
-		if (MenueStil.bambus()) {
+		if (MenüStil.bambus()) {
 			g.fillGradient(x, y, x + b, y + h, 0xFF0B1626, 0xFF050A10);
 		} else {
 			Neon.flaeche(g, x, y, b, h, Farben.KARTE);
@@ -1257,7 +1257,7 @@ public class BambusMenuScreen extends Screen {
 			Neon.rahmen(g, x, y, b, h, Farben.LINIE);
 		} else if (voll) {
 			Neon.flaeche(g, x, y, b, h, hover ? Farben.mische(Farben.NEON, 0xFFFFFFFF, 0.35f) : Farben.NEON);
-			if (hover && MenueStil.bambus()) {
+			if (hover && MenüStil.bambus()) {
 				Neon.leuchtRahmen(g, x, y, b, h, Farben.NEON, 1f);
 			}
 		} else {

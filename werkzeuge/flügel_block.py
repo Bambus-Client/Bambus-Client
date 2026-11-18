@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Erzeugt die Blockbench-Stil-Texturen der Flügel: <id>_block.png (32×16, grobe Pixel wie ein Minecraft-Modell).
-Quelle ist das fertige HD-Bild <id>.png (512×256). Aufruf: python3 werkzeuge/fluegel_block.py"""
+Quelle ist das fertige HD-Bild <id>.png (512×256). Aufruf: python3 werkzeuge/flügel_block.py"""
 import glob, os
 from PIL import Image
 

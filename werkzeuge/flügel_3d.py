@@ -7,7 +7,7 @@ Je Flügel entstehen drei Bilder (512 x 256):
 Layout: Schulter links (x=0), Spitze rechts; der linke Flügel wird gespiegelt.
 Die Vorderkante (EDGE_PTS bzw. DRACHE_KANTE) muss zu Kosmetik.FluegelForm in der Mod passen.
 
-Aufruf: python3 fluegel_3d.py <zielordner> [id ...]"""
+Aufruf: python3 werkzeuge/flügel_3d.py <zielordner> [id ...]"""
 import numpy as np
 from PIL import Image, ImageDraw
 import os, sys

@@ -27,7 +27,7 @@ public final class Kosmetik {
 	public record Fluegel(String id, String name, int farbe) {}
 
 	/**
-	 * Form eines 3D-Flügels (passt zu werkzeuge/fluegel_3d.py): Vorderkante im 128×64-Raster der Textur,
+	 * Form eines 3D-Flügels (passt zu werkzeuge/flügel_3d.py): Vorderkante im 128×64-Raster der Textur,
 	 * bis wohin der 3D-Knochen reicht, seine Dicke (0 = kein Knochen), Knochenfarben und ob er leuchtet.
 	 */
 	public record FluegelForm(float[][] kante, float knochenBis, float dicke, int knochenHell, int knochenDunkel,

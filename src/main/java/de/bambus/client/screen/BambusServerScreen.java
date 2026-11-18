@@ -294,7 +294,7 @@ public class BambusServerScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		int b = width, h = height;
 		boolean eng = h < 280;
 

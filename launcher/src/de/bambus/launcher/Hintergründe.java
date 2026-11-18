@@ -11,7 +11,7 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 
 /** Animierte Hintergründe für den Launcher (in den Einstellungen wählbar). */
-final class Hintergruende {
+final class Hintergründe {
 
 	static final String[][] ARTEN = {   // {id, Name}
 			{"gitter", "GITTER"},
@@ -57,7 +57,7 @@ final class Hintergruende {
 		}
 	}
 
-	private Hintergruende() {}
+	private Hintergründe() {}
 
 	static void zeichne(Graphics2D g, String art, int x, int y, int b, int h) {
 		double t = System.currentTimeMillis() / 1000.0;

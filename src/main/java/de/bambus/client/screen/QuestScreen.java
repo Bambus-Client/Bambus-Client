@@ -3,7 +3,7 @@ package de.bambus.client.screen;
 import de.bambus.client.Sprache;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.bambus.client.Blaetter;
+import de.bambus.client.Blätter;
 import de.bambus.client.Farben;
 import de.bambus.client.Garderobe;
 import de.bambus.client.Hinweise;
@@ -47,7 +47,7 @@ public class QuestScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		pb = Math.min(width - 20, 460);
 		ph = Math.min(height - 20, 320);
 		px = (width - pb) / 2;
@@ -75,19 +75,19 @@ public class QuestScreen extends Screen {
 		Neon.text(g, font, "Blätter sammeln · kostet nie Geld", px + 30, py + 21, 0.6f, Farben.GRAU, false);
 
 		// Guthaben rechts oben
-		String bl = Blaetter.blaetter() + " Blätter";
+		String bl = Blätter.blaetter() + " Blätter";
 		int bb = font.width(Sprache.t(bl));
-		Neon.text(g, font, bl, px + pb - 12 - bb, py + 11, 1f, Blaetter.blattFarbe(), true);
-		Symbole.zeichne(g, "blatt", px + pb - 26 - bb, py + 11, 1, Blaetter.blattFarbe());
+		Neon.text(g, font, bl, px + pb - 12 - bb, py + 11, 1f, Blätter.blattFarbe(), true);
+		Symbole.zeichne(g, "blatt", px + pb - 26 - bb, py + 11, 1, Blätter.blattFarbe());
 
 		// Rangleiste
 		int rx = px + 10, ry = py + 34, rb = pb - 20, rh = 16;
-		int gesammelt = Blaetter.gesammelt();
-		int farbe = Blaetter.rangFarbe();
+		int gesammelt = Blätter.gesammelt();
+		int farbe = Blätter.rangFarbe();
 		g.fill(rx, ry, rx + rb, ry + rh, Farben.KARTE);
 		g.fill(rx, ry, rx + (int) (rb * Quests.rangFortschritt(gesammelt)), ry + rh, Farben.alpha(farbe, 60));
 		g.renderOutline(rx, ry, rb, rh, Farben.LINIE);
-		Neon.text(g, font, "RANG: " + Blaetter.rangName().toUpperCase(), rx + 6, ry + 4, 0.75f, farbe, false);
+		Neon.text(g, font, "RANG: " + Blätter.rangName().toUpperCase(), rx + 6, ry + 4, 0.75f, farbe, false);
 		int rest = Quests.bisNaechsterRang(gesammelt);
 		String text = rest > 0 ? "noch " + rest + " bis " + Quests.RAENGE[Quests.rangNummer(gesammelt) + 1][0]
 				: "höchster Rang";
@@ -100,7 +100,7 @@ public class QuestScreen extends Screen {
 		int y = cy - scroll;
 
 		y = ueberschrift(g, "HERAUSFORDERUNGEN HEUTE", y);
-		for (String[] q : Blaetter.heuteMitStand()) {
+		for (String[] q : Blätter.heuteMitStand()) {
 			y = questZeile(g, q, y);
 		}
 		y += 6;
@@ -154,8 +154,8 @@ public class QuestScreen extends Screen {
 
 	/** Das Set der Jahreszeit: vier Stücke zusammen, günstiger als einzeln. */
 	private int saisonKarte(GuiGraphics g, int mx, int my, int y) {
-		String[] s = Blaetter.saison();
-		boolean offen = Blaetter.saisonOffen();
+		String[] s = Blätter.saison();
+		boolean offen = Blätter.saisonOffen();
 		int h = 38;
 		boolean hover = offen && Neon.ueber(mx, my, cx, y, cb - 4, h) && Neon.ueber(mx, my, cx, cy, cb, ch);
 		g.fill(cx, y, cx + cb - 4, y + h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
@@ -180,11 +180,11 @@ public class QuestScreen extends Screen {
 			final int p = preis;
 			final String name = s[1];
 			bereiche.add(new Bereich(cx, y, cb - 4, h, () -> {
-				if (Blaetter.kaufeSaison()) {
-					Hinweise.zeige("stern", "Set " + name + " freigeschaltet", "In der Garderobe anziehen", Blaetter.rangFarbe());
+				if (Blätter.kaufeSaison()) {
+					Hinweise.zeige("stern", "Set " + name + " freigeschaltet", "In der Garderobe anziehen", Blätter.rangFarbe());
 				} else {
 					Hinweise.zeige("stern", "Noch nicht genug Blätter",
-							"Es fehlen " + (p - Blaetter.blaetter()), Farben.NEON_CYAN);
+							"Es fehlen " + (p - Blätter.blaetter()), Farben.NEON_CYAN);
 				}
 			}));
 		}
@@ -193,7 +193,7 @@ public class QuestScreen extends Screen {
 
 	private int shopZeile(GuiGraphics g, int mx, int my, String[] s, int y) {
 		int h = 24;
-		boolean hat = !Blaetter.gesperrt(s[1], s[0]);
+		boolean hat = !Blätter.gesperrt(s[1], s[0]);
 		boolean hover = !hat && Neon.ueber(mx, my, cx, y, cb - 4, h) && Neon.ueber(mx, my, cx, cy, cb, ch);
 		g.fill(cx, y, cx + cb - 4, y + h, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(cx, y, cb - 4, h, hat ? Farben.alpha(Farben.NEON, 170) : hover ? Farben.NEON_CYAN : Farben.LINIE);
@@ -206,11 +206,11 @@ public class QuestScreen extends Screen {
 			final String id = s[0], art = s[1], name = s[2];
 			final int preis = Integer.parseInt(s[3]);
 			bereiche.add(new Bereich(cx, y, cb - 4, h, () -> {
-				if (Blaetter.kaufe(art, id)) {
-					Hinweise.zeige("stern", name + " freigeschaltet", "In der Garderobe anziehen", Blaetter.rangFarbe());
+				if (Blätter.kaufe(art, id)) {
+					Hinweise.zeige("stern", name + " freigeschaltet", "In der Garderobe anziehen", Blätter.rangFarbe());
 				} else {
 					Hinweise.zeige("stern", "Noch nicht genug Blätter",
-							"Es fehlen " + (preis - Blaetter.blaetter()), Farben.NEON_CYAN);
+							"Es fehlen " + (preis - Blätter.blaetter()), Farben.NEON_CYAN);
 				}
 			}));
 		}

@@ -1,6 +1,8 @@
-# 🎋 Bambus Client 3.0 – Neon Edition
+# 🎋 Bambus Client – Neon Edition
 
-Ein PvP-/HUD-Client für **Minecraft Java 1.21.11** (Fabric) im Neon-Look – mit eigenem Launcher.
+Bambus Client ist ein **Fabric-Client für Minecraft: Java Edition** mit eigenem Launcher. Passe dein HUD mit Anzeigen für FPS, Ping oder Koordinaten an, nutze PvP-Module wie den Combo-Zähler und gestalte deinen Charakter mit eigenen Umhängen und Flügeln. Im Launcher verwaltest du deine Mod-Profile und kannst Minecraft-Versionen in getrennten Spielordnern nutzen.
+
+Unterstützte Minecraft-Versionen: **1.21.11, 26.1, 26.1.1, 26.1.2, 26.2 und 26.3**. Hilfe zur Installation findest du in der [Anleitung](ANLEITUNG.md), Neuigkeiten in der [Änderungsübersicht](%C3%84NDERUNGEN.md).
 
 ## Was du brauchst
 
@@ -18,7 +20,7 @@ Java, Fabric und die Fabric API bringt der Bambus Launcher selbst mit bzw. lädt
 | `BambusLauncher.jar` | Alle Systeme, wenn Java schon installiert ist |
 
 Die Dateien entstehen automatisch auf GitHub (siehe „Bauen“). **`Bambus-Client-Download.zip`** enthält alles in einem Download.
-Schritt-für-Schritt (Mac & Windows) und eine Testliste: **ANLEITUNG.md**.
+Für macOS und Windows gibt es eine [Schritt-für-Schritt-Anleitung mit Testliste](ANLEITUNG.md) und einen [Kurzstart für Spieler](F%C3%9CR-SPIELER.txt).
 
 ## Windows: installieren und in die Taskleiste
 
@@ -35,13 +37,13 @@ Deinstallieren geht wie bei jedem Programm über *Einstellungen → Apps*.
 
 ## Der Launcher
 
-Links die Seitenleiste mit vier Tabs:
+Zu den wichtigsten Bereichen in der Seitenleiste gehören:
 
 - **START** – großer SPIELEN-Knopf, Übersicht (aktive Module, Cape, Arbeitsspeicher)
-- **MODULE** – jede Funktion als Karte mit Neon-Schalter: an/aus per Klick
-- **KOSMETIK** – dein eigener Skin als drehbare 3D-Figur, dazu Capes, Flügel und Partikelspuren –
+- **MOD-MENÜ** – jede Funktion als Karte mit Neon-Schalter: an/aus per Klick
+- **GARDEROBE** – dein eigener Skin als drehbare 3D-Figur, dazu Capes, Flügel und Partikelspuren –
   und das **Kosmetik-Studio** („+ Erstellen“), mit dem du eigene Capes und Flügel baust
-- **MODS** – **⚡ FPS-Boost** (Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling, Dynamic FPS),
+- **PROFILE** – **⚡ FPS-Boost** (Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling, Dynamic FPS),
   **Mod Menu** (Mods-Knopf im Spiel), Mod-Profile wie in der Modrinth-App, Mods auf Modrinth und CurseForge suchen und hinzufügen (mit Icons), eigene `.jar`-Mods an/aus
 - **EINSTELLUNGEN** – Arbeitsspeicher (2–16 GB), Ordner öffnen, Zurücksetzen
 
@@ -98,17 +100,17 @@ Seit 3.3 im neuen HD-Look: weiche Verläufe, Glanz, Leuchten und echte 3D-Formen
   ist ein echter Knochen, ein Gelenkstück führt in den Rücken, ein Glanz läuft über die Federn.
   Bewegung: schlagen beim Laufen, Springen und Fliegen, gleiten im Stand, anlegen beim Schleichen.
 - **Flügel-Paket 1 (Pixel-Look):** Engel Classic, Drache Classic, Fee, Phönix Classic – aus Blockbench-Modellen
-  umgerechnet mit `werkzeuge/fluegel_aus_bbmodel.py` (quadratische Bilder, Gelenk oben links).
+  umgerechnet mit [`werkzeuge/flügel_aus_bbmodel.py`](werkzeuge/fl%C3%BCgel_aus_bbmodel.py) (quadratische Bilder, Gelenk oben links).
 - **Hüte:** Krone (funkelnde Steine), Zylinder (pulsierendes Neonband), Heiligenschein (kreisende Funken),
   Hörner (gebogen), Katzenohren (zucken), Partyhut (laufende Streifen), Bandana (flatternde Enden), Neon-Visier (Scan-Balken)
 - **Partikel:** Neon-Funken, Sternenstaub, Herzen, Musik, Seelenfeuer, Kirschblüten, Magie, Flammen – kreisen um dich
 - **Kill-Effekte:** Neon-Blitz, Feuerwerk, Seelen, Flammen, Herzen, Totem – Ring, Doppelspirale und Blitz
 - **Pfeil-Spuren:** als Spirale hinter eigenen Pfeilen, Dreizacken und Perlen
 
-Die Texturen entstehen mit `werkzeuge/fluegel_3d.py` und `werkzeuge/capes_hd.py`.
+Die Texturen entstehen mit [`werkzeuge/flügel_3d.py`](werkzeuge/fl%C3%BCgel_3d.py) und `werkzeuge/capes_hd.py`.
 
 ### Eigene Kosmetik erstellen
-Im Launcher unter **KOSMETIK → „+ Erstellen“** öffnet sich das Kosmetik-Studio:
+Im Launcher unter **GARDEROBE → „+ Erstellen“** öffnet sich das Kosmetik-Studio:
 
 1. **Cape** oder **Flügel** wählen
 2. Vorlage aussuchen (Capes: Verlauf, Streifen, Bambus, Sterne, Platine, Welle · Flügel: Federn, Drache,
@@ -136,7 +138,7 @@ Der Launcher sucht beim Start selbst nach einer neuen Version (abschaltbar unter
 - **Neuer Launcher**: Oben erscheint **▲ UPDATE**. Ein Klick zeigt „Was ist neu“, und **LAUNCHER AKTUALISIEREN** spielt die neue Version ein (Windows: läuft von selbst durch und startet neu, Mac: die neue .dmg öffnet sich).
 
 **So veröffentlichst du ein Update (alles auf github.com):**
-1. Änderungen hochladen und in `AENDERUNGEN.md` kurz aufschreiben, was neu ist – das sehen alle als „Was ist neu“.
+1. Änderungen hochladen und in [`ÄNDERUNGEN.md`](%C3%84NDERUNGEN.md) kurz festhalten, was neu ist.
 2. Auf der Projektseite rechts **Releases → Draft a new release** → bei „Choose a tag“ eine höhere Nummer eintippen, z. B. `v3.4.0` → **Publish release**.
    (Oder einen Tag `v3.4.0` hochladen.)
 3. GitHub baut alles (ca. 10–15 Minuten) und hängt die Dateien an das Release. Ab dann bekommen alle Launcher das Update.

@@ -90,9 +90,9 @@ public class BambusTitelScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mx, int my, float delta) {
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		float t = zeit();
-		if (MenueHintergrund.zeichne(g, font, BambusClient.config.menueHintergrund, width, height, t)) {
+		if (MenüHintergrund.zeichne(g, font, BambusClient.config.menueHintergrund, width, height, t)) {
 			g.fillGradient(0, 0, width, height / 5, 0x90000000, 0x00000000);
 			return;   // anderer Hintergrund gewählt (Launcher-Einstellungen oder Bambus-Menü)
 		}
@@ -300,14 +300,14 @@ public class BambusTitelScreen extends Screen {
 	/** Profil-Karte: Spielername, Rang und Blätter. */
 	private void profil(GuiGraphics g, int x, int y, int b, int h) {
 		g.fill(x, y, x + b, y + h, 0xC0080D16);
-		Neon.ecken(g, x - 2, y - 2, b + 4, h + 4, 6, Farben.alpha(de.bambus.client.Blaetter.rangFarbe(), 200));
+		Neon.ecken(g, x - 2, y - 2, b + 4, h + 4, 6, Farben.alpha(de.bambus.client.Blätter.rangFarbe(), 200));
 		de.bambus.client.Kompat.item(g, Items.PLAYER_HEAD, x + 6, y + (h - 16) / 2);
 		String name = minecraft.getUser() == null ? "Spieler" : minecraft.getUser().getName();
-		boolean dev = de.bambus.client.Blaetter.istEntwickler();
+		boolean dev = de.bambus.client.Blätter.istEntwickler();
 		Neon.text(g, font, font.plainSubstrByWidth(Sprache.t(name), (int) ((b - 34) / 0.85f)), x + 27, y + 7, 0.85f, Farben.WEISS, false);
-		Neon.text(g, font, dev ? "ENTWICKLER" : de.bambus.client.Blaetter.rangName().toUpperCase(), x + 27, y + 18, 0.6f,
-				dev ? Farben.NEON_PINK : de.bambus.client.Blaetter.rangFarbe(), false);
-		Neon.text(g, font, de.bambus.client.Blaetter.blaetter() + " Blätter", x + 27, y + 27, 0.6f, Farben.GRAU, false);
+		Neon.text(g, font, dev ? "ENTWICKLER" : de.bambus.client.Blätter.rangName().toUpperCase(), x + 27, y + 18, 0.6f,
+				dev ? Farben.NEON_PINK : de.bambus.client.Blätter.rangFarbe(), false);
+		Neon.text(g, font, de.bambus.client.Blätter.blaetter() + " Blätter", x + 27, y + 27, 0.6f, Farben.GRAU, false);
 	}
 
 	private static int mischen(int a, int b, float t) {
