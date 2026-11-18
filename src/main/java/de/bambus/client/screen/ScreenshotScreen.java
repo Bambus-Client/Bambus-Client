@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.NativeImage;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
@@ -43,7 +45,7 @@ public class ScreenshotScreen extends Screen {
 	private Bild gross = null;
 
 	public ScreenshotScreen(Screen eltern) {
-		super(Component.literal("Screenshots"));
+		super(Component.literal(Sprache.t("Screenshots")));
 		this.eltern = eltern;
 	}
 
@@ -163,7 +165,7 @@ public class ScreenshotScreen extends Screen {
 		int seiten = Math.max(1, (dateien.size() + PRO_SEITE - 1) / PRO_SEITE);
 		knopf(g, mx, my, "‹", width / 2 - 120, height - 26, 30, 4);
 		String s = (seite + 1) + " / " + seiten;
-		g.drawString(font, s, width / 2 - 80, height - 21, Farben.WEISS, false);
+		g.drawString(font, Sprache.t(s), width / 2 - 80, height - 21, Farben.WEISS, false);
 		knopf(g, mx, my, "›", width / 2 - 40, height - 26, 30, 5);
 		knopf(g, mx, my, "ORDNER", width / 2 + 0, height - 26, 70, 6);
 		knopf(g, mx, my, "FERTIG", width / 2 + 76, height - 26, 70, 7);
@@ -173,7 +175,7 @@ public class ScreenshotScreen extends Screen {
 		boolean hover = Neon.ueber(mx, my, x, y, b, 18);
 		g.fill(x, y, x + b, y + 18, hover ? Farben.alpha(Farben.NEON, 40) : Farben.KARTE);
 		g.renderOutline(x, y, b, 18, hover ? Farben.NEON : Farben.LINIE);
-		g.drawString(font, text, x + (b - font.width(text)) / 2, y + 5, hover ? Farben.WEISS : Farben.NEON, false);
+		g.drawString(font, Sprache.t(text), x + (b - font.width(Sprache.t(text))) / 2, y + 5, hover ? Farben.WEISS : Farben.NEON, false);
 		flaechen.add(new int[]{x, y, b, 18, nr});
 	}
 

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -144,7 +146,7 @@ public final class Neon {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(groesse, groesse);
-		g.drawString(font, text, 0, 0, farbe, schatten);
+		g.drawString(font, Sprache.t(text), 0, 0, farbe, schatten);
 		g.pose().popMatrix();
 	}
 

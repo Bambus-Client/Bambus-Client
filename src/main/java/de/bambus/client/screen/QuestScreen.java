@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.Blaetter;
 import de.bambus.client.Farben;
@@ -32,7 +34,7 @@ public class QuestScreen extends Screen {
 	private int maxScroll;
 
 	public QuestScreen(Screen eltern) {
-		super(Component.literal("Quests"));
+		super(Component.literal(Sprache.t("Quests")));
 		this.eltern = eltern;
 	}
 
@@ -74,7 +76,7 @@ public class QuestScreen extends Screen {
 
 		// Guthaben rechts oben
 		String bl = Blaetter.blaetter() + " Blätter";
-		int bb = font.width(bl);
+		int bb = font.width(Sprache.t(bl));
 		Neon.text(g, font, bl, px + pb - 12 - bb, py + 11, 1f, Blaetter.blattFarbe(), true);
 		Symbole.zeichne(g, "blatt", px + pb - 26 - bb, py + 11, 1, Blaetter.blattFarbe());
 
@@ -89,7 +91,7 @@ public class QuestScreen extends Screen {
 		int rest = Quests.bisNaechsterRang(gesammelt);
 		String text = rest > 0 ? "noch " + rest + " bis " + Quests.RAENGE[Quests.rangNummer(gesammelt) + 1][0]
 				: "höchster Rang";
-		int tb = (int) (font.width(text) * 0.75f);
+		int tb = (int) (font.width(Sprache.t(text)) * 0.75f);
 		Neon.text(g, font, text, rx + rb - 6 - tb, ry + 4, 0.75f, Farben.GRAU, false);
 	}
 
@@ -124,7 +126,7 @@ public class QuestScreen extends Screen {
 
 	private int ueberschrift(GuiGraphics g, String text, int y) {
 		Neon.text(g, font, text, cx + 2, y, 0.75f, Farben.NEON, false);
-		int tb = (int) (font.width(text) * 0.75f);
+		int tb = (int) (font.width(Sprache.t(text)) * 0.75f);
 		g.fill(cx + tb + 8, y + 3, cx + cb - 4, y + 4, Farben.LINIE);
 		return y + 14;
 	}
@@ -145,7 +147,7 @@ public class QuestScreen extends Screen {
 		Neon.text(g, font, q[1], cx + 22, y + 6, 0.85f, fertig ? Farben.WEISS : 0xFFC8D2DE, false);
 		Neon.text(g, font, q[2], cx + 22, y + 18, 0.6f, Farben.GRAU, false);
 		String lohn = ziel > 1 && !fertig ? stand + "/" + ziel + "  +" + q[3] : "+" + q[3];
-		int lb = (int) (font.width(lohn) * 0.75f);
+		int lb = (int) (font.width(Sprache.t(lohn)) * 0.75f);
 		Neon.text(g, font, lohn, cx + cb - 10 - lb, y + 11, 0.75f, fertig ? Farben.NEON : Farben.NEON_CYAN, false);
 		return y + h + 4;
 	}
@@ -172,7 +174,7 @@ public class QuestScreen extends Screen {
 					cx + 8, y + 27, 0.6f, Farben.NEON_CYAN, false);
 		}
 		String rechts = offen ? preis + " BLÄTTER" : "✔ KOMPLETT";
-		int rb = (int) (font.width(rechts) * 0.75f);
+		int rb = (int) (font.width(Sprache.t(rechts)) * 0.75f);
 		Neon.text(g, font, rechts, cx + cb - 10 - rb, y + 14, 0.75f, offen ? Farben.NEON_CYAN : Farben.NEON, false);
 		if (offen) {
 			final int p = preis;
@@ -198,7 +200,7 @@ public class QuestScreen extends Screen {
 		Neon.text(g, font, s[2], cx + 8, y + 4, 0.85f, hat ? Farben.WEISS : 0xFFC8D2DE, false);
 		Neon.text(g, font, s[1].equals("cape") ? "Umhang" : "Partikel", cx + 8, y + 15, 0.6f, Farben.GRAU, false);
 		String rechts = hat ? "✔ FREIGESCHALTET" : s[3] + " BLÄTTER";
-		int rb = (int) (font.width(rechts) * 0.75f);
+		int rb = (int) (font.width(Sprache.t(rechts)) * 0.75f);
 		Neon.text(g, font, rechts, cx + cb - 10 - rb, y + 8, 0.75f, hat ? Farben.NEON : Farben.NEON_CYAN, false);
 		if (!hat) {
 			final String id = s[0], art = s[1], name = s[2];

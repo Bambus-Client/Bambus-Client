@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
@@ -46,7 +48,7 @@ public class NeonKarte extends AbstractButton {
 	private final Runnable aktion;
 
 	public NeonKarte(int x, int y, int b, int h, String titel, String untertitel, Motiv motiv, Runnable aktion) {
-		super(x, y, b, h, Component.literal(titel));
+		super(x, y, b, h, Component.literal(Sprache.t(titel)));
 		this.titel = titel;
 		this.untertitel = untertitel;
 		this.motiv = motiv;
@@ -86,10 +88,10 @@ public class NeonKarte extends AbstractButton {
 		// Titel und Untertitel
 		Font font = Minecraft.getInstance().font;
 		g.fill(x + 6, motivUnten, x + b - 6, motivUnten + 1, Farben.alpha(Farben.NEON, 90 + (int) (100 * k)));
-		float groesse = font.width(titel) > b - 8 ? 0.75f : 1f;   // schmale Karten: kleinerer Titel
-		int tb = (int) (font.width(titel) * groesse);
+		float groesse = font.width(Sprache.t(titel)) > b - 8 ? 0.75f : 1f;   // schmale Karten: kleinerer Titel
+		int tb = (int) (font.width(Sprache.t(titel)) * groesse);
 		Neon.leuchtText(g, font, titel, x + (b - tb) / 2, motivUnten + (groesse < 1f ? 7 : 6), groesse, Anim.mische(NeonKarte.ruhig(), Farben.NEON, k));
-		int ub = (int) (font.width(untertitel) * 0.6f);
+		int ub = (int) (font.width(Sprache.t(untertitel)) * 0.6f);
 		Neon.text(g, font, untertitel, x + (b - ub) / 2, motivUnten + 18, 0.6f, Farben.GRAU, false);
 	}
 

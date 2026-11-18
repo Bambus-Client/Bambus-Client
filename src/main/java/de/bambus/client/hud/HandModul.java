@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,9 +37,9 @@ public class HandModul extends HudModul {
 	@Override
 	public int breite(Minecraft mc, boolean editor) {
 		ItemStack[] liste = items(mc);
-		if (liste.length == 0) return editor ? mc.font.width("Hand") + 10 : 0;
+		if (liste.length == 0) return editor ? mc.font.width(Sprache.t("Hand")) + 10 : 0;
 		int b = 0;
-		for (ItemStack s : liste) b = Math.max(b, mc.font.width(text(s)));
+		for (ItemStack s : liste) b = Math.max(b, mc.font.width(Sprache.t(text(s))));
 		return 20 + b;
 	}
 
@@ -52,7 +54,7 @@ public class HandModul extends HudModul {
 		ItemStack[] liste = items(mc);
 		if (liste.length == 0) {
 			panel(g, x, y, breite(mc, true), 15);
-			g.drawString(mc.font, "Hand", x + 6, y + 4, Farben.GRAU, true);
+			g.drawString(mc.font, Sprache.t("Hand"), x + 6, y + 4, Farben.GRAU, true);
 			return;
 		}
 		for (int i = 0; i < liste.length; i++) {
@@ -60,7 +62,7 @@ public class HandModul extends HudModul {
 			int zy = y + i * 17;
 			g.renderItem(s, x, zy);
 			g.renderItemDecorations(mc.font, s, x, zy);
-			g.drawString(mc.font, text(s), x + 19, zy + 4, RuestungModul.farbe(s), true);
+			g.drawString(mc.font, Sprache.t(text(s)), x + 19, zy + 4, RuestungModul.farbe(s), true);
 		}
 	}
 }

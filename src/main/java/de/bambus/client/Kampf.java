@@ -51,7 +51,7 @@ public final class Kampf {
 	public static boolean schuetzeFreund(Player spieler, Entity entity) {
 		Minecraft mc = Minecraft.getInstance();
 		if (spieler != mc.player || !BambusClient.config.freundSchutz || !istFreund(entity)) return false;
-		Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal("§d♥ " + entity.getName().getString() + " ist dein Freund – geschützt"), true);
+		Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal(Sprache.t("§d♥ " + entity.getName().getString() + " ist dein Freund – geschützt")), true);
 		return true;
 	}
 
@@ -63,7 +63,7 @@ public final class Kampf {
 		}
 		long jetzt = System.currentTimeMillis();
 		if (le instanceof Player && BambusClient.config.freunde.stream().anyMatch(f -> f.equalsIgnoreCase(le.getName().getString()))) {
-			Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal("§d♥ " + le.getName().getString() + " ist dein Freund"), true);
+			Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal(Sprache.t("§d♥ " + le.getName().getString() + " ist dein Freund")), true);
 		}
 		reach = abstand(spieler.getEyePosition(), le.getBoundingBox());
 		combo = (le == ziel && jetzt - letzterTreffer < COMBO_ZEIT) ? combo + 1 : 1;

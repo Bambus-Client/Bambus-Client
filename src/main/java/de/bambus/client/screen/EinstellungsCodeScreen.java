@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.EinstellungsTransfer;
 import de.bambus.client.Farben;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,16 +33,16 @@ public class EinstellungsCodeScreen extends Screen {
 	private long meldungZeit;
 
 	public EinstellungsCodeScreen(Screen eltern) {
-		super(Component.literal("Einstellungs-Code"));
+		super(Component.literal(Sprache.t("Einstellungs-Code")));
 		this.eltern = eltern;
 	}
 
 	@Override
 	protected void init() {
 		String alt = feld == null ? "" : feld.getValue();
-		feld = new EditBox(font, 0, 0, 200, 16, Component.literal("Code"));
+		feld = new EditBox(font, 0, 0, 200, 16, Component.literal(Sprache.t("Code")));
 		feld.setMaxLength(200_000);
-		feld.setHint(Component.literal("§8BAMBUS-… hier einfügen (Strg+V)"));
+		feld.setHint(Component.literal(Sprache.t("§8BAMBUS-… hier einfügen (Strg+V)")));
 		feld.setBordered(false);
 		feld.setTextColor(Farben.WEISS);
 		feld.setValue(alt);
@@ -156,8 +158,8 @@ public class EinstellungsCodeScreen extends Screen {
 		boolean ueber = vorhanden && Neon.ueber(mx, my, x, y, b, 22);
 		g.fill(x, y, x + b, y + 22, ueber ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.fill(x, y, x + 2, y + 22, aktiv ? Farben.NEON : Farben.LINIE);
-		g.drawString(font, titel, x + 8, y + 3, vorhanden ? Farben.WEISS : Farben.GRAU, false);
-		Neon.text(g, font, font.plainSubstrByWidth(text, (int) ((b - 40) / 0.6f)), x + 8, y + 13, 0.6f, Farben.GRAU, false);
+		g.drawString(font, Sprache.t(titel), x + 8, y + 3, vorhanden ? Farben.WEISS : Farben.GRAU, false);
+		Neon.text(g, font, font.plainSubstrByWidth(Sprache.t(text), (int) ((b - 40) / 0.6f)), x + 8, y + 13, 0.6f, Farben.GRAU, false);
 		if (vorhanden) {
 			Neon.schalter(g, x + b - 26, y + 7, an, "code:" + titel);
 			bereiche.add(new Bereich(x, y, b, 22, umschalten));
@@ -169,7 +171,7 @@ public class EinstellungsCodeScreen extends Screen {
 		boolean ueber = aktiv && Neon.ueber(mx, my, x, y, b, h);
 		g.fill(x, y, x + b, y + h, ueber ? Farben.alpha(farbe, 45) : Farben.KARTE);
 		g.renderOutline(x, y, b, h, aktiv ? (ueber ? farbe : Farben.alpha(farbe, 140)) : 0xFF161F2B);
-		int w = (int) (font.width(text) * 0.75f);
+		int w = (int) (font.width(Sprache.t(text)) * 0.75f);
 		Neon.text(g, font, text, x + (b - w) / 2, y + (h - 6) / 2, 0.75f, aktiv ? (ueber ? Farben.WEISS : farbe) : 0xFF3A4656, false);
 		if (aktiv) bereiche.add(new Bereich(x, y, b, h, aktion));
 	}
