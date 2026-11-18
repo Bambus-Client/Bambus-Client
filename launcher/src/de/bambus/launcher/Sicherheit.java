@@ -32,7 +32,8 @@ final class Sicherheit {
 
 	/** Öffentliche Schlüssel (RSA 3072, X.509, Base64) – dürfen öffentlich sein. */
 	private static final String[] OEFFENTLICH = {
-			// HIER_OEFFENTLICHER_SCHLUESSEL – wird eingetragen, sobald der Schlüssel erzeugt ist (siehe SICHERHEIT.md)
+			// Bambus-Signierschlüssel, eingetragen am 18.11.2026
+			"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAwM9dOgitUCbmgw26GKx7e9gftMKV08tzLzLvNAbZ0W9OUZf7Dxmn3nevkvyPM4KAzV/y7/Bpb3n1wtyF3LikZkSZujdc0aDWQPB6TnFqJwAml23uSEHWXtri1+plFsoIkPdIAfFnLBsIcFpGuZ0f0jPZDcBPTOwB0Td184n01JI69zc50REu1dhKgrs7NgFtEAYkcZ+DAPGJ4DlyAEa+YRuZGe7IKyGkiUV3KO0BQ6QG/eWfqKXGb4v6hxKFXbGmLcpCPsORmOTEi8MBbFEnYkKJxC+X5wKI24PPhOKeaDJ/TwWVS+PUXhmWheqJBOr7G8gU94Vk8FKV7FDc9b8VIRsWkAVS8V9bjnQScDnXZLAEDP7ydXU2rBFN5Le9m3cPgYM3a6GabGv67l8s4ZWmMOks9PBbQyL71vzEtZO2SK4zEfJ5gZC8CjrTJ91X70+icpVZdCYK9ZElK2//n2h2xUc/1ZghvMQkaEYkt3wN3lA0FDC7DmeDiqHMh3TGa5wVAgMBAAE=",
 	};
 
 	// ---------------------------------------------------------- Unterschrift
