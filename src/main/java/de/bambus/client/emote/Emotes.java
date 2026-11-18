@@ -5,6 +5,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +49,12 @@ public final class Emotes {
 
 	private static void neu(String id, String name, String text, int farbe, boolean schleife, float dauer,
 							Emote.Bewegung b, Takt takt) {
-		Emote e = new Emote(id, name, text, farbe, schleife, dauer, b, takt);
+		neu(id, name, text, farbe, schleife, dauer, b, takt, null);
+	}
+
+	private static void neu(String id, String name, String text, int farbe, boolean schleife, float dauer,
+							Emote.Bewegung b, Takt takt, Emote.Effekt effekt) {
+		Emote e = new Emote(id, name, text, farbe, schleife, dauer, b, takt, effekt);
 		ALLE.add(e);
 		NACH_ID.put(id, e);
 	}
@@ -220,6 +226,240 @@ public final class Emotes {
 		}, null);
 	}
 
+	// ================================================================ Neue Tänze und Gesten (eigene Kreationen)
+
+	/** Ein Partikel nahe beim Spieler (nur für dich sichtbar). dx/dz: seitlich versetzt, y: Höhe über den Füßen. */
+	private static void partikel(Minecraft mc, Player s, net.minecraft.core.particles.ParticleOptions art,
+								 double dx, double y, double dz, double vx, double vy, double vz) {
+		if (mc.level != null) mc.level.addParticle(art, s.getX() + dx, s.getY() + y, s.getZ() + dz, vx, vy, vz);
+	}
+
+	private static final java.util.Random ZUFALL = new java.util.Random();
+
+	private static float z(float max) {
+		return (ZUFALL.nextFloat() * 2 - 1) * max;
+	}
+
+	static {
+		neu("fersenflitzer", "Fersen-Flitzer", "Hacken tippen, Arme pumpen – im Laufschritt auf der Stelle", 0xFF3DFF8A, true, 0, (p, t) -> {
+			float s = sin(t, 1.2f);
+			p.neigung = 10;
+			p.rBeinX = -0.55f * Math.max(0, s);
+			p.lBeinX = -0.55f * Math.max(0, -s);
+			p.rArmX = 0.9f * s;
+			p.lArmX = -0.9f * s;
+			p.rArmZ = 0.2f;
+			p.lArmZ = -0.2f;
+			p.hoehe = 0.07f * hops(t, 1.2f);
+			p.kopfX = 0.12f * sin(t, 2.4f);
+		}, new Takt(5, "x..x.x..", "..x...x.", "xxxxxxxx", "a..a.c..", null));
+
+		neu("rundum", "Rundum-Feuerwerk", "Im Kreis tanzen, über dir knallt Feuerwerk", 0xFFFFC846, true, 0, (p, t) -> {
+			p.drehung = 360 * t * 0.35f;
+			float s = sin(t, 1f);
+			p.rArmX = -2.6f + 0.5f * s;
+			p.lArmX = -2.6f - 0.5f * s;
+			p.rArmZ = 0.45f;
+			p.lArmZ = -0.45f;
+			p.hoehe = 0.1f * hops(t, 1f);
+			p.rBeinZ = 0.1f;
+			p.lBeinZ = -0.1f;
+		}, new Takt(5, "x...x.x.", "..x...x.", "x.x.x.x.", "a.h.a.j.", null), (mc, s, t, nr) -> {
+			if (nr % 24 == 0) {   // alle 1,2 Sekunden eine Rakete über dir
+				double w = ZUFALL.nextDouble() * Math.PI * 2;
+				double x = Math.cos(w) * 1.6, zz = Math.sin(w) * 1.6;
+				for (int i = 0; i < 24; i++) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.FIREWORK, x, 3.2, zz, z(0.18f), z(0.18f), z(0.18f));
+			}
+		});
+
+		neu("zickzack", "Zickzack-Schwung", "Arme schwingen hin und her, Beine kicken zur Seite", 0xFFFF8A3D, true, 0, (p, t) -> {
+			float s = sin(t, 1f);
+			p.rArmZ = 0.9f + 0.7f * s;
+			p.lArmZ = -0.9f + 0.7f * s;
+			p.rArmX = -0.5f;
+			p.lArmX = -0.5f;
+			p.koerperZ = -0.12f * s;
+			p.rBeinZ = 0.45f * Math.max(0, s);
+			p.lBeinZ = -0.45f * Math.max(0, -s);
+			p.hoehe = 0.08f * hops(t, 1f);
+			p.kopfZ = 0.1f * s;
+		}, new Takt(5, "x..x..x.", "....x...", "xxxxxxxx", "c..c..f.", null));
+
+		neu("huepfshuffle", "Hüpf-Shuffle", "Federnd auf der Stelle – immer im Takt", 0xFF00E5FF, true, 0, (p, t) -> {
+			float s = sin(t, 1.1f);
+			p.hoehe = 0.12f * hops(t, 2.2f);
+			p.rBeinX = -0.35f * s;
+			p.lBeinX = 0.35f * s;
+			p.rArmX = -0.7f - 0.4f * hops(t, 2.2f);
+			p.lArmX = -0.7f - 0.4f * hops(t, 2.2f);
+			p.rArmZ = 0.3f;
+			p.lArmZ = -0.3f;
+			p.kopfX = 0.1f * hops(t, 2.2f);
+			p.drehung = 12 * s;
+		}, new Takt(5, "x.x.x.x.", "..x...x.", ".xxx.xxx", "a.a.d.d.", null));
+
+		neu("breakdance", "Breakdance", "Toprock, ab auf den Boden und drehen", 0xFFB06BFF, true, 0, (p, t) -> {
+			float phase = t % 6f;
+			if (phase < 2f) {   // Toprock: Schritte vor und zurück, Arme locker
+				float s = sin(t, 1.2f);
+				p.rBeinX = -0.5f * s;
+				p.lBeinX = 0.5f * s;
+				p.arme(0.5f * s, 0.6f);
+				p.drehung = 15 * s;
+				p.hoehe = 0.05f * hops(t, 1.2f);
+			} else if (phase < 5.4f) {   // auf dem Rücken drehen, Beine in V-Form
+				float k = Math.min(1f, (phase - 2f) * 4);
+				p.neigung = -85 * k;
+				p.hoehe = -0.62f * k;
+				p.drehung = 540 * (phase - 2f);
+				p.rBeinZ = 0.6f;
+				p.lBeinZ = -0.6f;
+				p.rBeinX = -0.3f;
+				p.lBeinX = -0.3f;
+				p.arme(-0.3f, 1.4f);
+			} else {   // Freeze: eine Hand hoch
+				p.hoehe = -0.62f;
+				p.neigung = -40;
+				p.rArmX = -3.0f;
+				p.lArmZ = -0.9f;
+				p.rBeinX = -1.2f;
+				p.lBeinX = -0.6f;
+			}
+		}, new Takt(5, "x..x..x.", "..x..x.x", "xxxxxxxx", "a...d...", null));
+
+		neu("trommelwirbel", "Trommelwirbel", "Wild auf unsichtbare Trommeln hauen", 0xFFFF2BD6, true, 0, (p, t) -> {
+			float s = sin(t, 4f);
+			p.neigung = 12;
+			p.rArmX = -1.0f + 0.4f * Math.max(0, s);
+			p.lArmX = -1.0f + 0.4f * Math.max(0, -s);
+			p.rArmZ = -0.15f;
+			p.lArmZ = 0.15f;
+			p.kopfX = 0.2f + 0.1f * sin(t, 2f);
+			p.rBeinX = -0.15f;
+			p.lBeinX = 0.15f;
+		}, new Takt(4, "x..x..x.", ".x..x..x", "x.x.x.x.", null, null));
+
+		neu("umarmung", "Umarmung", "Eine große Umarmung für alle", 0xFFFF6BA8, false, 3.2f, (p, t) -> {
+			float rein = Math.min(1f, t * 3);
+			p.rArmX = -1.45f * rein;
+			p.lArmX = -1.45f * rein;
+			p.rArmZ = -0.55f * rein;
+			p.lArmZ = 0.55f * rein;
+			p.koerperZ = 0.08f * sin(t, 0.7f) * rein;
+			p.kopfZ = 0.15f * rein;
+		}, null, (mc, s, t, nr) -> {
+			if (nr % 16 == 4) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.HEART, z(0.4f), 2.2, z(0.4f), 0, 0.05, 0);
+		});
+
+		neu("tauchgang", "Tauchgang", "Abtauchen und mit Brustschwimmen davon", 0xFF2B6BFF, true, 0, (p, t) -> {
+			float zug = 0.5f + 0.5f * sin(t, 0.8f);
+			p.neigung = 80;
+			p.hoehe = 0.15f;
+			p.rArmX = -3.0f + 0.3f * zug;
+			p.lArmX = -3.0f + 0.3f * zug;
+			p.rArmZ = 1.3f * zug;
+			p.lArmZ = -1.3f * zug;
+			p.rBeinX = 0.35f * sin(t, 2f);
+			p.lBeinX = -0.35f * sin(t, 2f);
+			p.kopfX = -0.9f;
+		}, null, (mc, s, t, nr) -> {
+			if (nr % 3 == 0) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.BUBBLE_POP, z(0.5f), 1.0 + z(0.3f), z(0.5f), 0, 0.06, 0);
+		});
+
+		neu("lhopser", "L-Hopser", "Das L an die Stirn und seitlich hüpfen", 0xFF7DF9FF, true, 0, (p, t) -> {
+			float s = sin(t, 0.9f);
+			p.rArmX = -2.6f;
+			p.rArmZ = -0.5f;
+			p.lArmX = 0.4f * s;
+			p.lArmZ = -0.3f;
+			p.hoehe = 0.15f * hops(t, 1.8f);
+			p.rBeinZ = 0.35f * Math.max(0, s);
+			p.lBeinZ = -0.35f * Math.max(0, -s);
+			p.drehung = 10 * s;
+		}, new Takt(5, "x...x...", "....x...", "x.x.x.x.", "a.a.a.f.", null));
+
+		neu("tiefenentspannt", "Tiefenentspannt", "Hände hinter den Kopf und ganz entspannt", 0xFF8DACD4, true, 0, (p, t) -> {
+			p.rArmX = -2.6f;
+			p.lArmX = -2.6f;
+			p.rArmZ = -0.95f;
+			p.lArmZ = 0.95f;
+			p.neigung = -6;
+			p.koerperZ = 0.06f * sin(t, 0.35f);
+			p.kopfY = 0.25f * sin(t, 0.18f);
+			p.kopfX = -0.1f;
+			p.rBeinZ = 0.08f;
+			p.lBeinZ = -0.08f;
+		}, null);
+
+		neu("aura", "Aura-Pose", "Arme verschränkt, ein Leuchten wirbelt um dich", 0xFFFFE680, true, 0, (p, t) -> {
+			p.rArmX = -0.95f;
+			p.lArmX = -0.95f;
+			p.rArmZ = -0.75f;
+			p.lArmZ = 0.75f;
+			p.kopfX = -0.15f + 0.05f * sin(t, 0.4f);
+			p.kopfY = 0.15f * sin(t, 0.2f);
+			p.rBeinZ = 0.12f;
+			p.lBeinZ = -0.12f;
+		}, null, (mc, s, t, nr) -> {
+			double w = t * 4;   // zwei Leuchtspuren schrauben sich um dich nach oben
+			for (int i = 0; i < 2; i++) {
+				double a = w + i * Math.PI;
+				partikel(mc, s, net.minecraft.core.particles.ParticleTypes.END_ROD, Math.cos(a) * 0.8, (t * 0.9) % 2.2, Math.sin(a) * 0.8, 0, 0.01, 0);
+			}
+		});
+
+		neu("gruselgroove", "Grusel-Groove", "Schaurig und doch funky", 0xFF6BFFB0, true, 0, (p, t) -> {
+			float s = sin(t, 0.9f);
+			p.rArmX = -1.5f + 0.25f * sin(t, 1.8f);
+			p.lArmX = -1.5f - 0.25f * sin(t, 1.8f);
+			p.rArmZ = 0.1f * s;
+			p.lArmZ = 0.1f * s;
+			p.koerperZ = 0.14f * s;
+			p.kopfZ = -0.3f * s;
+			p.kopfX = 0.15f;
+			p.hoehe = -0.08f + 0.05f * hops(t, 0.9f);
+			p.rBeinX = -0.2f * Math.max(0, s);
+			p.lBeinX = -0.2f * Math.max(0, -s);
+		}, new Takt(6, "x..x..x.", "....x...", ".x.x.x.x", "a..a.c.d", "h...g.f."), (mc, s, t, nr) -> {
+			if (nr % 10 == 0) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.SOUL, z(0.6f), 0.2, z(0.6f), 0, 0.04, 0);
+		});
+
+		neu("feuersprung", "Feuersprung", "Hochspringen, unten zünden die Flammen", 0xFFFF4D2B, true, 0, (p, t) -> {
+			float h = hops(t, 0.7f);
+			p.hoehe = 0.5f * h;
+			p.arme(-2.9f * h, 0.4f);
+			p.rBeinX = -0.6f * h;
+			p.lBeinX = -0.6f * h;
+			p.kopfX = -0.25f * h;
+		}, new Takt(4, "x.x.x.x.", "..x...x.", "xxxxxxxx", "a.a.c.c.", null), (mc, s, t, nr) -> {
+			if (nr % 14 == 0) {   // bei jeder Landung ein Flammenring
+				for (int i = 0; i < 16; i++) {
+					double a = i * Math.PI / 8;
+					partikel(mc, s, net.minecraft.core.particles.ParticleTypes.FLAME, Math.cos(a) * 0.6, 0.1, Math.sin(a) * 0.6,
+							Math.cos(a) * 0.05, 0.02, Math.sin(a) * 0.05);
+				}
+			}
+			if (nr % 3 == 0) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.SMALL_FLAME, z(0.4f), 0.1, z(0.4f), 0, 0.03, 0);
+		});
+
+		neu("paddelkreisel", "Paddel-Kreisel", "Sitzen, paddeln und sich im Kreis drehen", 0xFF38BDF8, true, 0, (p, t) -> {
+			float seite = sin(t, 0.5f) > 0 ? 1 : -1;   // abwechselnd links und rechts paddeln
+			float zug = sin(t, 1f);
+			p.hoehe = -0.62f;
+			p.rBeinX = -1.45f;
+			p.lBeinX = -1.45f;
+			p.rArmX = -0.9f + 0.6f * zug;
+			p.lArmX = -0.9f - 0.6f * zug;
+			p.rArmZ = 0.5f * seite;
+			p.lArmZ = 0.5f * seite;
+			p.koerperZ = 0.12f * seite;
+			p.drehung = 360 * t * 0.45f;
+			p.kopfZ = -0.1f * seite;
+		}, null, (mc, s, t, nr) -> {
+			if (nr % 4 == 0) partikel(mc, s, net.minecraft.core.particles.ParticleTypes.SPLASH, z(0.9f), 0.2, z(0.9f), 0, 0.1, 0);
+		});
+	}
+
 	public static Emote nachId(String id) {
 		return NACH_ID.get(id);
 	}
@@ -252,6 +492,7 @@ public final class Emotes {
 	private static long seit;
 	private static CameraType alteKamera;
 	private static int letzterSchritt = -1;
+	private static int effektTick;
 
 	/** Vorschau in Menüs (Garderobe, Rad): tanzt nur das Modell im Menü. */
 	private static Emote vorschau;
@@ -322,6 +563,7 @@ public final class Emotes {
 			stoppe();
 			return;
 		}
+		if (aktiv.effekt() != null) aktiv.effekt().tick(mc, mc.player, t, effektTick++);
 		Takt takt = aktiv.takt();
 		if (takt != null && BambusClient.config.emoteMusik) {
 			int schritt = (int) (t * 20 / takt.ticksProAchtel());
