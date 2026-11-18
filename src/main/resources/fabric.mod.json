@@ -7,7 +7,7 @@
 	"authors": [
 		"Bambus"
 	],
-	"license": "MIT",
+	"license": "LicenseRef-All-Rights-Reserved",
 	"icon": "assets/bambus/icon.png",
 	"environment": "client",
 	"entrypoints": {

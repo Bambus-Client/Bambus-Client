@@ -13,7 +13,7 @@ package de.bambus.recht;
 public final class Rechtstext {
 
 	/** Stand des Textes. Höher = alle müssen neu zustimmen. */
-	public static final int VERSION = 1;
+	public static final int VERSION = 2;
 
 	public static final String STAND = "18.11.2026";
 
@@ -56,6 +56,7 @@ public final class Rechtstext {
 							+ "• Du brauchst ein eigenes, gekauftes Minecraft: Java Edition. Bambus fragt nie nach deinem Passwort.\n"
 							+ "• Die Regeln von Mojang und von jedem Server gelten weiter – auch mit Bambus.\n"
 							+ "• Bambus hat keinen eigenen Server. Deine Einstellungen, Blätter und Kosmetik bleiben auf deinem Computer.\n"
+							+ "• Alle Rechte an Bambus gehören den Entwicklern. Kopieren, Verändern oder Weitergeben ist ohne ihre Erlaubnis verboten.\n"
 							+ "• Bambus wird so angeboten, wie es ist – ohne Garantie."},
 			{"1. Kein offizielles Minecraft-Produkt",
 					"Bambus ist ein Hobbyprojekt. Es ist kein offizielles Minecraft-Produkt und nicht von Mojang oder Microsoft "
@@ -90,21 +91,30 @@ public final class Rechtstext {
 							+ "• Minecraft-Server, die du einträgst: Abfrage von Spielerzahl und Ping\n"
 							+ "• Discord: nur wenn du die Discord-Anzeige einschaltest, und nur über das Discord-Programm auf deinem Computer\n"
 							+ "Für diese Dienste gelten deren eigene Datenschutzbestimmungen."},
-			{"6. Offener Code, ohne Gewähr",
-					"Der Quellcode von Bambus ist offen (MIT-Lizenz) und kann von allen geprüft werden. "
-							+ "Bambus wird so angeboten, wie es ist – ohne Garantie, dass es fehlerfrei läuft. "
+			{"6. Alle Rechte bei den Entwicklern",
+					"Bambus – Launcher, Client, Name, Logo, Grafiken, Kosmetik, Texte und Musik – gehört den Entwicklern von Bambus. "
+							+ "Alle Rechte sind vorbehalten.\n"
+							+ "• Erlaubt: die offiziellen Versionen von GitHub oder aus dem Update kostenlos herunterladen und privat damit spielen. "
+							+ "Den Quellcode darfst du auf GitHub ansehen.\n"
+							+ "• Verboten ohne schriftliche Erlaubnis der Entwickler: Bambus kopieren, verändern, nachbauen, woanders hochladen, "
+							+ "weitergeben oder verkaufen, Name, Logo, Grafiken oder Musik benutzen oder Bambus als eigenes Werk ausgeben.\n"
+							+ "• Wer das trotzdem tut, verletzt die Rechte der Entwickler. Dann können rechtliche Schritte eingeleitet werden "
+							+ "(zum Beispiel Abmahnung, Unterlassung oder Schadensersatz), und die Erlaubnis zum Spielen endet.\n"
+							+ "Die genauen Bedingungen stehen in der Datei LICENSE."},
+			{"7. Ohne Gewähr",
+					"Bambus wird kostenlos und so angeboten, wie es ist – ohne Garantie, dass es fehlerfrei läuft. "
 							+ "Mach Sicherungen deiner wichtigen Welten, bevor du Mods oder neue Minecraft-Versionen ausprobierst."},
-			{"7. Für Kinder und Jugendliche",
+			{"8. Für Kinder und Jugendliche",
 					"Wenn du jünger als 16 bist, lies das hier bitte zusammen mit deinen Eltern oder einer anderen erwachsenen Person, "
 							+ "der du vertraust. Frag nach, wenn etwas unklar ist."},
-			{"8. Änderungen",
+			{"9. Änderungen",
 					"Wenn sich an diesen Regeln etwas Wichtiges ändert, zeigen Launcher und Client sie beim nächsten Start noch einmal "
 							+ "an, und du stimmst neu zu. Nachlesen kannst du sie jederzeit – im Launcher unter EINSTELLUNGEN → RECHTLICHES, im Spiel unter Mod-Menü → MEHR → Rechtliches.\n"
 							+ "Stand: " + STAND},
 			{"Zum Nachlesen",
 					"• Minecraft-EULA: minecraft.net/eula\n"
 							+ "• Nutzungsrichtlinien: minecraft.net/usage-guidelines\n"
-							+ "• Quellcode und Lizenz: github.com/Bambus-Client/Bambus-Client"},
+							+ "• Lizenz und Quellcode: github.com/Bambus-Client/Bambus-Client (Datei LICENSE)"},
 	};
 
 	private static final String[][] EN = {
@@ -113,6 +123,7 @@ public final class Rechtstext {
 							+ "• You need your own purchased copy of Minecraft: Java Edition. Bamboo never asks for your password.\n"
 							+ "• Mojang's rules and every server's rules still apply – with Bamboo too.\n"
 							+ "• Bamboo has no server of its own. Your settings, leaves and cosmetics stay on your computer.\n"
+							+ "• All rights in Bamboo belong to its developers. Copying, changing or sharing it without their permission is not allowed.\n"
 							+ "• Bamboo is provided as it is – without any warranty."},
 			{"1. Not an official Minecraft product",
 					"Bamboo is a hobby project. It is not an official Minecraft product and is not approved by or associated with "
@@ -145,20 +156,29 @@ public final class Rechtstext {
 							+ "• Minecraft servers you add: checking player count and ping\n"
 							+ "• Discord: only if you turn on the Discord status, and only through the Discord app on your computer\n"
 							+ "Their own privacy policies apply to these services."},
-			{"6. Open code, no warranty",
-					"Bamboo's source code is open (MIT licence) and anyone can check it. "
-							+ "Bamboo is provided as it is – without any guarantee that it works without errors. "
+			{"6. All rights belong to the developers",
+					"Bamboo – launcher, client, name, logo, graphics, cosmetics, texts and music – belongs to Bamboo's developers. "
+							+ "All rights are reserved.\n"
+							+ "• Allowed: downloading the official versions from GitHub or the updater for free and playing with them privately. "
+							+ "You may view the source code on GitHub.\n"
+							+ "• Not allowed without the developers' written permission: copying, changing or recreating Bamboo, uploading it "
+							+ "elsewhere, sharing or selling it, using its name, logo, graphics or music, or passing it off as your own work.\n"
+							+ "• Anyone who does this anyway infringes the developers' rights. Legal action can then be taken "
+							+ "(for example a cease-and-desist letter, an injunction or damages), and the permission to play ends.\n"
+							+ "The exact terms are in the LICENSE file."},
+			{"7. No warranty",
+					"Bamboo is provided free of charge and as it is – without any guarantee that it works without errors. "
 							+ "Back up your important worlds before you try mods or new Minecraft versions."},
-			{"7. For children and teenagers",
+			{"8. For children and teenagers",
 					"If you are younger than 16, please read this together with your parents or another adult you trust. "
 							+ "Ask if anything is unclear."},
-			{"8. Changes",
+			{"9. Changes",
 					"If something important changes in these rules, the launcher and the client will show them again the next time "
 							+ "they start, and you agree again. You can read them any time – in the launcher under SETTINGS → LEGAL, in the game under mod menu → MORE → Legal.\n"
 							+ "Last updated: " + STAND},
 			{"To read more",
 					"• Minecraft EULA: minecraft.net/eula\n"
 							+ "• Usage guidelines: minecraft.net/usage-guidelines\n"
-							+ "• Source code and licence: github.com/Bambus-Client/Bambus-Client"},
+							+ "• Licence and source code: github.com/Bambus-Client/Bambus-Client (LICENSE file)"},
 	};
 }

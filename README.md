@@ -147,7 +147,7 @@ Die Versionsnummer überall im Code übernimmt der Build automatisch aus dem Tag
 
 **Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt oder mit ihnen verbunden.**
 Bambus fragt nie nach deinem Passwort (Anmeldung nur im offiziellen Minecraft Launcher), liefert keine
-Minecraft-Spieldateien mit und ist Open Source (MIT, siehe `LICENSE`).
+Minecraft-Spieldateien mit – alle Rechte vorbehalten (siehe `LICENSE`).
 Alles Weitere – EULA, Code-Signierung, fremde Lizenzen – steht in [`RECHTLICHES.md`](RECHTLICHES.md).
 
 ## Bauen

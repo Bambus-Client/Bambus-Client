@@ -60,8 +60,11 @@ Bambus dann genau wie der offizielle Launcher **frisch von den Mojang-Servern** 
 
 ## 3. Sicherheit, Code-Signierung und Virenwarnungen
 
-- **Open Source:** Der komplette Quellcode liegt offen (MIT-Lizenz, siehe `LICENSE`). Jede Datei kann geprüft
-  werden; die fertigen Programme baut GitHub automatisch aus genau diesem Code.
+- **Alle Rechte vorbehalten:** Seit 18.11.2026 steht Bambus nicht mehr unter MIT, sondern unter einer eigenen Lizenz
+  (siehe `LICENSE`): Privat spielen mit den offiziellen Versionen ist erlaubt, Kopieren, Verändern, Weitergeben und
+  Verkaufen nur mit schriftlicher Erlaubnis; Verstöße können rechtlich verfolgt werden. Der Quellcode bleibt auf
+  GitHub einsehbar; die fertigen Programme baut GitHub automatisch aus genau diesem Code.
+  Früher unter MIT veröffentlichte Versionen bleiben für diese Kopien unter MIT.
 - **Windows SmartScreen / macOS Gatekeeper:** Unsignierte Programme zeigen „Unbekannter Herausgeber“ bzw.
   „nicht verifizierter Entwickler“. Das ist kein Virus, sondern fehlende Signatur.
 - **Signieren ist vorbereitet:** Der GitHub-Ablauf (`.github/workflows/build.yml`) signiert automatisch,
