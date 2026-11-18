@@ -1,0 +1,29 @@
+{
+  "version": "3.4.0",
+  "build": 64,
+  "commit": "b2bfd45ed7f5e853908364bd90cb4df6d7b1de3b",
+  "aenderungen": [
+    "Release: Launcher-Setup, Zip und Client-Mod als Bambus-Client-standalone.jar",
+    "Client auf Englisch: Sprachauswahl und Wörterbuch",
+    "14 neue Emotes mit Effekten, Garderobe-Listen scrollbar",
+    "26.x: ClickType heißt seit 26.1 ContainerInput (Inventar sortieren baut wieder)",
+    "Wegpunkte in Module, Wegpunkte-Menü und Schnellmenü grün",
+    "Freunde-Reiter im Mod-Menü",
+    "Add files via upload",
+    "Add files via upload",
+    "Emotes: der eigene Spieler führt die Emotes vor statt Strichfiguren",
+    "Emotes mit Blättern freischalten",
+    "Garderobe → Emotes: Rad in der Mitte, Emotes links und rechts",
+    "Emotes: Emote-Rad (Taste B), Emotes in der Garderobe, 16 eigene Emotes"
+  ],
+  "launcher": {
+    "datei": "BambusLauncher.jar",
+    "sha256": "b75e58bef8d7d1e5c968612013c53667cea40f2b4aec7d7dc33361acaae39bf3",
+    "groesse": 39501530
+  },
+  "mod": {
+    "datei": "bambus-client.jar",
+    "sha256": "4c311bc6b34d907e13156bd85bccb45af5cae91e108ee0ee39843d3617f06c74",
+    "groesse": 7846141
+  }
+}
