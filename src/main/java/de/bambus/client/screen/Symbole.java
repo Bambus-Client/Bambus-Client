@@ -92,7 +92,7 @@ public final class Symbole {
 				{"freelook", "auge"}, {"fullbright", "sonne"}, {"hell", "sonne"}, {"fadenkreuz", "fadenkreuz"},
 				{"partikel", "kosmetik"}, {"cape", "kosmetik"}, {"flügel", "kosmetik"}, {"low-end", "blitz"},
 				{"fps", "blitz"}, {"leben", "herz"}, {"screenshot", "kamera"}, {"discord", "person"},
-				{"freund", "person"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
+				{"freund", "person"}, {"wegpunkt", "karte"}, {"zeit", "uhr"}, {"wetter", "sonne"}, {"scoreboard", "hud"},
 				{"bossbar", "hud"}, {"tab", "hud"}, {"chat", "hud"}, {"hauptmenü", "hud"}, {"menü", "mehr"},
 				{"verlauf", "kosmetik"}, {"benachrichtigung", "update"}, {"lade", "update"}, {"treffer", "ziel"},
 				{"textur", "textur"}, {"fire", "textur"}, {"shield", "ruestung"}, {"sword", "pvp"}, {"kürbis", "auge"}, {"wasser", "auge"},

@@ -152,6 +152,9 @@ public class BambusClient implements ClientModInitializer {
 		// Eigene Treffer auswerten (Combo, Reach, Target-HUD, Kills) – nur lesen, nichts verändern
 		AttackEntityCallback.EVENT.register((spieler, welt, hand, entity, treffer) -> {
 			if (welt.isClientSide()) {
+				if (Kampf.schuetzeFreund(spieler, entity)) {
+					return InteractionResult.FAIL;   // Schlag gar nicht erst schicken
+				}
 				Kampf.angriff(spieler, entity);
 			}
 			return InteractionResult.PASS;
@@ -189,7 +192,7 @@ public class BambusClient implements ClientModInitializer {
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> Sortieren.knopfAnbringen(client, screen, breite, hoehe));
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> {
 			if (screen instanceof TitleScreen) {
-				Screens.getButtons(screen).add(Button.builder(Component.literal("§bBAMBUS"),
+				Screens.getButtons(screen).add(Button.builder(Component.literal(Sprache.t("§bBAMBUS")),
 								b -> client.setScreen(new BambusMenuScreen(screen)))
 						.bounds(breite - 84, 6, 78, 20).build());
 				ScreenEvents.afterRender(screen).register(
@@ -318,7 +321,7 @@ public class BambusClient implements ClientModInitializer {
 			Hinweise.zeige("hud", "Bambus-HUD", config.hudAn ? "eingeschaltet" : "ausgeschaltet", Farben.NEON);
 			if (mc.player != null) {
 				Kompat.meldung(mc.player,
-						Component.literal("§aBambus-HUD: " + (config.hudAn ? "an" : "aus")), true);
+						Component.literal(Sprache.t("§aBambus-HUD: " + (config.hudAn ? "an" : "aus"))), true);
 			}
 		}
 
@@ -347,7 +350,7 @@ public class BambusClient implements ClientModInitializer {
 				Wegpunkte.Punkt p = Wegpunkte.hierSetzen(mc, null);
 				if (p != null) {
 					Hinweise.zeige("karte", "Wegpunkt gesetzt: " + p.name,
-							p.x + " / " + p.y + " / " + p.z + " · Rechts-Shift → WEGPUNKTE", 0xFF000000 | p.farbe);
+							p.x + " / " + p.y + " / " + p.z + " · Mod-Menü → Module → Wegpunkte", 0xFF000000 | p.farbe);
 				}
 			}
 		}

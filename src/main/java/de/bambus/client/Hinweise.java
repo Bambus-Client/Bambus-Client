@@ -84,7 +84,7 @@ public final class Hinweise {
 			boolean online = verbindung.getPlayerInfo(f) != null;
 			String k = f.toLowerCase(java.util.Locale.ROOT);
 			if (online && FREUNDE_ONLINE.add(k)) {
-				if (!f.equalsIgnoreCase(mc.player.getName().getString())) {
+				if (BambusClient.config.freundHinweis && !f.equalsIgnoreCase(mc.player.getName().getString())) {
 					zeige("person", "Freund online", f, Farben.NEON_CYAN);
 				}
 			} else if (!online) {
@@ -131,8 +131,8 @@ public final class Hinweise {
 		// Symbol in einem kleinen leuchtenden Feld
 		g.fill(x + 6, y + 6, x + 24, y + 24, Farben.alpha(h.farbe, 36));
 		Symbole.zeichne(g, h.symbol, x + 7, y + 7, 2, h.farbe);
-		g.drawString(font, font.plainSubstrByWidth(h.titel, BREITE - 34), x + 29, y + 6, Farben.WEISS, false);
-		Neon.text(g, font, font.plainSubstrByWidth(h.text, (int) ((BREITE - 34) / 0.75f)), x + 29, y + 18, 0.75f, Farben.GRAU, false);
+		g.drawString(font, Sprache.t(font.plainSubstrByWidth(Sprache.t(h.titel), BREITE - 34)), x + 29, y + 6, Farben.WEISS, false);
+		Neon.text(g, font, font.plainSubstrByWidth(Sprache.t(h.text), (int) ((BREITE - 34) / 0.75f)), x + 29, y + 18, 0.75f, Farben.GRAU, false);
 		// Restzeit als dünner Balken
 		g.fill(x + 2, y + HOEHE - 1, x + 2 + Math.round((BREITE - 2) * Math.max(0, rest)), y + HOEHE, Farben.alpha(h.farbe, 160));
 	}

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.bambus.client.BambusClient;
@@ -84,7 +86,7 @@ public class BambusServerScreen extends Screen {
 	private static final int KARTE = 40;
 
 	public BambusServerScreen(Screen eltern) {
-		super(Component.literal("Server"));
+		super(Component.literal(Sprache.t("Server")));
 		this.eltern = eltern;
 	}
 
@@ -108,8 +110,8 @@ public class BambusServerScreen extends Screen {
 			}
 		}
 		String alt = suche == null ? "" : suche.getValue();
-		suche = new EditBox(font, 0, 0, 140, 16, Component.literal("Suche"));
-		suche.setHint(Component.literal("§8Suchen …"));
+		suche = new EditBox(font, 0, 0, 140, 16, Component.literal(Sprache.t("Suche")));
+		suche.setHint(Component.literal(Sprache.t("§8Suchen …")));
 		suche.setBordered(false);
 		suche.setTextColor(Farben.WEISS);
 		suche.setValue(alt);
@@ -155,7 +157,7 @@ public class BambusServerScreen extends Screen {
 
 	private void pinge(ServerData d) {
 		d.setState(ServerData.State.PINGING);
-		d.motd = Component.literal("Wird abgefragt …");
+		d.motd = Component.literal(Sprache.t("Wird abgefragt …"));
 		d.ping = -1;
 		d.players = null;
 		boolean nativ = minecraft.options.useNativeTransport();
@@ -169,7 +171,7 @@ public class BambusServerScreen extends Screen {
 			} catch (Exception e) {
 				d.setState(ServerData.State.UNREACHABLE);
 				d.ping = -1;
-				d.motd = Component.literal("Nicht erreichbar").withStyle(ChatFormatting.RED);
+				d.motd = Component.literal(Sprache.t("Nicht erreichbar")).withStyle(ChatFormatting.RED);
 			}
 		});
 	}
@@ -335,7 +337,7 @@ public class BambusServerScreen extends Screen {
 		int[] breiten = new int[knoepfe.length];
 		int gesamt = 0;
 		for (int i = 0; i < knoepfe.length; i++) {
-			breiten[i] = Math.max(40, (int) (font.width(knoepfe[i][0]) * 0.75f) + 16);
+			breiten[i] = Math.max(40, (int) (font.width(Sprache.t(knoepfe[i][0])) * 0.75f) + 16);
 			gesamt += breiten[i] + 4;
 		}
 		float skala = Math.min(1f, (b - 2 * rand) / (float) gesamt);
@@ -348,7 +350,7 @@ public class BambusServerScreen extends Screen {
 		}
 		// Minecraft-Liste (LAN) unten rechts klein
 		String mc = "Minecraft-Liste (LAN)";
-		int mw = (int) (font.width(mc) * 0.6f);
+		int mw = (int) (font.width(Sprache.t(mc)) * 0.6f);
 		boolean mh = Neon.ueber(mx, my, b - mw - 8, kopf + 3, mw + 4, 9);
 		Neon.text(g, font, mc, b - mw - 6, kopf + 4, 0.6f, mh ? Farben.WEISS : Farben.GRAU, false);
 		bereiche.add(new Bereich(b - mw - 8, kopf + 3, mw + 4, 9, this::minecraftListe));
@@ -370,7 +372,7 @@ public class BambusServerScreen extends Screen {
 		if (sichtbar.isEmpty()) {
 			String leer = nurFavoriten ? "Noch keine Favoriten – klick bei einem Server auf ☆." : liste.size() == 0
 					? "Noch keine Server. Klick auf HINZUFÜGEN." : "Kein Server passt zur Suche.";
-			int lw = (int) (font.width(leer) * 0.85f);
+			int lw = (int) (font.width(Sprache.t(leer)) * 0.85f);
 			Neon.text(g, font, leer, b / 2 - lw / 2, ly + 20, 0.85f, Farben.GRAU, false);
 		}
 		// Scrollbalken
@@ -415,16 +417,16 @@ public class BambusServerScreen extends Screen {
 		// Name, Adresse, Beschreibung
 		int tx = ix + is + 6;
 		int rechts = 74;
-		String name = font.plainSubstrByWidth(d.name, b - (tx - x) - rechts - 14);
-		g.drawString(font, name, tx, y + 4, Farben.WEISS, true);
-		int nb = font.width(name);
-		Neon.text(g, font, font.plainSubstrByWidth(d.ip, (int) ((b - (tx - x) - rechts - nb - 22) / 0.6f)), tx + nb + 6, y + 6, 0.6f, Farben.GRAU, false);
+		String name = font.plainSubstrByWidth(Sprache.t(d.name), b - (tx - x) - rechts - 14);
+		g.drawString(font, Sprache.t(name), tx, y + 4, Farben.WEISS, true);
+		int nb = font.width(Sprache.t(name));
+		Neon.text(g, font, font.plainSubstrByWidth(Sprache.t(d.ip), (int) ((b - (tx - x) - rechts - nb - 22) / 0.6f)), tx + nb + 6, y + 6, 0.6f, Farben.GRAU, false);
 		List<FormattedCharSequence> zeilen = font.split(d.motd == null ? Component.empty() : d.motd, (int) ((b - (tx - x) - rechts) / 0.75f));
 		for (int i = 0; i < Math.min(2, zeilen.size()); i++) {
 			g.pose().pushMatrix();
 			g.pose().translate(tx, y + 16 + i * 8);
 			g.pose().scale(0.75f, 0.75f);
-			g.drawString(font, zeilen.get(i), 0, 0, 0xFFA8B4C4, false);
+			g.drawString(font, Sprache.t(zeilen.get(i)), 0, 0, 0xFFA8B4C4, false);
 			g.pose().popMatrix();
 		}
 
@@ -436,16 +438,16 @@ public class BambusServerScreen extends Screen {
 		pingBalken(g, d, x + b - 34, y + 5);
 		String spieler = d.players == null ? "" : d.players.online() + "/" + d.players.max();
 		if (!spieler.isEmpty()) {
-			int sw = (int) (font.width(spieler) * 0.75f);
+			int sw = (int) (font.width(Sprache.t(spieler)) * 0.75f);
 			Neon.text(g, font, spieler, x + b - 8 - sw, y + 18, 0.75f, Farben.GRAU, false);
 		}
 		if (d.state() == ServerData.State.INCOMPATIBLE && d.version != null) {
-			String v = font.plainSubstrByWidth(d.version.getString(), 90);
-			int vw = (int) (font.width(v) * 0.6f);
+			String v = font.plainSubstrByWidth(Sprache.t(d.version.getString()), 90);
+			int vw = (int) (font.width(Sprache.t(v)) * 0.6f);
 			Neon.text(g, font, v, x + b - 8 - vw, y + 29, 0.6f, Farben.ROT, false);
 		} else if (d.ping >= 0 && d.state() == ServerData.State.SUCCESSFUL) {
 			String ms = d.ping + " ms";
-			int pw = (int) (font.width(ms) * 0.6f);
+			int pw = (int) (font.width(Sprache.t(ms)) * 0.6f);
 			Neon.text(g, font, ms, x + b - 8 - pw, y + 29, 0.6f, pingFarbe(d.ping), false);
 		}
 	}
@@ -502,7 +504,7 @@ public class BambusServerScreen extends Screen {
 		boolean ueber = Neon.ueber(mx, my, x, y, b, 14);
 		g.fill(x, y, x + b, y + 14, an ? Farben.alpha(Farben.NEON, 40) : ueber ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(x, y, b, 14, an ? Farben.NEON : Farben.LINIE);
-		int w = (int) (font.width(text) * 0.75f);
+		int w = (int) (font.width(Sprache.t(text)) * 0.75f);
 		Neon.text(g, font, text, x + (b - w) / 2, y + 4, 0.75f, an ? Farben.WEISS : Farben.GRAU, false);
 		bereiche.add(new Bereich(x, y, b, 14, aktion));
 	}
@@ -511,8 +513,8 @@ public class BambusServerScreen extends Screen {
 		boolean ueber = aktiv && Neon.ueber(mx, my, x, y, b, h);
 		g.fill(x, y, x + b, y + h, ueber ? Farben.alpha(farbe, 40) : Farben.KARTE);
 		g.renderOutline(x, y, b, h, aktiv ? (ueber ? farbe : Farben.alpha(farbe, 120)) : 0xFF161F2B);
-		float s = Math.min(0.75f, (b - 6) / (float) font.width(text));
-		int w = (int) (font.width(text) * s);
+		float s = Math.min(0.75f, (b - 6) / (float) font.width(Sprache.t(text)));
+		int w = (int) (font.width(Sprache.t(text)) * s);
 		Neon.text(g, font, text, x + (b - w) / 2, y + (h - (int) (8 * s)) / 2, s, aktiv ? (ueber ? Farben.WEISS : farbe) : 0xFF3A4656, false);
 		if (aktiv) bereiche.add(new Bereich(x, y, b, h, aktion));
 	}

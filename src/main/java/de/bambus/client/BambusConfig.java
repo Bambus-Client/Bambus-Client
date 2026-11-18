@@ -62,6 +62,7 @@ public class BambusConfig {
 	public boolean hinweise = true;        // Neon-Benachrichtigungen
 	public boolean ladebildschirm = true;  // eigener Ladebildschirm
 	public String menueStil = "bambus";
+	public String sprache = "auto";        // Sprache des Clients: auto (wie Minecraft), de, en
 	public int musikDurchsicht = 70;       // Musik-Insel: Durchsichtigkeit in Prozent
 	public int musikSchriftInsel = 1;      // Schriften.NAMEN: 0 Minecraft, 1 Poppins, 2 Montserrat, 3 Pixel
 	public int musikSchriftWoerter = 2;
@@ -81,6 +82,8 @@ public class BambusConfig {
 
 	// Extras
 	public java.util.List<String> freunde = new java.util.ArrayList<>();
+	public boolean freundHinweis = true;   // Meldung, wenn ein Freund auf den Server kommt
+	public boolean freundSchutz = false;   // Freunde lassen sich nicht schlagen
 	public boolean autoScreenshot = false;
 	public boolean discordAn = false;
 	public boolean helferAn = true;        // Bambus-Helfer bei Rechts-Shift anbieten

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.EigeneKosmetik;
@@ -53,7 +55,7 @@ public class GarderobeScreen extends Screen {
 	private int rx, ry, rb, rh;
 
 	public GarderobeScreen(Screen eltern) {
-		super(Component.literal("Garderobe"));
+		super(Component.literal(Sprache.t("Garderobe")));
 		this.eltern = eltern;
 	}
 
@@ -132,10 +134,10 @@ public class GarderobeScreen extends Screen {
 			int farbe = aktiv ? Farben.NEON : Anim.mische(Farben.GRAU, Farben.WEISS, h);
 			int textY = mitUntertitel ? y + 5 : y + (eh - 8) / 2;
 			KosmetikSymbole.artSymbol(g, a, x + 14, mitUntertitel ? y + 8 : y + (eh - 12) / 2, farbe);
-			g.drawString(font, a.titel, x + 32, textY, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
+			g.drawString(font, Sprache.t(a.titel), x + 32, textY, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
 			if (mitUntertitel) {
 				Garderobe.Eintrag gewaehlt = a.gewaehlt();
-				String unter = font.plainSubstrByWidth(gewaehlt != null ? gewaehlt.name() : "Keins", (int) ((LEISTE - 44) / 0.6f));
+				String unter = font.plainSubstrByWidth(Sprache.t(gewaehlt != null ? gewaehlt.name() : "Keins"), (int) ((LEISTE - 44) / 0.6f));
 				Neon.text(g, font, unter, x + 32, y + 16, 0.6f, gewaehlt != null ? (aktiv ? Farben.NEON : Farben.GRAU) : 0xFF4A5A6E, false);
 			}
 			klick(x + 6, y, LEISTE - 14, eh, () -> wechsle(a), false);
@@ -177,7 +179,7 @@ public class GarderobeScreen extends Screen {
 				BambusClient.config.speichern();
 			});
 			String blaetter = de.bambus.client.Blaetter.blaetter() + " Blätter";
-			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(blaetter) * 0.75f), 18, 0.75f,
+			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(Sprache.t(blaetter)) * 0.75f), 18, 0.75f,
 					de.bambus.client.Blaetter.blattFarbe(), false);
 			emoteEditor(g, mx, my, x, b);
 			return;
@@ -226,6 +228,7 @@ public class GarderobeScreen extends Screen {
 	private boolean zugBewegt;
 	private float radX, radY;            // Lage des Rads (für Klicks und Ablegen)
 	private int radD;
+	private int emoteScroll, emoteMaxScroll, emoteListeOben, emoteListeUnten;
 
 	/** Rad in der Mitte, Emotes links und rechts – wie ein Kleiderschrank für Tänze. */
 	private void emoteEditor(GuiGraphics g, int mx, int my, int x, int b) {
@@ -240,8 +243,14 @@ public class GarderobeScreen extends Screen {
 		radY = oben + platz / 2f;
 		int spalte = Math.max(60, (int) ((b - radD) / 2f) - 10);
 		int haelfte = (alle.size() + 1) / 2;
-		int zh = Math.max(16, Math.min(30, (platz + 4) / haelfte - 4));
+		int zh = Math.max(20, Math.min(30, (platz + 4) / haelfte - 4));
 		float t = (System.currentTimeMillis() % 100_000L) / 1000f;
+		// passen nicht alle Emotes untereinander, lassen sich die Listen mit dem Mausrad scrollen
+		emoteListeOben = oben;
+		emoteListeUnten = unten;
+		emoteMaxScroll = Math.max(0, haelfte * (zh + 4) - 4 - platz);
+		emoteScroll = Math.max(0, Math.min(emoteScroll, emoteMaxScroll));
+		g.enableScissor(x, oben, x + b, unten);
 
 		// Feld des Rads unter der Maus; beim Ziehen zeigt es, wo das Emote landet
 		int radFeld = EmoteRadScreen.feld(radX, radY, radD, mx, my, true);
@@ -250,8 +259,9 @@ public class GarderobeScreen extends Screen {
 		for (int i = 0; i < alle.size(); i++) {
 			de.bambus.client.emote.Emote e = alle.get(i);
 			int zx = i < haelfte ? x : x + b - spalte;
-			int zy = oben + (i % haelfte) * (zh + 4);
-			boolean hover = gezogen == null && Neon.ueber(mx, my, zx, zy, spalte, zh);
+			int zy = oben + (i % haelfte) * (zh + 4) - emoteScroll;
+			if (zy + zh < oben || zy > unten) continue;   // außerhalb der sichtbaren Liste
+			boolean hover = gezogen == null && my >= oben && my < unten && Neon.ueber(mx, my, zx, zy, spalte, zh);
 			if (hover) hoverId = e.id();
 			int imRad = java.util.Arrays.asList(rad).indexOf(e.id());
 			boolean zu = de.bambus.client.emote.Emotes.gesperrt(e);
@@ -263,7 +273,7 @@ public class GarderobeScreen extends Screen {
 			if (zu) g.fill(zx + 3, zy + 1, zx + 22, zy + zh - 1, 0x880B1322);
 			int tx = zx + 24;
 			float ns = spalte < 100 ? 0.65f : 0.8f;   // in schmalen Spalten kleiner, damit der Name passt
-			String n = font.plainSubstrByWidth(e.name(), (int) ((spalte - 27 - (imRad >= 0 || zu ? 13 : 0)) / ns));
+			String n = font.plainSubstrByWidth(Sprache.t(e.name()), (int) ((spalte - 27 - (imRad >= 0 || zu ? 13 : 0)) / ns));
 			Neon.text(g, font, n, tx, zy + (zh >= 24 ? 5 : zh / 2 - 3), ns, hover ? Farben.WEISS : 0xFFC8D2DE, false);
 			if (zu) {   // noch gesperrt: Schloss und Preis (zweiter Klick kauft)
 				de.bambus.client.screen.EmoteRadScreen.schloss(g, zx + spalte - 8, zy + zh / 2 - 3, Farben.NEON_CYAN);
@@ -271,7 +281,7 @@ public class GarderobeScreen extends Screen {
 				String preis = e.id().equals(kaufBereit) ? "KAUFEN?" : spalte < 100 ? p + " Bl." : p + " BLÄTTER";
 				Neon.text(g, font, preis, tx, zy + zh - (zh >= 24 ? 10 : 7), 0.55f, Farben.NEON_CYAN, false);
 			} else if (zh >= 24) {
-				String bes = font.plainSubstrByWidth(e.beschreibung(), (int) ((spalte - 32) / 0.55f));
+				String bes = font.plainSubstrByWidth(Sprache.t(e.beschreibung()), (int) ((spalte - 32) / 0.55f));
 				Neon.text(g, font, bes, tx, zy + zh - 10, 0.55f, Farben.GRAU, false);
 			}
 			if (imRad >= 0) {   // liegt schon im Rad: Platznummer
@@ -279,6 +289,15 @@ public class GarderobeScreen extends Screen {
 				Neon.text(g, font, String.valueOf(imRad + 1), zx + spalte - 10, zy + 5, 0.6f, Farben.NEON, false);
 			}
 			emoteZeilen.add(new EmoteZeile(zx, zy, spalte, zh, e.id()));
+		}
+		g.disableScissor();
+		if (emoteMaxScroll > 0) {   // Hinweis: es gibt mehr Emotes – Bildlaufleisten an beiden Listen
+			int balkenH = Math.max(12, platz * platz / (platz + emoteMaxScroll));
+			int balkenY = oben + (platz - balkenH) * emoteScroll / emoteMaxScroll;
+			for (int bx : new int[]{x + spalte + 2, x + b - spalte - 4}) {
+				g.fill(bx, oben, bx + 2, unten, Farben.LINIE);
+				g.fill(bx, balkenY, bx + 2, balkenY + balkenH, Farben.NEON);
+			}
 		}
 
 		// Vorschau in der Mitte: das Emote unter der Maus, sonst das gezogene, sonst das des gewählten Platzes
@@ -297,7 +316,7 @@ public class GarderobeScreen extends Screen {
 
 		String hinweis = gezogen != null ? "Auf einen Platz im Rad ziehen und loslassen"
 				: "Emote ins Rad ziehen – oder Platz anklicken, dann Emote anklicken · Rechtsklick leert einen Platz";
-		int hb = (int) (font.width(hinweis) * 0.6f);
+		int hb = (int) (font.width(Sprache.t(hinweis)) * 0.6f);
 		Neon.text(g, font, hinweis, (int) radX - hb / 2, unten + 4, 0.6f, Farben.GRAU, false);
 
 		// das gezogene Emote hängt an der Maus
@@ -324,6 +343,7 @@ public class GarderobeScreen extends Screen {
 			return true;
 		}
 		if (e.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) return false;
+		if (e.y() < emoteListeOben || e.y() >= emoteListeUnten) return false;
 		for (EmoteZeile z : emoteZeilen) {
 			if (Neon.ueber(e.x(), e.y(), z.x(), z.y(), z.b(), z.h())) {
 				de.bambus.client.emote.Emote em = de.bambus.client.emote.Emotes.nachId(z.id());
@@ -372,8 +392,8 @@ public class GarderobeScreen extends Screen {
 		}
 		g.fill(x + 6, y + h - 24, x + b - 6, y + h - 23, Farben.LINIE);
 		Neon.text(g, font, "AKTIV", x + 8, y + h - 18, 0.6f, Farben.GRAU, false);
-		String name = font.plainSubstrByWidth(gewaehlt != null ? gewaehlt.name() : "Keins", b - 16);
-		g.drawString(font, name, x + 8, y + h - 11, gewaehlt != null ? Farben.NEON : Farben.GRAU, false);
+		String name = font.plainSubstrByWidth(Sprache.t(gewaehlt != null ? gewaehlt.name() : "Keins"), b - 16);
+		g.drawString(font, Sprache.t(name), x + 8, y + h - 11, gewaehlt != null ? Farben.NEON : Farben.GRAU, false);
 	}
 
 	/** Zeichnet „Keins“ + alle Einträge als Kacheln und gibt die benötigte Höhe zurück. */
@@ -406,19 +426,19 @@ public class GarderobeScreen extends Screen {
 				Neon.text(g, font, "EIGEN", tx + 4, ty + 3, 0.5f, Farben.SCHWARZ, false);
 			}
 		} else {
-			g.drawString(font, "∅", tx + KACHEL_B / 2 - 3, ty + 24, Farben.GRAU, false);
+			g.drawString(font, Sprache.t("∅"), tx + KACHEL_B / 2 - 3, ty + 24, Farben.GRAU, false);
 		}
 
 		if (aktiv) {
 			Neon.leuchtRahmen(g, tx, ty, KACHEL_B, KACHEL_H, e == null ? Farben.NEON : farbe, 0.6f + 0.4f * Farben.puls());
 			g.fill(tx + KACHEL_B - 11, ty + 2, tx + KACHEL_B - 2, ty + 11, Farben.NEON);
-			g.drawString(font, "✔", tx + KACHEL_B - 10, ty + 2, Farben.SCHWARZ, false);
+			g.drawString(font, Sprache.t("✔"), tx + KACHEL_B - 10, ty + 2, Farben.SCHWARZ, false);
 		} else {
 			g.renderOutline(tx, ty, KACHEL_B, KACHEL_H, hover ? 0xFF2E4058 : Farben.LINIE);
 		}
 
-		String n = font.plainSubstrByWidth(name, (int) ((KACHEL_B - 4) / 0.75f));
-		int nb = (int) (font.width(n) * 0.75f);
+		String n = font.plainSubstrByWidth(Sprache.t(name), (int) ((KACHEL_B - 4) / 0.75f));
+		int nb = (int) (font.width(Sprache.t(n)) * 0.75f);
 		Neon.text(g, font, n, tx + (KACHEL_B - nb) / 2, ty + KACHEL_H - 22, 0.75f, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
 		String id = e != null ? e.id() : Kosmetik.AUS;
 		boolean gesperrt = de.bambus.client.Blaetter.gesperrt(art.schluessel(), id);
@@ -431,7 +451,7 @@ public class GarderobeScreen extends Screen {
 			g.fill(sx - 2, sy - 3, sx + 2, sy, 0xFF0B1322);
 		}
 		String status = gesperrt ? (id.equals(kaufBereit) ? "KAUFEN?" : preis + " BLÄTTER") : aktiv ? "AKTIV" : "WÄHLEN";
-		int sb = (int) (font.width(status) * 0.6f);
+		int sb = (int) (font.width(Sprache.t(status)) * 0.6f);
 		Neon.text(g, font, status, tx + (KACHEL_B - sb) / 2, ty + KACHEL_H - 11, 0.6f,
 				gesperrt ? Farben.NEON_CYAN : aktiv ? Farben.NEON : Farben.GRAU, false);
 
@@ -477,7 +497,7 @@ public class GarderobeScreen extends Screen {
 		boolean hover = Neon.ueber(mx, my, x, y, b, 15);
 		g.fill(x, y, x + b, y + 15, hover ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(x, y, b, 15, hover ? Farben.NEON_PINK : Farben.LINIE);
-		int tb = (int) (font.width(text) * 0.6f);
+		int tb = (int) (font.width(Sprache.t(text)) * 0.6f);
 		Neon.text(g, font, text, x + (b - tb) / 2, y + 5, 0.6f, hover ? Farben.WEISS : Farben.GRAU, false);
 		klick(x, y, b, 15, aktion, false);
 	}
@@ -486,7 +506,7 @@ public class GarderobeScreen extends Screen {
 		boolean hover = Neon.ueber(mx, my, x, y, b, h);
 		g.fill(x, y, x + b, y + h, hover ? Farben.alpha(Farben.NEON, 30) : Farben.KARTE);
 		g.renderOutline(x, y, b, h, hover ? Farben.NEON : Farben.alpha(Farben.NEON, 120));
-		g.drawString(font, text, x + (b - font.width(text)) / 2, y + (h - 8) / 2, Farben.NEON, false);
+		g.drawString(font, Sprache.t(text), x + (b - font.width(Sprache.t(text))) / 2, y + (h - 8) / 2, Farben.NEON, false);
 		klick(x, y, b, h, aktion, false);
 	}
 
@@ -546,6 +566,10 @@ public class GarderobeScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mx, double my, double horizontal, double vertikal) {
+		if (art == Garderobe.Art.EMOTES && emoteMaxScroll > 0) {
+			emoteScroll = Math.max(0, Math.min(emoteMaxScroll, emoteScroll - (int) (vertikal * 18)));
+			return true;
+		}
 		if (imRaster(mx, my)) {
 			scroll -= (int) (vertikal * 18);
 			scroll = Math.max(0, Math.min(scroll, Math.max(0, inhaltHoehe - rh)));

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
@@ -42,19 +44,19 @@ public class HudEditorScreen extends Screen {
 	private final Deque<HudModul> ausgeblendet = new ArrayDeque<>();
 
 	public HudEditorScreen(Screen eltern) {
-		super(Component.literal("HUD verschieben"));
+		super(Component.literal(Sprache.t("HUD verschieben")));
 		this.eltern = eltern;
 	}
 
 	@Override
 	protected void init() {
-		addRenderableWidget(Button.builder(Component.literal("Zurücksetzen"), b -> {
+		addRenderableWidget(Button.builder(Component.literal(Sprache.t("Zurücksetzen")), b -> {
 			for (HudModul m : BambusClient.MODULE) {
 				m.zuruecksetzen();
 			}
 			BambusClient.config.speichern();
 		}).bounds(width / 2 - 104, height - 28, 100, 20).build());
-		addRenderableWidget(Button.builder(Component.literal("Fertig"), b -> onClose())
+		addRenderableWidget(Button.builder(Component.literal(Sprache.t("Fertig")), b -> onClose())
 				.bounds(width / 2 + 4, height - 28, 100, 20).build());
 	}
 
@@ -79,7 +81,7 @@ public class HudEditorScreen extends Screen {
 	/** Name und Größe über dem Modul (oder darunter, wenn oben kein Platz ist): {x, y, b}. */
 	private int[] namensFeld(HudModul m) {
 		String name = m.name + "  " + Math.round(m.skala() * 100) + " %";
-		int nb = (int) (font.width(name) * 0.75f) + 6;
+		int nb = (int) (font.width(Sprache.t(name)) * 0.75f) + 6;
 		int ny = by(m) - 11 < 0 ? by(m) + bh(m) + 3 : by(m) - 11;
 		return new int[]{bx(m) - 1, ny, nb};
 	}
@@ -187,17 +189,17 @@ public class HudEditorScreen extends Screen {
 		HudModul gz = groesseAendern != null ? groesseAendern : (System.currentTimeMillis() < groesseZeigenBis ? groesseZeigen : null);
 		if (gz != null) {
 			String p = Math.round(gz.skala() * 100) + " %";
-			Neon.leuchtText(g, font, p, width / 2 - (int) (font.width(p) * 1.5f), 18, 3f, Farben.NEON);
+			Neon.leuchtText(g, font, p, width / 2 - (int) (font.width(Sprache.t(p)) * 1.5f), 18, 3f, Farben.NEON);
 		}
 
 		String[] tipps = {"Ziehen = verschieben  ·  Ecke/Mausrad = Größe  ·  Shift = frei  ·  Rechtsklick = 100 %",
 				"✕ oder Entf = ausblenden  ·  Strg+Z = zurückholen"};
 		String eineZeile = tipps[0] + "  ·  " + tipps[1];
-		if (font.width(eineZeile) * 0.75f <= width - 24) {
+		if (font.width(Sprache.t(eineZeile)) * 0.75f <= width - 24) {
 			tipps = new String[]{eineZeile};
 		}
 		for (int i = 0; i < tipps.length; i++) {   // von unten nach oben über den Knöpfen
-			int tb = (int) (font.width(tipps[i]) * 0.75f);
+			int tb = (int) (font.width(Sprache.t(tipps[i])) * 0.75f);
 			int ty = height - 42 - (tipps.length - 1 - i) * 11;
 			g.fill(width / 2 - tb / 2 - 6, ty - 2, width / 2 + tb / 2 + 6, ty + 9, 0xB005080C);
 			Neon.text(g, font, tipps[i], width / 2 - tb / 2, ty, 0.75f, Farben.WEISS, false);

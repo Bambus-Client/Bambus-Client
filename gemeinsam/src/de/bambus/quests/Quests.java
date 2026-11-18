@@ -101,6 +101,10 @@ public final class Quests {
 			{"salut", "80"}, {"muskeln", "100"}, {"lachen", "100"}, {"facepalm", "100"}, {"sieger", "140"},
 			{"chillen", "150"}, {"hampelmann", "160"}, {"kreisel", "180"}, {"wackler", "220"}, {"welle", "220"},
 			{"propeller", "240"}, {"roboter", "260"}, {"disco", "260"},
+			{"umarmung", "100"}, {"tiefenentspannt", "150"}, {"trommelwirbel", "180"}, {"lhopser", "180"},
+			{"tauchgang", "200"}, {"huepfshuffle", "220"}, {"paddelkreisel", "220"}, {"fersenflitzer", "240"},
+			{"gruselgroove", "240"}, {"zickzack", "260"}, {"feuersprung", "260"}, {"aura", "280"},
+			{"rundum", "300"}, {"breakdance", "300"},
 	};
 
 	/**

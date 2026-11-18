@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import de.bambus.client.Wegpunkte;
@@ -64,7 +66,7 @@ public class KompassModul extends HudModul {
 			if (grad % 45 == 0 && (haupt || zwischen.an())) {
 				String n = NAMEN[grad / 45];
 				int farbe = Farben.alpha(n.equals("N") ? Farben.ROT : haupt ? Farben.WEISS : Farben.NEON_CYAN, alpha);
-				g.drawString(mc.font, n, px - mc.font.width(n) / 2, y + 6, farbe, true);
+				g.drawString(mc.font, Sprache.t(n), px - mc.font.width(Sprache.t(n)) / 2, y + 6, farbe, true);
 			} else {
 				g.fill(px, y + 12, px + 1, y + 16, Farben.alpha(Farben.GRAU, alpha));
 			}
@@ -93,10 +95,10 @@ public class KompassModul extends HudModul {
 				g.disableScissor();
 				g.pose().pushMatrix();
 				float s = 0.65f;
-				int tb = Math.round(mc.font.width(t) * s);
+				int tb = Math.round(mc.font.width(Sprache.t(t)) * s);
 				g.pose().translate(mitte - tb / 2f, y + HOEHE + 1);
 				g.pose().scale(s, s);
-				g.drawString(mc.font, t, 0, 0, 0xFF000000 | naechster.farbe, true);
+				g.drawString(mc.font, Sprache.t(t), 0, 0, 0xFF000000 | naechster.farbe, true);
 				g.pose().popMatrix();
 				g.enableScissor(x + 2, y, x + BREITE - 2, y + HOEHE);
 			}
@@ -113,11 +115,11 @@ public class KompassModul extends HudModul {
 			return;
 		}
 		String zahl = Math.round(r) % 360 + "°";
-		int zb = mc.font.width(zahl);
+		int zb = mc.font.width(Sprache.t(zahl));
 		g.pose().pushMatrix();
 		g.pose().translate(mitte - zb * 0.3f, y + HOEHE - 1);
 		g.pose().scale(0.6f, 0.6f);
-		g.drawString(mc.font, zahl, 0, 0, Farben.NEON, false);
+		g.drawString(mc.font, Sprache.t(zahl), 0, 0, Farben.NEON, false);
 		g.pose().popMatrix();
 	}
 }

@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Einstellung;
 import de.bambus.client.Farben;
@@ -149,7 +151,7 @@ public class MusikModul extends HudModul {
 				g.fill(cx + cs - 1, cy + cs - 1, cx + cs, cy + cs, ecke);
 			} else {
 				g.fill(cx, cy, cx + cs, cy + cs, Farben.alpha(0xFF2A2440, (int) (255 * a)));
-				g.drawString(font, "♪", cx + 3, cy + 2, Farben.alpha(AKZENT, (int) (255 * a)), false);
+				g.drawString(font, Sprache.t("♪"), cx + 3, cy + 2, Farben.alpha(AKZENT, (int) (255 * a)), false);
 			}
 			tx = cx + cs + 6;
 		}
@@ -161,8 +163,8 @@ public class MusikModul extends HudModul {
 		if (!editor && fehlerZeigen()) {
 			String meldung = "⚠ " + Musik.fehler();
 			float fs = 0.6f;
-			while (meldung.length() > 4 && font.width(meldung) * fs > textB) meldung = meldung.substring(0, meldung.length() - 2) + "…";
-			klein(g, font, Component.literal(meldung), tx, y + 6, fs, Farben.alpha(0xFFFF9A9A, (int) (255 * a)), true);
+			while (meldung.length() > 4 && font.width(Sprache.t(meldung)) * fs > textB) meldung = meldung.substring(0, meldung.length() - 2) + "…";
+			klein(g, font, Component.literal(Sprache.t(meldung)), tx, y + 6, fs, Farben.alpha(0xFFFF9A9A, (int) (255 * a)), true);
 			return;
 		}
 		Songtext.Zeile zeile = !beispiel && songtext.an() ? Songtext.aktuelleZeile(zeit) : null;
@@ -172,16 +174,16 @@ public class MusikModul extends HudModul {
 			String titel = beispiel ? "Song-Titel" : Musik.titel, kuenstler = beispiel ? "Künstler" : Musik.kuenstler;
 			String text = titel + (kuenstler.isEmpty() ? "" : "  ·  " + kuenstler);
 			int schrift = BambusClient.config.musikSchriftInsel;
-			float s = Math.min(1f, textB / (float) Math.max(1, font.width(Schriften.text(text, schrift, false))));
+			float s = Math.min(1f, textB / (float) Math.max(1, font.width(Sprache.t(Schriften.text(text, schrift, false)))));
 			if (s < 0.75f) {   // zu lang: kürzen statt winzig
 				s = 0.75f;
-				while (text.length() > 1 && font.width(Schriften.text(text + "…", schrift, false)) > textB / s) {
+				while (text.length() > 1 && font.width(Sprache.t(Schriften.text(text + "…", schrift, false))) > textB / s) {
 					text = text.substring(0, text.length() - 1);
 				}
 				text = text.stripTrailing() + "…";
 			}
 			Component c = Schriften.text(text, schrift, false);
-			int w = (int) (font.width(c) * s);
+			int w = (int) (font.width(Sprache.t(c)) * s);
 			klein(g, font, c, tx + (textB - w) / 2, y + 5 + (int) ((1 - s) * 4), s, Farben.alpha(Farben.WEISS, (int) (255 * a)), schatten);
 		}
 
@@ -211,10 +213,10 @@ public class MusikModul extends HudModul {
 								boolean schatten) {
 		List<Songtext.Wort> woerter = zeile.woerter();
 		int schrift = BambusClient.config.musikSchriftInsel;
-		int raum = font.width(Schriften.text(" ", schrift, false));
+		int raum = font.width(Sprache.t(Schriften.text(" ", schrift, false)));
 		// Breite genauso messen wie gezeichnet wird: Wort für Wort plus Leerzeichen
 		int gesamt = raum * Math.max(0, woerter.size() - 1);
-		for (Songtext.Wort w : woerter) gesamt += font.width(Schriften.text(w.text(), schrift, false));
+		for (Songtext.Wort w : woerter) gesamt += font.width(Sprache.t(Schriften.text(w.text(), schrift, false)));
 		float s = Math.min(1f, breite / (float) Math.max(1, gesamt));
 		s = Math.max(0.6f, s);
 		float start = x + Math.max(0, (breite - gesamt * s) / 2);
@@ -226,7 +228,7 @@ public class MusikModul extends HudModul {
 			boolean gesungen = zeit >= w.start();
 			boolean aktuell = gesungen && zeit < naechstes;
 			Component wort = Schriften.text(w.text(), schrift, false);
-			float ww = font.width(wort) * s;
+			float ww = font.width(Sprache.t(wort)) * s;
 			if (cx + ww > x + breite + 4) break;   // passt auch verkleinert nicht mehr
 			if (aktuell) {
 				g.fill((int) cx - 2, ty - 2, (int) (cx + ww) + 2, ty + (int) (8 * s) + 1, Farben.alpha(AKZENT, (int) (90 * a)));
@@ -251,7 +253,7 @@ public class MusikModul extends HudModul {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(groesse, groesse);
-		g.drawString(font, text, 0, 0, farbe, schatten);
+		g.drawString(font, Sprache.t(text), 0, 0, farbe, schatten);
 		g.pose().popMatrix();
 	}
 }

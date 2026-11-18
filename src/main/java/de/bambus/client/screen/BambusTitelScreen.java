@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import net.fabricmc.loader.api.FabricLoader;
@@ -42,7 +44,7 @@ public class BambusTitelScreen extends Screen {
 	private final float[] hoverAnim = new float[10];
 
 	public BambusTitelScreen() {
-		super(Component.literal("Bambus Client"));
+		super(Component.literal(Sprache.t("Bambus Client")));
 		Random r = new Random(7);
 		for (int i = 0; i < 26; i++) {
 			int farbe = r.nextInt(5) == 0 ? Farben.NEON_CYAN : r.nextInt(7) == 0 ? Farben.NEON_PINK : Farben.NEON;
@@ -207,7 +209,7 @@ public class BambusTitelScreen extends Screen {
 		// ---- Profil rechts oben
 		int pb = 128, ph = 40;
 		int px = width - pb - 12, py = 12;
-		int titelEnde = tx + (int) (font.width("BAMBUS") * gross) + 16;
+		int titelEnde = tx + (int) (font.width(Sprache.t("BAMBUS")) * gross) + 16;
 		if (px > titelEnde && py + ph < ky - 4) {   // neben dem Titel, über den Karten
 			profil(g, px, py, pb, ph);
 		}
@@ -216,7 +218,7 @@ public class BambusTitelScreen extends Screen {
 		String tasten = "RECHTS-SHIFT  Menü    C  Zoom    ALT  Freelook    H  HUD";
 		Neon.text(g, font, tasten, lx, ry + rh + 8, 0.6f, Farben.alpha(Farben.GRAU, (int) (200 * einblenden)), false);
 		String vanilla = "Minecraft-Menü";
-		int vb = (int) (font.width(vanilla) * 0.75f);
+		int vb = (int) (font.width(Sprache.t(vanilla)) * 0.75f);
 		int vx = width - vb - 10;
 		int vy = height - 14;
 		boolean vh = Neon.ueber(mx, my, vx - 4, vy - 3, vb + 8, 13);
@@ -290,7 +292,7 @@ public class BambusTitelScreen extends Screen {
 		g.fill(x, y + h - 2, x + b, y + h, Farben.alpha(k.akzent(), (int) (al * (0.45f + 0.55f * hv))));
 		int iy = y + (h - 16) / 2 - 1;
 		de.bambus.client.Kompat.item(g, k.symbol(), x + 4, iy);
-		float ts = font.width(k.text()) > b - 26 ? 0.6f : 0.75f;
+		float ts = font.width(Sprache.t(k.text())) > b - 26 ? 0.6f : 0.75f;
 		Neon.text(g, font, k.text(), x + 23, y + (h - (int) (8 * ts)) / 2 - 1, ts, Farben.alpha(hover ? Farben.WEISS : k.akzent(), al), false);
 		flaechen.add(new int[]{x, y0, b, h, i});
 	}
@@ -302,7 +304,7 @@ public class BambusTitelScreen extends Screen {
 		de.bambus.client.Kompat.item(g, Items.PLAYER_HEAD, x + 6, y + (h - 16) / 2);
 		String name = minecraft.getUser() == null ? "Spieler" : minecraft.getUser().getName();
 		boolean dev = de.bambus.client.Blaetter.istEntwickler();
-		Neon.text(g, font, font.plainSubstrByWidth(name, (int) ((b - 34) / 0.85f)), x + 27, y + 7, 0.85f, Farben.WEISS, false);
+		Neon.text(g, font, font.plainSubstrByWidth(Sprache.t(name), (int) ((b - 34) / 0.85f)), x + 27, y + 7, 0.85f, Farben.WEISS, false);
 		Neon.text(g, font, dev ? "ENTWICKLER" : de.bambus.client.Blaetter.rangName().toUpperCase(), x + 27, y + 18, 0.6f,
 				dev ? Farben.NEON_PINK : de.bambus.client.Blaetter.rangFarbe(), false);
 		Neon.text(g, font, de.bambus.client.Blaetter.blaetter() + " Blätter", x + 27, y + 27, 0.6f, Farben.GRAU, false);

@@ -40,6 +40,21 @@ public final class Kampf {
 	public interface KillHoerer { void kill(LivingEntity opfer, boolean spieler); }
 	public static KillHoerer killHoerer = (o, s) -> {};
 
+	/** Ist das ein Spieler aus deiner Freunde-Liste? */
+	public static boolean istFreund(Entity entity) {
+		if (!(entity instanceof Player p)) return false;
+		String n = p.getName().getString();
+		return BambusClient.config.freunde.stream().anyMatch(f -> f.equalsIgnoreCase(n));
+	}
+
+	/** „Freunde schützen“: Schlag auf einen Freund abfangen (nur Client). */
+	public static boolean schuetzeFreund(Player spieler, Entity entity) {
+		Minecraft mc = Minecraft.getInstance();
+		if (spieler != mc.player || !BambusClient.config.freundSchutz || !istFreund(entity)) return false;
+		Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal(Sprache.t("§d♥ " + entity.getName().getString() + " ist dein Freund – geschützt")), true);
+		return true;
+	}
+
 	/** Aufruf aus dem AttackEntityCallback (nur Client). */
 	public static void angriff(Player spieler, Entity entity) {
 		Minecraft mc = Minecraft.getInstance();
@@ -48,7 +63,7 @@ public final class Kampf {
 		}
 		long jetzt = System.currentTimeMillis();
 		if (le instanceof Player && BambusClient.config.freunde.stream().anyMatch(f -> f.equalsIgnoreCase(le.getName().getString()))) {
-			Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal("§d♥ " + le.getName().getString() + " ist dein Freund"), true);
+			Kompat.meldung(mc.player, net.minecraft.network.chat.Component.literal(Sprache.t("§d♥ " + le.getName().getString() + " ist dein Freund")), true);
 		}
 		reach = abstand(spieler.getEyePosition(), le.getBoundingBox());
 		combo = (le == ziel && jetzt - letzterTreffer < COMBO_ZEIT) ? combo + 1 : 1;

@@ -106,17 +106,17 @@ public final class Ladebildschirm {
 		Neon.leuchtRahmen(g, b / 2 - 34, cy - 34, 68, 64, Farben.alpha(Farben.NEON, (int) (90 + 120 * puls)), 0.4f + 0.6f * puls);
 
 		String titel = "BAMBUS";
-		int tb = (int) (font.width(titel) * 2.5f + font.width(" CLIENT") * 1.25f);
+		int tb = (int) (font.width(Sprache.t(titel)) * 2.5f + font.width(Sprache.t(" CLIENT")) * 1.25f);
 		int tx = b / 2 - tb / 2;
 		Neon.leuchtText(g, font, titel, tx, cy + 40, 2.5f, Farben.NEON);
-		Neon.text(g, font, " CLIENT", tx + (int) (font.width(titel) * 2.5f), cy + 48, 1.25f, Farben.WEISS, false);
+		Neon.text(g, font, " CLIENT", tx + (int) (font.width(Sprache.t(titel)) * 2.5f), cy + 48, 1.25f, Farben.WEISS, false);
 
 		// Status (Titel der Minecraft-Seite, z. B. „Verbinden …“)
 		String status = s.getTitle().getString();
 		if (status.isEmpty()) status = s instanceof ConnectScreen ? "Verbinde mit dem Server" : "Welt wird geladen";
 		int punkte = (int) (sek * 3) % 4;
 		String st = status + ".".repeat(punkte);
-		Neon.text(g, font, st, b / 2 - (int) (font.width(status) * 0.85f / 2), cy + 72, 0.85f, Farben.NEON_CYAN, false);
+		Neon.text(g, font, st, b / 2 - (int) (font.width(Sprache.t(status)) * 0.85f / 2), cy + 72, 0.85f, Farben.NEON_CYAN, false);
 
 		// Ladebalken ohne festen Fortschritt: ein Leuchtsegment gleitet hin und her
 		int bw = Math.min(220, b - 60);
@@ -134,13 +134,13 @@ public final class Ladebildschirm {
 		int nr = (int) (sek / 4) % TIPPS.length;
 		float k = Math.min(1f, (sek % 4) / 0.4f) * Math.min(1f, (4 - sek % 4) / 0.4f);
 		String tipp = "TIPP  ·  " + TIPPS[nr];
-		int tw = (int) (font.width(tipp) * 0.75f);
+		int tw = (int) (font.width(Sprache.t(tipp)) * 0.75f);
 		int unterKnoepfen = cy + 100 + anzahlKnoepfe * 24;
 		if (h - 34 >= unterKnoepfen) {   // nur, wenn er nichts überdeckt
 			Neon.text(g, font, tipp, b / 2 - tw / 2, h - 34, 0.75f, Farben.alpha(Farben.WEISS, (int) (40 + 200 * k)), false);
 		}
 		String hinweis = "Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt.";
-		int hw = (int) (font.width(hinweis) * 0.6f);
+		int hw = (int) (font.width(Sprache.t(hinweis)) * 0.6f);
 		Neon.text(g, font, hinweis, b / 2 - hw / 2, h - 14, 0.6f, 0xFF4A5A6E, false);
 	}
 }

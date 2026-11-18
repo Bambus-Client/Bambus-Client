@@ -52,9 +52,9 @@ public final class Sortieren {
 		else if (menu instanceof ShulkerBoxMenu || menu instanceof InventoryMenu) fensterHoehe = 166;
 		else return;
 		int links = (breite - 176) / 2, oben = (hoehe - fensterHoehe) / 2;
-		Button sortieren = Button.builder(Component.literal("⇅"), b -> starte(mc))
+		Button sortieren = Button.builder(Component.literal(Sprache.t("⇅")), b -> starte(mc))
 				.bounds(links + 178, oben + 2, 16, 16)
-				.tooltip(Tooltip.create(Component.literal("Sortieren (" + regelName() + ")\n§7Regel ändern: Mod-Menü → MEHR")))
+				.tooltip(Tooltip.create(Component.literal(Sprache.t("Sortieren (" + regelName() + ")\n§7Regel ändern: Mod-Menü → MEHR"))))
 				.build();
 		net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen).add(sortieren);
 	}
