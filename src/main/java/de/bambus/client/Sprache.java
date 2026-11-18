@@ -88,7 +88,7 @@ public final class Sprache {
 			String c = CACHE.get(s);
 			if (c != null) return c;
 		}
-		String r = uebersetze(s);
+		String r = de.bambus.recht.Marke.englisch(uebersetze(s));   // auf Englisch heißt Bambus „Bamboo“
 		synchronized (CACHE) {
 			CACHE.put(s, r);
 		}

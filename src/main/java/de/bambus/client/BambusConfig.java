@@ -129,6 +129,9 @@ public class BambusConfig {
 	public int spielminuten = 0;        // zählt die Mod hoch
 	public String spielTag = "";
 	public int spielBonusHeute = 0;     // schon vergebene Spiel-Blätter von heute
+	// Zustimmung zum Rechtlichen (Version des Textes aus de.bambus.recht.Rechtstext) – Launcher und Spiel teilen sie
+	public int rechtlichZugestimmt = 0;
+	public String rechtlichDatum = "";
 	public String spielVerlauf = "";    // Spielzeit je Tag, z. B. „2026-11-14:35,2026-11-13:120“ (30 Tage)
 	// Wegpunkte: „Name|x|y|z|Farbe|Ort|Dimension|sichtbar“, Ort = Server-Adresse oder „sp:Weltname“
 	public java.util.List<String> wegpunkte = new java.util.ArrayList<>();

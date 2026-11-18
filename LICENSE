@@ -1,27 +1,83 @@
-MIT License
+Bambus Client – Lizenz / Licence
+Copyright (c) 2026 Bambus Client (die Entwickler von Bambus Client, GitHub: Bambus-Client)
+ALLE RECHTE VORBEHALTEN. / ALL RIGHTS RESERVED.
 
-Copyright (c) 2026 Bambus Client
+=== Deutsch ===
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Rechte
+Alle Rechte an Bambus Client und Bambus Launcher – Quellcode, fertige Programme, Name „Bambus“/„Bamboo“,
+Logo, Grafiken, Kosmetik, Texte und Musik – liegen bei den Entwicklern von Bambus Client. Diese Lizenz
+überträgt keine Rechte, außer der unten ausdrücklich erlaubten Nutzung.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Erlaubt
+Du darfst die offiziellen Versionen von Bambus Client und Bambus Launcher, die über den offiziellen
+GitHub-Auftritt (github.com/Bambus-Client) oder die eingebaute Update-Funktion verteilt werden, kostenlos
+zum privaten Spielen herunterladen, installieren und benutzen. Den Quellcode darfst du auf GitHub ansehen.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. Verboten – ohne vorherige schriftliche Erlaubnis der Entwickler
+- Bambus ganz oder teilweise kopieren, verändern, nachbauen oder in eigene Projekte übernehmen
+- Bambus oder veränderte Fassungen weiterverbreiten, auf anderen Seiten hochladen oder anbieten
+- Bambus verkaufen, vermieten oder damit Geld verdienen
+- Name, Logo, Grafiken, Kosmetik oder Musik von Bambus verwenden, auch unter anderem Namen
+- Bambus als eigenes Werk ausgeben oder Hinweise auf die Rechte entfernen
 
----
-This license covers only the Bambus Client source code and its own textures.
-Minecraft is a trademark of Mojang AB / Microsoft. Bambus Client is not an
-official Minecraft product and is not approved by or associated with Mojang
-or Microsoft. No Minecraft game files are included in this project.
+4. Verstöße
+Jede Nutzung, die über Punkt 2 hinausgeht und nicht schriftlich erlaubt wurde, verletzt die Rechte der
+Entwickler. Die Entwickler behalten sich vor, dagegen rechtlich vorzugehen (zum Beispiel Abmahnung,
+Unterlassung, Schadensersatz) und Kopien entfernen zu lassen. Die Erlaubnis aus Punkt 2 endet
+automatisch bei einem Verstoß.
+
+5. Ohne Gewähr
+Bambus wird kostenlos und so, wie es ist, angeboten – ohne Garantie. Soweit gesetzlich zulässig, haften
+die Entwickler nicht für Schäden durch die Nutzung. Gesetzliche Haftung für Vorsatz und grobe
+Fahrlässigkeit bleibt unberührt.
+
+6. Teile von anderen
+Schriftarten und andere Teile von Dritten (siehe src/main/resources/lizenzen, launcher/resources und
+RECHTLICHES.md) behalten ihre eigenen Lizenzen. Minecraft ist eine Marke von Mojang AB / Microsoft.
+Bambus Client ist kein offizielles Minecraft-Produkt und nicht von Mojang oder Microsoft genehmigt oder
+mit ihnen verbunden. Es sind keine Minecraft-Spieldateien enthalten.
+
+7. Frühere Versionen
+Versionen, die vor dem 18.11.2026 unter der MIT-Lizenz veröffentlicht wurden, bleiben für diese Kopien
+unter MIT. Ab dieser Fassung gilt für alle neuen Versionen ausschließlich diese Lizenz.
+
+Erlaubnis anfragen: über github.com/Bambus-Client
+
+=== English ===
+
+1. Rights
+All rights in Bamboo Client and Bamboo Launcher (Bambus Client / Bambus Launcher) – source code, built
+programs, the names "Bambus"/"Bamboo", logo, graphics, cosmetics, texts and music – belong to the
+developers of Bambus Client. This licence grants no rights except the use expressly allowed below.
+
+2. Allowed
+You may download, install and use the official releases distributed through the official GitHub presence
+(github.com/Bambus-Client) or the built-in updater, free of charge, for private play. You may view the
+source code on GitHub.
+
+3. Not allowed without prior written permission from the developers
+- copying, modifying, recreating or reusing Bamboo in whole or in part
+- redistributing Bamboo or modified versions, or uploading or offering them elsewhere
+- selling, renting or making money with Bamboo
+- using Bamboo's name, logo, graphics, cosmetics or music, including under another name
+- presenting Bamboo as your own work or removing rights notices
+
+4. Violations
+Any use beyond point 2 without written permission infringes the developers' rights. The developers reserve
+the right to take legal action (for example cease-and-desist, injunction, damages) and to have copies
+removed. The permission in point 2 ends automatically on any violation.
+
+5. No warranty
+Bamboo is provided free of charge and as is, without warranty. To the extent permitted by law, the
+developers are not liable for damage caused by its use. Statutory liability for intent and gross
+negligence remains unaffected.
+
+6. Third-party parts
+Fonts and other third-party parts keep their own licences. Minecraft is a trademark of Mojang AB /
+Microsoft. Bamboo Client is not an official Minecraft product and is not approved by or associated with
+Mojang or Microsoft. No Minecraft game files are included.
+
+7. Earlier versions
+Versions published under the MIT licence before 18 November 2026 remain under MIT for those copies.
+From this version on, all new versions are covered only by this licence.

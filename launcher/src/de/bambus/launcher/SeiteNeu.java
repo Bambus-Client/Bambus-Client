@@ -20,6 +20,9 @@ final class SeiteNeu extends JPanel {
 	/** {Version, Untertitel, Farbe(hex), Symbol, Punkte …} – neueste zuerst. */
 	private static final String[][] VERSIONEN = {
 			{"3.4", "Serverauswahl, Einstellungs-Code & mehrere Versionen", "00E5FF", "server",
+					"Vor dem ersten Start: das Rechtliche lesen und zustimmen – im Launcher und im Spiel, jederzeit unter EINSTELLUNGEN → RECHTLICHES nachzulesen",
+					"Auf Englisch heißt Bambus jetzt Bamboo",
+					"Neue Lizenz: alle Rechte bei den Entwicklern – privat spielen erlaubt, Kopieren und Weitergeben nur mit Erlaubnis",
 					"Einstellungs-Code: Module mit Anordnung und alle Minecraft-Einstellungen mit einem Code teilen",
 					"Profil-Menü: jedes Profil direkt spielen, Mods hinzufügen auf eigener Seite mit Suche und Icons",
 					"Neben SPIELEN: ▾-Pfeil zur Profilauswahl – das aktive Profil steht über dem Knopf",
