@@ -16,6 +16,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Signierschlüssel prüfen
+        env:
+          BAMBUS_SIGNIER_SCHLUESSEL: ${{ secrets.BAMBUS_SIGNIER_SCHLUESSEL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BAMBUS_SIGNIER_SCHLUESSEL:-}" ]; then
+            echo "::warning::Secret BAMBUS_SIGNIER_SCHLUESSEL ist hier nicht verfügbar – Updates würden nicht verteilt (siehe SICHERHEIT.md)."
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$BAMBUS_SIGNIER_SCHLUESSEL" > "$RUNNER_TEMP/s.pem"
+          echo test > "$RUNNER_TEMP/t.txt"
+          openssl dgst -sha256 -sign "$RUNNER_TEMP/s.pem" -out "$RUNNER_TEMP/t.sig" "$RUNNER_TEMP/t.txt"
+          oeff=$(openssl pkey -in "$RUNNER_TEMP/s.pem" -pubout -outform DER | base64 -w0)
+          rm -f "$RUNNER_TEMP/s.pem"
+          if grep -q "$oeff" launcher/src/de/bambus/launcher/Sicherheit.java; then
+            echo "Signierschlüssel passt zum Launcher ✔"
+          else
+            echo "::error::Das Secret passt nicht zum öffentlichen Schlüssel in Sicherheit.java."
+            exit 1
+          fi
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

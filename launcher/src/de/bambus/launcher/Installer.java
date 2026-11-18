@@ -323,10 +323,12 @@ final class Installer {
 			}
 		}
 		String url = (String) datei.get("url");
-		String name = (String) datei.get("filename");
+		String name = Sicherheit.dateiname((String) datei.get("filename"), "fabric-api.jar");
 
+		byte[] inhalt = lade(url);
+		Sicherheit.pruefeModrinth(inhalt, datei.get("hashes"), "Fabric API");
 		Path tmp = modsOrdner.resolve(name + ".download");
-		Files.write(tmp, lade(url));
+		Files.write(tmp, inhalt);
 		Files.move(tmp, modsOrdner.resolve(name), StandardCopyOption.REPLACE_EXISTING);
 		for (Path p : alte) {
 			Files.deleteIfExists(p);
@@ -549,6 +551,7 @@ final class Installer {
 	static byte[] lade(String adresse, String... kopf) throws IOException {
 		String url = adresse;
 		for (int umleitung = 0; umleitung < 5; umleitung++) {
+			Sicherheit.pruefeAdresse(url);   // auch jede Weiterleitung nur über https
 			HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
 			c.setRequestProperty("User-Agent", USER_AGENT);
 			if (umleitung == 0) {   // Schlüssel nie an eine Weiterleitung auf einen anderen Server mitgeben

@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
  *     in den Branch auto-update (siehe .github/workflows/auto-update.yml).
  *  2. Der Launcher schaut beim Start und alle 30 Minuten in die version.json. Hat sie eine höhere
  *     Bau-Nummer als er selbst, lädt er die neue BambusLauncher.jar nach ~/.bambus-launcher/updates
- *     und prüft die SHA-256-Prüfsumme.
+ *     und prüft die SHA-256-Prüfsumme. Die version.json selbst ist unterschrieben (version.sig) –
+ *     ohne passende Unterschrift wird nichts geladen ({@link Sicherheit}).
  *  3. Beim nächsten Öffnen startet der installierte Launcher direkt die neue Version ({@link Selbststart}) –
  *     die Mod steckt darin, kommt also automatisch mit. Nichts muss neu installiert werden.
  *
@@ -96,6 +97,17 @@ final class Updater {
 			daten = Installer.lade(quelle() + "/version.json?t=" + System.currentTimeMillis() / 60000);
 		} catch (IOException ex) {
 			throw new IOException("Keine Verbindung zum Update-Server.");
+		}
+		// Unterschrift prüfen: Nur Updates, die mit dem Bambus-Schlüssel unterschrieben sind, werden angenommen.
+		String signatur;
+		try {
+			signatur = new String(Installer.lade(quelle() + "/version.sig?t=" + System.currentTimeMillis() / 60000),
+					StandardCharsets.US_ASCII);
+		} catch (IOException ex) {
+			throw new IOException("Das Update ist nicht unterschrieben – es wird aus Sicherheitsgründen nicht geladen.");
+		}
+		if (!Sicherheit.echt(daten, signatur)) {
+			throw new IOException("Die Unterschrift des Updates stimmt nicht – es wird aus Sicherheitsgründen nicht geladen.");
 		}
 		Map<String, Object> o = Json.objekt(Json.parse(new String(daten, StandardCharsets.UTF_8)));
 		if (o == null) throw new IOException("Die Update-Daten sind unlesbar.");
