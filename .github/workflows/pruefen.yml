@@ -1,0 +1,37 @@
+# Prüft jede Änderung, bevor sie auf main kommt: baut Mod (1.21.11 und 26.x) und Launcher.
+# Verteilt nichts – das macht erst auto-update.yml, wenn die Änderung auf main ist.
+name: Änderung prüfen
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main, auto-update]
+
+permissions:
+  contents: read
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            25
+            21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Mod und Launcher für 1.21.11 bauen
+        run: bash ./gradlew build --no-daemon
+
+      - name: Mod für Minecraft 26.x bauen
+        run: |
+          cd versionen/neu
+          for mc in 26.1 26.2 26.3; do
+            JAVA_HOME="$JAVA_HOME_25_X64" bash ./gradlew build -Pmc=$mc --no-daemon
+          done
+
