@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Musik;
 import de.bambus.client.Songtext;
 import net.minecraft.client.Camera;
@@ -172,7 +174,7 @@ public final class SongtextWelt {
 		double[] p = sicht.projiziere(ort);
 		if (p == null) return null;
 		float s = groesse(new Wort(text, "", ort, 0, 0, groesse, rand), sicht, p[2]);
-		return new Kasten((float) p[0], (float) p[1], mc.font.width(text) * s / 2 + 3, 5.5f * s + 3);
+		return new Kasten((float) p[0], (float) p[1], mc.font.width(Sprache.t(text)) * s / 2 + 3, 5.5f * s + 3);
 	}
 
 	/** Gesungene Wörter der aktuellen Zeile in die Welt setzen (jedes nur einmal). */
@@ -277,7 +279,7 @@ public final class SongtextWelt {
 	private static Vec3 dahinter(Minecraft mc, Sicht sicht, Wort vorher, Component neu) {
 		double einheit = vorher.groesse() / 8.0;   // Weltgröße eines Schrift-Pixels
 		double cos = Math.cos(vorher.neigung()), sin = Math.sin(vorher.neigung());
-		double weiter = (mc.font.width(vorher.text()) + mc.font.width(neu)) / 2.0 * einheit + 5 * einheit;
+		double weiter = (mc.font.width(Sprache.t(vorher.text())) + mc.font.width(Sprache.t(neu))) / 2.0 * einheit + 5 * einheit;
 		Vec3 rechts = vorher.ort().add(sicht.welt(cos * weiter, sin * weiter));
 		Vec3 zeile = vorher.ort().add(sicht.welt(-sin * 13 * einheit, cos * 13 * einheit));
 		for (Vec3 ort : new Vec3[] {rechts, zeile}) {
@@ -289,7 +291,7 @@ public final class SongtextWelt {
 
 	/** Weißes Wort mit bläulichem 3D-Rand, leicht schräg und kursiv. */
 	private static void zeichneWort(GuiGraphics g, Minecraft mc, Wort w, float x, float y, float s, float deckkraft) {
-		int breite = mc.font.width(w.text());
+		int breite = mc.font.width(Sprache.t(w.text()));
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().rotate(w.neigung());
@@ -299,9 +301,9 @@ public final class SongtextWelt {
 		int a = (int) (255 * deckkraft);
 		int[] rand = {0x5B7FB0, 0x6A8DBC, 0x7A9BC8, 0x8DACD4, 0xA3BEE0};
 		for (int i = rand.length; i >= 1; i--) {   // Ebenen nach hinten versetzt = Tiefe
-			g.drawString(mc.font, w.text(), (int) (i * 0.6f), (int) (i * 0.6f), (a << 24) | rand[rand.length - i], false);
+			g.drawString(mc.font, Sprache.t(w.text()), (int) (i * 0.6f), (int) (i * 0.6f), (a << 24) | rand[rand.length - i], false);
 		}
-		g.drawString(mc.font, w.text(), 0, 0, (a << 24) | 0xFFFFFF, false);
+		g.drawString(mc.font, Sprache.t(w.text()), 0, 0, (a << 24) | 0xFFFFFF, false);
 		g.pose().popMatrix();
 	}
 }

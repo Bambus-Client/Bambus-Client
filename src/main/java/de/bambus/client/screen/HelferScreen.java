@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.Farben;
 import de.bambus.helfer.HelferWissen;
@@ -63,18 +65,18 @@ public class HelferScreen extends Screen {
 	private int cx, cy, cb, ch;
 
 	public HelferScreen(Screen eltern) {
-		super(Component.literal("Bambus-Helfer"));
+		super(Component.literal(Sprache.t("Bambus-Helfer")));
 		this.eltern = eltern;
 	}
 
 	private boolean englisch() {
-		return !minecraft.options.languageCode.startsWith("de");
+		return Sprache.englisch();
 	}
 
 	@Override
 	protected void init() {
-		feld = new EditBox(font, 0, 0, 200, 16, Component.literal("Frage"));
-		feld.setHint(Component.literal(englisch() ? "Ask something …" : "Frag etwas …"));
+		feld = new EditBox(font, 0, 0, 200, 16, Component.literal(Sprache.t("Frage")));
+		feld.setHint(Component.literal(Sprache.t(englisch() ? "Ask something …" : "Frag etwas …")));
 		feld.setMaxLength(120);
 		addRenderableWidget(feld);
 		setInitialFocus(feld);
@@ -167,7 +169,7 @@ public class HelferScreen extends Screen {
 
 		int sx = px + pb - 20, sy = py + 8;
 		boolean hover = Neon.ueber(mx, my, sx, sy, 12, 12);
-		g.drawString(font, "✕", sx + 2, sy + 2, hover ? Farben.ROT : Farben.GRAU, false);
+		g.drawString(font, Sprache.t("✕"), sx + 2, sy + 2, hover ? Farben.ROT : Farben.GRAU, false);
 		klick(sx, sy, 12, 12, this::onClose);
 		g.fill(px + 8, py + 30, px + pb - 8, py + 31, Farben.LINIE);
 	}
@@ -177,7 +179,7 @@ public class HelferScreen extends Screen {
 		String[] liste = englisch() ? HelferWissen.VORSCHLAEGE_EN : HelferWissen.VORSCHLAEGE_DE;
 		int x = px + 10;
 		for (String v : liste) {
-			int b = (int) (font.width(v) * 0.75f) + 12;
+			int b = (int) (font.width(Sprache.t(v)) * 0.75f) + 12;
 			if (x + b > px + pb - 10) {
 				break;   // eine Zeile reicht – der Rest passt nicht
 			}
@@ -232,7 +234,7 @@ public class HelferScreen extends Screen {
 			umbruch.clear();
 			umbruchBreite = maxB;
 		}
-		return umbruch.computeIfAbsent(n, m -> font.split(Component.literal(m.text()), maxB - 2 * PAD));
+		return umbruch.computeIfAbsent(n, m -> font.split(Component.literal(Sprache.t(m.text())), maxB - 2 * PAD));
 	}
 
 	private boolean hatRezept(Nachricht n) {
@@ -249,7 +251,7 @@ public class HelferScreen extends Screen {
 		List<FormattedCharSequence> z = zeilen(n, maxB);
 		int textB = 0;
 		for (FormattedCharSequence s : z) {
-			textB = Math.max(textB, font.width(s));
+			textB = Math.max(textB, font.width(Sprache.t(s)));
 		}
 		int b = textB + 2 * PAD;
 		if (hatRezept(n)) {
@@ -268,7 +270,7 @@ public class HelferScreen extends Screen {
 		}
 		int ty = y + PAD;
 		for (FormattedCharSequence s : z) {
-			g.drawString(font, s, x + PAD, ty, n.vonHelfer() ? 0xFFDCE6F0 : Farben.WEISS, false);
+			g.drawString(font, Sprache.t(s), x + PAD, ty, n.vonHelfer() ? 0xFFDCE6F0 : Farben.WEISS, false);
 			ty += ZEILE;
 		}
 		if (hatRezept(n)) {
@@ -290,7 +292,7 @@ public class HelferScreen extends Screen {
 		}
 		int mitte = y + 3 * FELD / 2;
 		int gx = x + 3 * FELD + 6;
-		g.drawString(font, "→", gx, mitte - 4, Farben.NEON, false);
+		g.drawString(font, Sprache.t("→"), gx, mitte - 4, Farben.NEON, false);
 		int ex = gx + 14, ey = mitte - FELD / 2 - 1;
 		g.fill(ex, ey, ex + FELD + 2, ey + FELD + 2, Farben.alpha(Farben.NEON, 30));
 		g.renderOutline(ex, ey, FELD + 2, FELD + 2, Farben.NEON);
@@ -317,7 +319,7 @@ public class HelferScreen extends Screen {
 		if (hover) {
 			Neon.leuchtRahmen(g, x, y, b, h, Farben.NEON, 1f);
 		}
-		g.drawString(font, text, x + (b - font.width(text)) / 2, y + (h - 8) / 2, Farben.SCHWARZ, false);
+		g.drawString(font, Sprache.t(text), x + (b - font.width(Sprache.t(text))) / 2, y + (h - 8) / 2, Farben.SCHWARZ, false);
 		klick(x, y, b, h, aktion);
 	}
 

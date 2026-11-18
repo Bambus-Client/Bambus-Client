@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.bambus.client.BambusClient;
@@ -37,7 +39,7 @@ public class EmoteRadScreen extends Screen {
 	private int auswahl = -1;
 
 	public EmoteRadScreen() {
-		super(Component.literal("Emotes"));
+		super(Component.literal(Sprache.t("Emotes")));
 	}
 
 	@Override
@@ -123,13 +125,13 @@ public class EmoteRadScreen extends Screen {
 
 		// Kopf und Hinweis
 		String titel = gezeigt != null ? gezeigt.name().toUpperCase(java.util.Locale.ROOT) : "EMOTES";
-		int tb = (int) (font.width(titel) * 1.4f);
+		int tb = (int) (font.width(Sprache.t(titel)) * 1.4f);
 		Neon.leuchtText(g, font, titel, (int) cx - tb / 2, y0 - 26, 1.4f, gezeigt != null ? gezeigt.farbe() : Farben.NEON);
 		String unter = gezeigt != null ? gezeigt.beschreibung() : "Maus in eine Richtung – loslassen oder klicken";
-		int ub = (int) (font.width(unter) * 0.7f);
+		int ub = (int) (font.width(Sprache.t(unter)) * 0.7f);
 		Neon.text(g, font, unter, (int) cx - ub / 2, y0 - 10, 0.7f, Farben.GRAU, false);
 		String fuss = "Bewegen beendet das Emote  ·  Musik: " + (BambusClient.config.emoteMusik ? "AN" : "AUS") + " (M)  ·  Belegen in der Garderobe";
-		int fb = (int) (font.width(fuss) * 0.6f);
+		int fb = (int) (font.width(Sprache.t(fuss)) * 0.6f);
 		Neon.text(g, font, fuss, (int) cx - fb / 2, y0 + d + 8, 0.6f, 0xFF6B7A90, false);
 	}
 
@@ -187,8 +189,8 @@ public class EmoteRadScreen extends Screen {
 				g.fill((int) fx - halb, (int) (fy - 22 * massstab), (int) fx + halb, (int) (fy + 14 * massstab), 0x880B1322);
 				schloss(g, (int) fx, (int) (fy - 6 * massstab), Farben.NEON_CYAN);
 			}
-			String n = font.plainSubstrByWidth(e.name(), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
-			int nb = (int) (font.width(n) * 0.6f);
+			String n = font.plainSubstrByWidth(Sprache.t(e.name()), (int) ((AUSSEN - INNEN) * massstab * 1.2f / 0.6f));
+			int nb = (int) (font.width(Sprache.t(n)) * 0.6f);
 			Neon.text(g, font, n, (int) fx - nb / 2, (int) (fy + 17 * massstab), 0.6f, an ? Farben.WEISS : 0xFFB5C2D4, false);
 		}
 

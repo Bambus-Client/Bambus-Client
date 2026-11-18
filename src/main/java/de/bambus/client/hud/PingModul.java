@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,7 +48,7 @@ public class PingModul extends HudModul {
 	public int breite(Minecraft mc, boolean editor) {
 		if (!editor && mc.hasSingleplayerServer()) return 0;   // im Einzelspieler gibt es keinen Ping
 		if (!verlauf.an()) {   // ohne Verlauf so breit wie der Text
-			return (signal.an() ? 26 : 6) + mc.font.width(text(mc, wert(mc, editor))) + 6;
+			return (signal.an() ? 26 : 6) + mc.font.width(Sprache.t(text(mc, wert(mc, editor)))) + 6;
 		}
 		return BREITE;
 	}
@@ -78,7 +80,7 @@ public class PingModul extends HudModul {
 			g.fill(x + 6 + i * 4, y + 17 - h, x + 9 + i * 4, y + 17, i < stufe ? f : 0xFF2A3445);
 		}
 		String text = text(mc, ms);
-		g.drawString(mc.font, text, x + (signal.an() ? 26 : 6), y + 5, f, true);
+		g.drawString(mc.font, Sprache.t(text), x + (signal.an() ? 26 : 6), y + 5, f, true);
 		if (!verlauf.an()) {
 			return;
 		}

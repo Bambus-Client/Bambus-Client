@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import de.bambus.client.Kampf;
@@ -51,10 +53,10 @@ public class ZielModul extends HudModul {
 			g.fill(x + 2, y, x + B, y + 1, Farben.NEON_PINK);
 			name = "♥ " + name;
 		}
-		g.drawString(mc.font, mc.font.plainSubstrByWidth(name, B - 50), x + 6, y + 4, Farben.WEISS, true);
+		g.drawString(mc.font, Sprache.t(mc.font.plainSubstrByWidth(Sprache.t(name), B - 50)), x + 6, y + 4, Farben.WEISS, true);
 		if (abstandZeigen.an()) {
 			String a = String.format("%.1f m", abstand);
-			g.drawString(mc.font, a, x + B - 6 - mc.font.width(a), y + 4, Farben.GRAU, true);
+			g.drawString(mc.font, Sprache.t(a), x + B - 6 - mc.font.width(Sprache.t(a)), y + 4, Farben.GRAU, true);
 		}
 
 		float anteil = Mth.clamp(leben / max, 0, 1);
@@ -71,16 +73,16 @@ public class ZielModul extends HudModul {
 		} else {
 			unten = (int) (anteil * 100) + " %";
 		}
-		g.drawString(mc.font, unten, x + 6, y + 26, Farben.WEISS, true);
+		g.drawString(mc.font, Sprache.t(unten), x + 6, y + 26, Farben.WEISS, true);
 		if (!schaden.an()) {
 			return;
 		}
 		if (System.currentTimeMillis() - Kampf.schadenZeit < 1500 && Kampf.letzterSchaden > 0) {
 			String s = String.format("-%.1f", Kampf.letzterSchaden);
-			g.drawString(mc.font, s, x + B - 6 - mc.font.width(s), y + 26, Farben.ROT, true);
+			g.drawString(mc.font, Sprache.t(s), x + B - 6 - mc.font.width(Sprache.t(s)), y + 26, Farben.ROT, true);
 		} else if (Kampf.combo > 1) {
 			String s = Kampf.combo + "x";
-			g.drawString(mc.font, s, x + B - 6 - mc.font.width(s), y + 26, Farben.NEON_PINK, true);
+			g.drawString(mc.font, Sprache.t(s), x + B - 6 - mc.font.width(Sprache.t(s)), y + 26, Farben.NEON_PINK, true);
 		}
 	}
 }

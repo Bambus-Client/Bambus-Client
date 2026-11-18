@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import de.bambus.client.Texturen;
 import net.minecraft.client.gui.Font;
@@ -48,7 +50,7 @@ public final class TexturAnsicht {
 		// Situation wählen
 		int cx = x + 4;
 		for (Lage l : Lage.values()) {
-			int cb = (int) (font.width(l.titel) * 0.6f) + 10;
+			int cb = (int) (font.width(Sprache.t(l.titel)) * 0.6f) + 10;
 			boolean aktiv = l == lage;
 			boolean hover = Neon.ueber(mx, my, cx, y + 4, cb, 11);
 			g.fill(cx, y + 4, cx + cb, y + 15, aktiv ? Farben.alpha(Farben.NEON, 60) : hover ? Farben.KARTE_HOVER : Farben.KARTE);

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.NativeImage;
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
@@ -168,7 +170,7 @@ public final class MenueHintergrund {
 				int a = k == 0 ? 170 : (int) (90 * (1 - k / (float) laenge));
 				int farbe = k == 0 ? 0xFFFFFFFF : (s % 5 == 0 ? Farben.NEON_CYAN : Farben.NEON);
 				String c = ((s * 7 + k * 13 + (int) (t * 4)) % 2) == 0 ? "0" : "1";
-				g.drawString(font, c, s * spalte + 3, y, Farben.alpha(farbe, a / 2), false);
+				g.drawString(font, Sprache.t(c), s * spalte + 3, y, Farben.alpha(farbe, a / 2), false);
 			}
 		}
 	}

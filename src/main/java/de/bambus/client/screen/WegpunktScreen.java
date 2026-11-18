@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import de.bambus.client.BambusClient;
 import de.bambus.client.BambusConfig;
@@ -35,7 +37,7 @@ public class WegpunktScreen extends Screen {
 	private int scroll;
 
 	public WegpunktScreen(Screen eltern) {
-		super(Component.literal("Wegpunkte"));
+		super(Component.literal(Sprache.t("Wegpunkte")));
 		this.eltern = eltern;
 	}
 
@@ -46,8 +48,8 @@ public class WegpunktScreen extends Screen {
 		px = (width - pb) / 2;
 		py = (height - ph) / 2;
 		String alt = name == null ? "" : name.getValue();
-		name = new EditBox(font, px + 14, py + 44, pb - 150, 14, Component.literal("Name"));
-		name.setHint(Component.literal("§8Name, z. B. Basis"));
+		name = new EditBox(font, px + 14, py + 44, pb - 150, 14, Component.literal(Sprache.t("Name")));
+		name.setHint(Component.literal(Sprache.t("§8Name, z. B. Basis")));
 		name.setMaxLength(24);
 		name.setBordered(false);
 		name.setTextColor(Farben.WEISS);
@@ -136,7 +138,7 @@ public class WegpunktScreen extends Screen {
 		Neon.text(g, font, p.name, x + 24, y + 3, 0.8f, p.sichtbar ? Farben.WEISS : Farben.GRAU, false);
 		Neon.text(g, font, p.x + " / " + p.y + " / " + p.z, x + 24, y + 12, 0.55f, Farben.GRAU, false);
 		String ab = Wegpunkte.abstandText(Wegpunkte.abstand(minecraft, p));
-		int abb = (int) (font.width(ab) * 0.7f);
+		int abb = (int) (font.width(Sprache.t(ab)) * 0.7f);
 		Neon.text(g, font, ab, x + b - 74 - abb, y + 6, 0.7f, farbe, false);
 
 		// Umbenennen (Text aus dem Feld oben)
@@ -165,14 +167,14 @@ public class WegpunktScreen extends Screen {
 		boolean ueber = Neon.ueber(mx, my, x, y, b, h);
 		g.fill(x, y, x + b, y + h, ueber ? Farben.KARTE_HOVER : Farben.KARTE);
 		g.renderOutline(x, y, b, h, ueber ? farbe : Farben.alpha(farbe, 150));
-		int tb = (int) (font.width(text) * 0.7f);
+		int tb = (int) (font.width(Sprache.t(text)) * 0.7f);
 		Neon.text(g, font, text, x + (b - tb) / 2, y + (h - 6) / 2, 0.7f, farbe, false);
 		bereiche.add(new Bereich(x, y, b, h, r));
 	}
 
 	private void knopfKlein(GuiGraphics g, int mx, int my, String zeichen, int x, int y, Runnable r) {
 		boolean ueber = Neon.ueber(mx, my, x, y, 16, 13) && Neon.ueber(mx, my, px, ly, pb, lh);
-		g.drawString(font, zeichen, x + 4, y + 2, ueber ? Farben.NEON : Farben.GRAU, false);
+		g.drawString(font, Sprache.t(zeichen), x + 4, y + 2, ueber ? Farben.NEON : Farben.GRAU, false);
 		bereich(x, y, 16, 13, r);
 	}
 

@@ -1,5 +1,7 @@
 package de.bambus.client.screen;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.BambusClient;
 import de.bambus.client.Farben;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,7 +33,7 @@ public class BambusAuswahlScreen extends Screen {
 	private final long offenSeit = System.currentTimeMillis();
 
 	public BambusAuswahlScreen() {
-		super(Component.literal("Bambus"));
+		super(Component.literal(Sprache.t("Bambus")));
 	}
 
 	@Override
@@ -80,13 +82,13 @@ public class BambusAuswahlScreen extends Screen {
 		// Kopf: Logo + Schriftzug, mittig über den Karten
 		int kartenOben = children().isEmpty() ? height / 2 : ((NeonKarte) children().get(0)).getY();
 		String titel = "BAMBUS";
-		int tb = font.width(titel);
+		int tb = font.width(Sprache.t(titel));
 		int kx = (width - tb - 16) / 2;
 		Neon.logo(g, kx, kartenOben - 26, 12);
 		Neon.leuchtText(g, font, titel, kx + 16, kartenOben - 24, 1f, Farben.NEON);
 
 		String hinweis = BambusClient.config.helferAn ? "ESC schließen · Helfer abschalten: Mod-Menü → MEHR → EXTRAS" : "ESC schließen";
-		int hb = (int) (font.width(hinweis) * 0.6f);
+		int hb = (int) (font.width(Sprache.t(hinweis)) * 0.6f);
 		Neon.text(g, font, hinweis, (width - hb) / 2, height - 14, 0.6f, Farben.GRAU, false);
 
 		// weiches Einblenden

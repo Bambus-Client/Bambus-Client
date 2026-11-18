@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -59,7 +61,7 @@ public class CooldownModul extends HudModul {
 		List<ItemStack> l = mitCooldown(mc);
 		panel(g, x, y, 110, hoehe(mc, editor));
 		if (l.isEmpty()) {
-			g.drawString(mc.font, "Cooldowns", x + 6, y + 8, Farben.GRAU, true);
+			g.drawString(mc.font, Sprache.t("Cooldowns"), x + 6, y + 8, Farben.GRAU, true);
 			return;
 		}
 		for (int i = 0; i < l.size(); i++) {

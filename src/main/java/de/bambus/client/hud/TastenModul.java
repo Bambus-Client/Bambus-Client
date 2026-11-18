@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import de.bambus.client.Farben;
 import de.bambus.client.Funktionen;
 import net.minecraft.client.KeyMapping;
@@ -91,24 +93,24 @@ public class TastenModul extends HudModul {
 		boolean gedrueckt = mapping.isDown();
 		flaeche(g, x, y, K, K, gedrueckt);
 		String name = mapping.getTranslatedKeyMessage().getString().toUpperCase();
-		if (font.width(name) > K - 2) {
+		if (font.width(Sprache.t(name)) > K - 2) {
 			name = name.substring(0, 1);
 		}
-		g.drawString(font, name, x + (K - font.width(name)) / 2, y + (K - 8) / 2,
+		g.drawString(font, Sprache.t(name), x + (K - font.width(Sprache.t(name))) / 2, y + (K - 8) / 2,
 				gedrueckt ? Farben.SCHWARZ : Farben.WEISS, !gedrueckt);
 	}
 
 	private void maus(GuiGraphics g, Font font, String name, int klicks, boolean gedrueckt, int x, int y, int b) {
 		flaeche(g, x, y, b, K, gedrueckt);
 		if (!cps.an()) {   // ohne CPS: Name mittig
-			g.drawString(font, name, x + (b - font.width(name)) / 2, y + (K - 8) / 2,
+			g.drawString(font, Sprache.t(name), x + (b - font.width(Sprache.t(name))) / 2, y + (K - 8) / 2,
 					gedrueckt ? Farben.SCHWARZ : Farben.WEISS, !gedrueckt);
 			return;
 		}
-		g.drawString(font, name, x + (b - font.width(name)) / 2, y + 3,
+		g.drawString(font, Sprache.t(name), x + (b - font.width(Sprache.t(name))) / 2, y + 3,
 				gedrueckt ? Farben.SCHWARZ : Farben.WEISS, !gedrueckt);
 		String cpsText = klicks + " CPS";
-		g.drawString(font, cpsText, x + (b - font.width(cpsText)) / 2, y + 12,
+		g.drawString(font, Sprache.t(cpsText), x + (b - font.width(Sprache.t(cpsText))) / 2, y + 12,
 				gedrueckt ? Farben.SCHWARZ : Farben.GRAU, false);
 	}
 }

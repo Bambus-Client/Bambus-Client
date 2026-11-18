@@ -1,5 +1,7 @@
 package de.bambus.client.hud;
 
+import de.bambus.client.Sprache;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -28,7 +30,7 @@ public abstract class TextModul extends HudModul {
 		}
 		int b = 0;
 		for (Zeile zeile : z) {
-			b = Math.max(b, mc.font.width(zeile.text()));
+			b = Math.max(b, mc.font.width(Sprache.t(zeile.text())));
 		}
 		return b + 10;
 	}
@@ -44,7 +46,7 @@ public abstract class TextModul extends HudModul {
 		List<Zeile> z = zeilen(mc, editor);
 		panel(g, x, y, breite(mc, editor), hoehe(mc, editor));
 		for (int i = 0; i < z.size(); i++) {
-			g.drawString(mc.font, z.get(i).text(), x + 6, y + 4 + i * 10, z.get(i).farbe(), true);
+			g.drawString(mc.font, Sprache.t(z.get(i).text()), x + 6, y + 4 + i * 10, z.get(i).farbe(), true);
 		}
 	}
 }

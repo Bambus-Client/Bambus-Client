@@ -28,7 +28,7 @@ public final class Schriften {
 	/** Text in der gewählten Schrift; „fett“ gilt nur für die Minecraft-Schrift (die anderen sind schon kräftig). */
 	public static Component text(String text, int schrift, boolean fett) {
 		int i = Math.floorMod(schrift, NAMEN.length);
-		MutableComponent c = Component.literal(text);
+		MutableComponent c = Component.literal(Sprache.t(text));
 		Style stil = SCHRIFT[i] != null ? Style.EMPTY.withFont(SCHRIFT[i]) : Style.EMPTY.withBold(fett);
 		return c.setStyle(stil);
 	}

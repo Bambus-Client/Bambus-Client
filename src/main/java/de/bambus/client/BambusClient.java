@@ -192,7 +192,7 @@ public class BambusClient implements ClientModInitializer {
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> Sortieren.knopfAnbringen(client, screen, breite, hoehe));
 		ScreenEvents.AFTER_INIT.register((client, screen, breite, hoehe) -> {
 			if (screen instanceof TitleScreen) {
-				Screens.getButtons(screen).add(Button.builder(Component.literal("§bBAMBUS"),
+				Screens.getButtons(screen).add(Button.builder(Component.literal(Sprache.t("§bBAMBUS")),
 								b -> client.setScreen(new BambusMenuScreen(screen)))
 						.bounds(breite - 84, 6, 78, 20).build());
 				ScreenEvents.afterRender(screen).register(
@@ -321,7 +321,7 @@ public class BambusClient implements ClientModInitializer {
 			Hinweise.zeige("hud", "Bambus-HUD", config.hudAn ? "eingeschaltet" : "ausgeschaltet", Farben.NEON);
 			if (mc.player != null) {
 				Kompat.meldung(mc.player,
-						Component.literal("§aBambus-HUD: " + (config.hudAn ? "an" : "aus")), true);
+						Component.literal(Sprache.t("§aBambus-HUD: " + (config.hudAn ? "an" : "aus"))), true);
 			}
 		}
 
