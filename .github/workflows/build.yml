@@ -1,10 +1,16 @@
 # Baut den Bambus Launcher als Windows-Programm (Java eingebaut) und das Installationsprogramm.
 # Start: von Hand unter „Actions → Windows-Launcher bauen → Run workflow“ oder automatisch bei einem Tag v*.
-# Bei einem Tag werden die Dateien zusätzlich an das GitHub-Release gehängt.
+# Bei einem Tag (oder wenn beim Start ein Release-Tag eingetragen ist) entsteht ein GitHub-Release mit
+# Launcher-Setup (.exe), Launcher als Zip und der Client-Mod als Bambus-Client-standalone.jar.
 name: Windows-Launcher bauen
 
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release-Tag, z. B. v3.4.0 (leer = nur bauen)'
+        required: false
+        default: ''
   push:
     tags: ['v*']
 
@@ -74,19 +80,28 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path "ausgabe\Bambus Launcher" -DestinationPath "ausgabe\Bambus-Launcher-Windows.zip"
 
+      - name: Client-Mod als standalone
+        shell: bash
+        run: cp "build/libs/bambus-client-${{ steps.version.outputs.nummer }}.jar" ausgabe/Bambus-Client-standalone.jar
+
       - uses: actions/upload-artifact@v4
         with:
           name: Bambus-Launcher-Windows
           path: |
             ausgabe/Bambus-Launcher-Setup.exe
             ausgabe/Bambus-Launcher-Windows.zip
+            ausgabe/Bambus-Client-standalone.jar
             build/libs/BambusLauncher.jar
 
-      - name: An das Release hängen
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Release anlegen
+        if: startsWith(github.ref, 'refs/tags/') || inputs.release != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: Bambus Client ${{ steps.version.outputs.nummer }}
+          body_path: .github/release-notizen.md
           files: |
             ausgabe/Bambus-Launcher-Setup.exe
             ausgabe/Bambus-Launcher-Windows.zip
-            build/libs/BambusLauncher.jar
+            ausgabe/Bambus-Client-standalone.jar
