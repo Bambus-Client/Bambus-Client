@@ -69,14 +69,14 @@ public class BambusAuswahlScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mx, int my, float delta) {
-		MenueStil.anwenden();
-		g.fill(0, 0, width, height, MenueStil.bambus() ? 0xC0020407 : Farben.HINTERGRUND);
+		MenüStil.anwenden();
+		g.fill(0, 0, width, height, MenüStil.bambus() ? 0xC0020407 : Farben.HINTERGRUND);
 		Neon.gitter(g, 0, 0, width, height, 24, Farben.alpha(Farben.NEON, 7));
 	}
 
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		super.render(g, mx, my, delta);
 
 		// Kopf: Logo + Schriftzug, mittig über den Karten

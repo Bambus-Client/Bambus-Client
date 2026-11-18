@@ -93,13 +93,13 @@ final class SeiteEinstellungen extends JPanel {
 		add(willkommen);
 
 		// Hintergrund-Auswahl
-		for (int i = 0; i < Hintergruende.ARTEN.length; i++) {
-			final String id = Hintergruende.ARTEN[i][0];
-			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(Hintergruende.ARTEN[i][1], id.equals(l.hintergrund) ? NeonUI.NEON : NeonUI.GRAU);
+		for (int i = 0; i < Hintergründe.ARTEN.length; i++) {
+			final String id = Hintergründe.ARTEN[i][0];
+			NeonUI.UmrissKnopf k = new NeonUI.UmrissKnopf(Hintergründe.ARTEN[i][1], id.equals(l.hintergrund) ? NeonUI.NEON : NeonUI.GRAU);
 			k.setBounds(X + i * 117, 388, 109, 34);
 			if (id.equals("bild")) k.setToolTipText("Eigenes Bild als Hintergrund – gilt auch im Bambus-Hauptmenü im Spiel");
 			k.addActionListener(e -> {
-				if (id.equals("bild") && (!Hintergruende.hatBild() || id.equals(l.hintergrund)) && !waehleBild()) return;
+				if (id.equals("bild") && (!Hintergründe.hatBild() || id.equals(l.hintergrund)) && !waehleBild()) return;
 				l.hintergrund = id;
 				l.client.setze("menueHintergrund", id);
 				l.belohne("hintergrund");
@@ -238,10 +238,10 @@ final class SeiteEinstellungen extends JPanel {
 				bg.dispose();
 				bild = fest;
 			}
-			java.nio.file.Path ziel = l.installer.spielOrdner.resolve("config").resolve(Hintergruende.BILD_DATEI);
+			java.nio.file.Path ziel = l.installer.spielOrdner.resolve("config").resolve(Hintergründe.BILD_DATEI);
 			java.nio.file.Files.createDirectories(ziel.getParent());
 			javax.imageio.ImageIO.write(bild, "png", ziel.toFile());
-			Hintergruende.setzeBild(bild);
+			Hintergründe.setzeBild(bild);
 			return true;
 		} catch (Exception ex) {
 			javax.swing.JOptionPane.showMessageDialog(this,

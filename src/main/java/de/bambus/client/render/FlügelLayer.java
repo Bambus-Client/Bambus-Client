@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
  * Selbst erstellte Flügel (ein Bild im alten Format) werden weiter mit zwei Flächen gezeichnet.
  * Nur auf deinem Bildschirm sichtbar.
  */
-public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
+public class FlügelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
 	private static final Identifier WEISS = Identifier.fromNamespaceAndPath(BambusClient.MOD_ID, "textures/weiss.png");
 	private static final int VOLL_HELL = 0xF000F0;
@@ -55,7 +55,7 @@ public class FluegelLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static float phase;
 	private static long zuletzt;
 
-	public FluegelLayer(RenderLayerParent<AvatarRenderState, PlayerModel> eltern) {
+	public FlügelLayer(RenderLayerParent<AvatarRenderState, PlayerModel> eltern) {
 		super(eltern);
 	}
 

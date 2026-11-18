@@ -9,7 +9,7 @@ import java.util.Random;
 /**
  * Quests, Ränge und Shop – die gemeinsame Grundlage für Launcher und Mod.
  * Hier stehen nur Daten und Rechnerei, kein Speichern: der Launcher nutzt Fortschritt,
- * die Mod nutzt Blaetter. Punkte heißen „Blätter“ und kosten nie Geld.
+ * die Mod nutzt Blätter. Punkte heißen „Blätter“ und kosten nie Geld.
  */
 public final class Quests {
 

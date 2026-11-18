@@ -69,7 +69,7 @@ public class BambusConfig {
 	public String emoteRad = de.bambus.client.emote.Emotes.STANDARD_RAD;   // Belegung der 8 Plätze im Emote-Rad
 	public boolean emoteMusik = true;      // eigener kleiner Beat bei Tanz-Emotes
 	public int musikWoerterTempo = 2;      // SongtextWelt.TEMPO: wie schnell die Wörter verschwinden (2 = Normal)
-	public int musikWoerterOrt = 0;        // SongtextWelt.ORTE: Seiten, Links, Rechts, Oben, Unten, Überall     // Aussehen der Menüs: bambus, clean, kompakt (screen.MenueStil)
+	public int musikWoerterOrt = 0;        // SongtextWelt.ORTE: Seiten, Links, Rechts, Oben, Unten, Überall     // Aussehen der Menüs: bambus, clean, kompakt (screen.MenüStil)
 	public String menueHintergrund = "synthwave";   // Bambus-Hauptmenü: synthwave, partikel, aurora, datenregen, gitter
 	public String letzteVersion = "";      // für „Bambus wurde aktualisiert“
 	/** Server-Favoriten aus dem Launcher, je „Name|Adresse“ – landen beim Start in der Mehrspieler-Liste. */

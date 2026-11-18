@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Rüstung mit Haltbarkeit (das Item in der Hand ist ein eigenes Modul, siehe {@link HandModul}). */
-public class RuestungModul extends HudModul {
+public class RüstungModul extends HudModul {
 
 	private static final int ZEILE = 17;
 	private static final EquipmentSlot[] SLOTS = {
@@ -21,7 +21,7 @@ public class RuestungModul extends HudModul {
 
 	private final Option haltbarkeit = option("haltbarkeit", "Haltbarkeit als Zahl", true);
 
-	public RuestungModul() {
+	public RüstungModul() {
 		// x = 10000 bedeutet: ganz rechts am Bildschirmrand
 		super("ruestung", "Rüstungsanzeige", 10000, 4);
 	}

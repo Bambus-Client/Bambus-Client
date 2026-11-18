@@ -14,16 +14,16 @@ import java.text.AttributedCharacterIterator;
  * - macht abgerundete Kästen eckig – für den Pixel-Look wie im Spiel.
  * Alles andere wird nur weitergereicht.
  */
-final class UebersetzteGrafik extends Graphics2D {
+final class ÜbersetzteGrafik extends Graphics2D {
 
 	private final Graphics2D d;
 	private final boolean uebersetzen;
 
-	UebersetzteGrafik(Graphics2D d) {
+	ÜbersetzteGrafik(Graphics2D d) {
 		this(d, true);
 	}
 
-	UebersetzteGrafik(Graphics2D d, boolean uebersetzen) {
+	ÜbersetzteGrafik(Graphics2D d, boolean uebersetzen) {
 		this.d = d;
 		this.uebersetzen = uebersetzen;
 	}
@@ -86,7 +86,7 @@ final class UebersetzteGrafik extends Graphics2D {
 	}
 	@Override public void drawString(AttributedCharacterIterator it, int x, int y) { d.drawString(it, x, y); }
 	@Override public void drawString(AttributedCharacterIterator it, float x, float y) { d.drawString(it, x, y); }
-	@Override public Graphics create() { return new UebersetzteGrafik((Graphics2D) d.create(), uebersetzen); }
+	@Override public Graphics create() { return new ÜbersetzteGrafik((Graphics2D) d.create(), uebersetzen); }
 	@Override public FontMetrics getFontMetrics() { return new Metrik(d.getFontMetrics(), uebersetzen, d); }
 	@Override public FontMetrics getFontMetrics(Font f) { return new Metrik(d.getFontMetrics(f), uebersetzen, d); }
 

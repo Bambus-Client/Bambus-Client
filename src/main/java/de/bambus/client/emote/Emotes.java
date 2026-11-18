@@ -511,11 +511,11 @@ public final class Emotes {
 
 	/** Noch nicht mit Blättern freigeschaltet? */
 	public static boolean gesperrt(Emote e) {
-		return e != null && de.bambus.client.Blaetter.gesperrt("emote", e.id());
+		return e != null && de.bambus.client.Blätter.gesperrt("emote", e.id());
 	}
 
 	public static int preis(Emote e) {
-		return de.bambus.client.Blaetter.preis("emote", e.id());
+		return de.bambus.client.Blätter.preis("emote", e.id());
 	}
 
 	public static void starte(Emote e) {

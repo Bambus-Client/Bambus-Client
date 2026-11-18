@@ -23,7 +23,7 @@ import java.nio.file.Path;
  * (Partikel, Aurora, Datenregen, Gitter) sowie ein eigenes Bild aus dem config-Ordner.
  * „synthwave“ zeichnet BambusTitelScreen selbst.
  */
-public final class MenueHintergrund {
+public final class MenüHintergrund {
 
 	public static final String[] ARTEN = {"synthwave", "partikel", "aurora", "datenregen", "gitter", "bild"};
 	public static final String[] NAMEN = {"Synthwave", "Partikel", "Aurora", "Datenregen", "Gitter", "Eigenes Bild"};
@@ -49,7 +49,7 @@ public final class MenueHintergrund {
 		}
 	}
 
-	private MenueHintergrund() {}
+	private MenüHintergrund() {}
 
 	public static String naechste(String art) {
 		for (int i = 0; i < ARTEN.length; i++) {

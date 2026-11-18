@@ -203,8 +203,8 @@ final class Willkommen extends JDialog {
 		int b = breite, h = hoehe;
 		g.setColor(NeonUI.HG);
 		g.fillRect(0, 0, b, h);
-		Hintergruende.zeichne(g, l.hintergrund, 0, 0, b, h);
-		Hintergruende.eckenLicht(g, 0, b, h);
+		Hintergründe.zeichne(g, l.hintergrund, 0, 0, b, h);
+		Hintergründe.eckenLicht(g, 0, b, h);
 		g.setColor(new Color(4, 7, 11, 150));
 		g.fillRect(0, 0, b, h);
 		NeonUI.leuchten(g, new RoundRectangle2D.Float(1, 1, b - 3, h - 3, 22, 22), NeonUI.NEON, 2);
@@ -348,10 +348,10 @@ final class Willkommen extends JDialog {
 
 	private void look(Graphics2D g, int b) {
 		ueberschrift(g, b, "DEIN LOOK", "Hintergrund im Launcher und im Bambus-Hauptmenü", 130);
-		int n = Hintergruende.ARTEN.length, kb = 158, kh = 104, gap = 14;
+		int n = Hintergründe.ARTEN.length, kb = 158, kh = 104, gap = 14;
 		int x0 = b / 2 - (n * kb + (n - 1) * gap) / 2, y = 184;
 		for (int i = 0; i < n; i++) {
-			final String id = Hintergruende.ARTEN[i][0];
+			final String id = Hintergründe.ARTEN[i][0];
 			int x = x0 + i * (kb + gap);
 			boolean aktiv = id.equals(l.hintergrund);
 			boolean hov = new Rectangle(x, y, kb, kh).contains(maus);
@@ -359,12 +359,12 @@ final class Willkommen extends JDialog {
 			v.setClip(new RoundRectangle2D.Float(x, y, kb, kh, 14, 14));
 			v.setColor(NeonUI.HG);
 			v.fillRect(x, y, kb, kh);
-			Hintergruende.zeichne(v, id, x, y, kb, kh);
+			Hintergründe.zeichne(v, id, x, y, kb, kh);
 			v.dispose();
 			NeonUI.leuchten(g, new RoundRectangle2D.Float(x, y, kb, kh, 14, 14), aktiv ? NeonUI.NEON : hov ? NeonUI.CYAN : NeonUI.LINIE, aktiv ? 2 : 1);
 			g.setFont(NeonUI.mono(11));
 			g.setColor(aktiv ? NeonUI.NEON : NeonUI.TEXT);
-			String name = Hintergruende.ARTEN[i][1];
+			String name = Hintergründe.ARTEN[i][1];
 			g.drawString(name, x + kb / 2 - g.getFontMetrics().stringWidth(name) / 2, y + kh + 20);
 			felder.add(new Feld(x, y, kb, kh + 24, () -> {
 				l.hintergrund = id;
@@ -472,7 +472,7 @@ final class Willkommen extends JDialog {
 	}
 
 	private static String name(String id) {
-		for (String[] a : Hintergruende.ARTEN) if (a[0].equals(id)) return a[1];
+		for (String[] a : Hintergründe.ARTEN) if (a[0].equals(id)) return a[1];
 		return id;
 	}
 

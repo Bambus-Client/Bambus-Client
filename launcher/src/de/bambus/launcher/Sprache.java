@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Sprache des Launchers (Deutsch oder Englisch).
- * Der Launcher ist auf Deutsch geschrieben; bei Englisch übersetzt {@link UebersetzteGrafik}
+ * Der Launcher ist auf Deutsch geschrieben; bei Englisch übersetzt {@link ÜbersetzteGrafik}
  * jeden Text beim Zeichnen über diese Tabelle. Neue Texte: einfach hier ein Paar ergänzen.
  */
 final class Sprache {

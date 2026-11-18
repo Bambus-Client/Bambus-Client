@@ -150,7 +150,7 @@ public final class BambusLauncher extends JFrame {
 		dockSymbol();
 		Startbild.melde("Einstellungen werden geladen …", 15);
 		ladeLauncherEinstellungen();
-		Hintergruende.ladeBild(installer.spielOrdner);   // eigenes Hintergrundbild, falls vorhanden
+		Hintergründe.ladeBild(installer.spielOrdner);   // eigenes Hintergrundbild, falls vorhanden
 		ladeEigeneFarben();
 		NeonUI.themaAnwenden(client.zahl("thema", 0));   // gleiche Farben wie im Spiel
 
@@ -697,8 +697,8 @@ public final class BambusLauncher extends JFrame {
 			// animierter Hintergrund (Einstellungen → HINTERGRUND) und farbiges Licht in den Ecken
 			java.awt.Shape clip = g.getClip();
 			g.clipRect(LEISTE, 0, b - LEISTE, h);
-			Hintergruende.zeichne(g, hintergrund, LEISTE, 0, b - LEISTE, h);
-			Hintergruende.eckenLicht(g, LEISTE, b - LEISTE, h);
+			Hintergründe.zeichne(g, hintergrund, LEISTE, 0, b - LEISTE, h);
+			Hintergründe.eckenLicht(g, LEISTE, b - LEISTE, h);
 			g.setClip(clip);
 
 			// Seitenleiste

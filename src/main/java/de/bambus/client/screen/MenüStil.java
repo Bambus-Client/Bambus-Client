@@ -7,23 +7,23 @@ import de.bambus.client.Farben;
  * Aussehen der Bambus-Menüs (Mod-Menü, Garderobe, Serverauswahl …) – einstellbar unter Mehr → DESIGN.
  * Das HUD im Spiel bleibt davon unberührt: Es setzt mit {@link Farben#themaAnwenden} immer die Bambus-Farben.
  */
-public enum MenueStil {
+public enum MenüStil {
 	BAMBUS("bambus", "Bambus", "Neon mit Leuchten und Sci-Fi-Ecken"),
 	CLEAN("clean", "Clean", "Schlicht, weich gerundet, ohne Leuchten"),
 	KOMPAKT("kompakt", "Kompakt", "Tiefschwarz, kantig, kräftige Akzente");
 
 	public final String id, name, beschreibung;
 
-	MenueStil(String id, String name, String beschreibung) {
+	MenüStil(String id, String name, String beschreibung) {
 		this.id = id;
 		this.name = name;
 		this.beschreibung = beschreibung;
 	}
 
 	/** Stil, mit dem gerade gezeichnet wird (wird pro Bild von {@link #anwenden()} gesetzt). */
-	private static MenueStil aktiv = BAMBUS;
+	private static MenüStil aktiv = BAMBUS;
 
-	public static MenueStil aktiv() {
+	public static MenüStil aktiv() {
 		return aktiv;
 	}
 
@@ -39,13 +39,13 @@ public enum MenueStil {
 		return aktiv == KOMPAKT;
 	}
 
-	public static MenueStil von(String id) {
-		for (MenueStil s : values()) if (s.id.equals(id)) return s;
+	public static MenüStil von(String id) {
+		for (MenüStil s : values()) if (s.id.equals(id)) return s;
 		return BAMBUS;
 	}
 
-	public MenueStil naechster(int richtung) {
-		MenueStil[] alle = values();
+	public MenüStil naechster(int richtung) {
+		MenüStil[] alle = values();
 		return alle[Math.floorMod(ordinal() + richtung, alle.length)];
 	}
 

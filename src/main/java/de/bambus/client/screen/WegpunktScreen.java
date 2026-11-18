@@ -66,7 +66,7 @@ public class WegpunktScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 		g.fill(px, py, px + pb, py + ph, Farben.PANEL);
 		Neon.gitter(g, px, py, pb, ph, 16, Farben.alpha(Farben.NEON, 6));
 		Neon.leuchtRahmen(g, px, py, pb, ph, Farben.NEON, 0.55f + 0.45f * Farben.puls());

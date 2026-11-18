@@ -84,7 +84,7 @@ public class GarderobeScreen extends Screen {
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		bereiche.clear();
-		MenueStil.anwenden();
+		MenüStil.anwenden();
 
 		// Seitenleiste gleitet von links herein
 		float k = weich() ? Anim.aus(Math.min(1f, (System.currentTimeMillis() - offenSeit) / Anim.OEFFNEN_MS)) : 1f;
@@ -178,9 +178,9 @@ public class GarderobeScreen extends Screen {
 				BambusClient.config.emoteMusik = !BambusClient.config.emoteMusik;
 				BambusClient.config.speichern();
 			});
-			String blaetter = de.bambus.client.Blaetter.blaetter() + " Blätter";
+			String blaetter = de.bambus.client.Blätter.blaetter() + " Blätter";
 			Neon.text(g, font, blaetter, x + b - 78 - (int) (font.width(Sprache.t(blaetter)) * 0.75f), 18, 0.75f,
-					de.bambus.client.Blaetter.blattFarbe(), false);
+					de.bambus.client.Blätter.blattFarbe(), false);
 			emoteEditor(g, mx, my, x, b);
 			return;
 		}
@@ -441,8 +441,8 @@ public class GarderobeScreen extends Screen {
 		int nb = (int) (font.width(Sprache.t(n)) * 0.75f);
 		Neon.text(g, font, n, tx + (KACHEL_B - nb) / 2, ty + KACHEL_H - 22, 0.75f, aktiv ? Farben.WEISS : 0xFFC8D2DE, false);
 		String id = e != null ? e.id() : Kosmetik.AUS;
-		boolean gesperrt = de.bambus.client.Blaetter.gesperrt(art.schluessel(), id);
-		int preis = gesperrt ? de.bambus.client.Blaetter.preis(art.schluessel(), id) : 0;
+		boolean gesperrt = de.bambus.client.Blätter.gesperrt(art.schluessel(), id);
+		int preis = gesperrt ? de.bambus.client.Blätter.preis(art.schluessel(), id) : 0;
 		if (gesperrt) {   // noch nicht freigeschaltet: abgedunkelt mit Schloss
 			g.fill(tx + 1, ty + 1, tx + KACHEL_B - 1, ty + KACHEL_H - 1, 0xC00B1322);
 			int sx = tx + KACHEL_B / 2, sy = ty + 24;
@@ -468,7 +468,7 @@ public class GarderobeScreen extends Screen {
 
 	/** Erster Klick fragt nach, zweiter Klick kauft – damit nichts aus Versehen weg ist. */
 	private void kaufe(String id, int preis) {
-		int da = de.bambus.client.Blaetter.blaetter();
+		int da = de.bambus.client.Blätter.blaetter();
 		if (da < preis) {
 			kaufBereit = null;
 			de.bambus.client.Hinweise.zeige("stern", "Noch nicht genug Blätter",
@@ -482,14 +482,14 @@ public class GarderobeScreen extends Screen {
 			return;
 		}
 		kaufBereit = null;
-		if (de.bambus.client.Blaetter.kaufe(art.schluessel(), id)) {
+		if (de.bambus.client.Blätter.kaufe(art.schluessel(), id)) {
 			art.waehle(id);
 			BambusClient.config.speichern();
 			String danach = art == Garderobe.Art.EMOTES
 					? "liegt jetzt auf Platz " + (de.bambus.client.emote.Emotes.gewaehlterPlatz + 1) + " im Rad"
 					: "schon angezogen";
 			de.bambus.client.Hinweise.zeige("stern", Garderobe.name(art.schluessel(), id) + " freigeschaltet",
-					"−" + preis + " Blätter · " + danach, de.bambus.client.Blaetter.rangFarbe());
+					"−" + preis + " Blätter · " + danach, de.bambus.client.Blätter.rangFarbe());
 		}
 	}
 
