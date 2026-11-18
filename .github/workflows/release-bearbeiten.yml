@@ -1,0 +1,34 @@
+# Ein vorhandenes Release nachbearbeiten: Text aus .github/release-notizen.md übernehmen
+# und auf Wunsch eine angehängte Datei entfernen. Start: „Actions → Release bearbeiten → Run workflow“.
+name: Release bearbeiten
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release-Tag, z. B. v3.4.0'
+        required: true
+      entfernen:
+        description: 'Datei, die aus dem Release entfernt werden soll (leer = keine)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  bearbeiten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Datei entfernen
+        if: inputs.entfernen != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete-asset "${{ inputs.tag }}" "${{ inputs.entfernen }}" --yes
+
+      - name: Text übernehmen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ inputs.tag }}" --notes-file .github/release-notizen.md

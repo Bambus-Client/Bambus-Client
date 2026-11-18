@@ -4,7 +4,6 @@
 | Datei | Wofür |
 |---|---|
 | **Bambus-Launcher-Setup.exe** | Launcher für Windows installieren (Java ist eingebaut). Empfohlen. |
-| **Bambus-Launcher-Windows.zip** | Launcher ohne Installation: entpacken und „Bambus Launcher.exe“ starten. |
 | **Bambus-Client-standalone.jar** | Nur die Client-Mod für Minecraft 1.21.11 mit Fabric, ohne Launcher: in den Ordner `mods` legen. Braucht die Fabric API. |
 
 Der Launcher hält sich danach selbst aktuell: neue Versionen kommen automatisch, ohne Neuinstallation.

@@ -1,7 +1,7 @@
 # Baut den Bambus Launcher als Windows-Programm (Java eingebaut) und das Installationsprogramm.
 # Start: von Hand unter „Actions → Windows-Launcher bauen → Run workflow“ oder automatisch bei einem Tag v*.
 # Bei einem Tag (oder wenn beim Start ein Release-Tag eingetragen ist) entsteht ein GitHub-Release mit
-# Launcher-Setup (.exe), Launcher als Zip und der Client-Mod als Bambus-Client-standalone.jar.
+# Launcher-Setup (.exe) und der Client-Mod als Bambus-Client-standalone.jar.
 name: Windows-Launcher bauen
 
 on:
@@ -103,5 +103,4 @@ jobs:
           body_path: .github/release-notizen.md
           files: |
             ausgabe/Bambus-Launcher-Setup.exe
-            ausgabe/Bambus-Launcher-Windows.zip
             ausgabe/Bambus-Client-standalone.jar
