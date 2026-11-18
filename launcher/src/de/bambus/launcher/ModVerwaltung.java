@@ -720,7 +720,7 @@ final class ModVerwaltung {
 			hinweise.add(titel + " gibt es noch nicht für Minecraft " + zielVersion);
 			return null;
 		}
-		String name = str(datei.get("fileName"), "curseforge-" + nummer + ".jar");
+		String name = Sicherheit.dateiname(str(datei.get("fileName"), null), "curseforge-" + nummer + ".jar");
 		String adresse = str(datei.get("downloadUrl"), "");
 		Path ziel = installer.modsOrdner.resolve(name);
 		if (!Files.isRegularFile(ziel)) {
@@ -729,8 +729,10 @@ final class ModVerwaltung {
 				hinweise.add(titel + ": nur direkt bei curseforge.com ladbar – dort laden und mit „+ MOD-DATEI“ hinzufügen");
 				return null;
 			}
+			byte[] inhalt = Installer.lade(adresse);
+			Sicherheit.pruefeCurseforge(inhalt, datei.get("hashes"), titel);
 			Path tmp = installer.modsOrdner.resolve(name + ".download");
-			Files.write(tmp, Installer.lade(adresse));
+			Files.write(tmp, inhalt);
 			Files.move(tmp, ziel, StandardCopyOption.REPLACE_EXISTING);
 		}
 		List<Object> abh = Json.liste(datei.get("dependencies"));
@@ -792,11 +794,13 @@ final class ModVerwaltung {
 				}
 				String slug = projekt;
 				Map<String, Object> datei = primaerDatei(version);
-				String name = str(datei.get("filename"), projekt + ".jar");
+				String name = Sicherheit.dateiname(str(datei.get("filename"), null), Sicherheit.dateiname(projekt + ".jar", "mod.jar"));
 				Path ziel = installer.modsOrdner.resolve(name);
 				if (!Files.isRegularFile(ziel)) {
+					byte[] inhalt = Installer.lade(str(datei.get("url"), ""));
+					Sicherheit.pruefeModrinth(inhalt, datei.get("hashes"), titel(projekt));
 					Path tmp = installer.modsOrdner.resolve(name + ".download");
-					Files.write(tmp, Installer.lade(str(datei.get("url"), "")));
+					Files.write(tmp, inhalt);
 					Files.move(tmp, ziel, StandardCopyOption.REPLACE_EXISTING);
 				}
 				neu.put(slug, name);

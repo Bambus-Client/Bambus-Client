@@ -332,6 +332,7 @@ final class Sprache {
 		g("Vor dem ersten Start: das Rechtliche lesen und zustimmen – im Launcher und im Spiel, jederzeit unter EINSTELLUNGEN → RECHTLICHES nachzulesen", "Before the first start: read and accept the legal text – in the launcher and in the game, readable any time under SETTINGS → LEGAL");
 		g("Auf Englisch heißt Bambus jetzt Bamboo", "In English, Bambus is now called Bamboo");
 		g("Neue Lizenz: alle Rechte bei den Entwicklern – privat spielen erlaubt, Kopieren und Weitergeben nur mit Erlaubnis", "New licence: all rights belong to the developers – private play allowed, copying and sharing only with permission");
+		g("Sicherheits-Update: Updates sind digital unterschrieben, Mods werden auf Veränderungen geprüft, Downloads nur über https", "Security update: updates are digitally signed, mods are checked for tampering, downloads only via https");
 		g("RECHTLICHES", "LEGAL"); g("Das Rechtliche noch einmal lesen", "Read the legal text again");
 		g("NAVIGATION", "NAVIGATION"); g("Kein offizielles Minecraft-Produkt.", "Not an official Minecraft product.");
 		g("Nicht von Mojang oder Microsoft genehmigt", "Not approved by or associated with");

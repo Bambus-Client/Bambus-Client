@@ -84,6 +84,27 @@ jobs:
           Der Bambus Launcher liest hier die \`version.json\` und lädt neuere Versionen von selbst.
           TEXT
 
+      - name: Update unterschreiben
+        env:
+          BAMBUS_SIGNIER_SCHLUESSEL: ${{ secrets.BAMBUS_SIGNIER_SCHLUESSEL }}
+        run: |
+          set -euo pipefail
+          # Neue Launcher nehmen nur unterschriebene Updates an (siehe launcher/.../Sicherheit.java).
+          if [ -z "${BAMBUS_SIGNIER_SCHLUESSEL:-}" ]; then
+            echo "::error::Das Secret BAMBUS_SIGNIER_SCHLUESSEL fehlt – ohne Unterschrift wird nichts verteilt."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$BAMBUS_SIGNIER_SCHLUESSEL" > "$RUNNER_TEMP/schluessel.pem"
+          openssl dgst -sha256 -sign "$RUNNER_TEMP/schluessel.pem" -out "$RUNNER_TEMP/version.sig.bin" verteilen/version.json
+          openssl pkey -in "$RUNNER_TEMP/schluessel.pem" -pubout -out "$RUNNER_TEMP/oeffentlich.pem"
+          rm -f "$RUNNER_TEMP/schluessel.pem"
+          openssl dgst -sha256 -verify "$RUNNER_TEMP/oeffentlich.pem" -signature "$RUNNER_TEMP/version.sig.bin" verteilen/version.json
+          base64 -w0 "$RUNNER_TEMP/version.sig.bin" > verteilen/version.sig
+          # Der öffentliche Schlüssel muss im Launcher eingebaut sein, sonst würden Launcher das Update ablehnen
+          oeff=$(openssl pkey -pubin -in "$RUNNER_TEMP/oeffentlich.pem" -outform DER | base64 -w0)
+          grep -q "$oeff" launcher/src/de/bambus/launcher/Sicherheit.java || { echo "::error::Schlüssel passt nicht zum Launcher."; exit 1; }
+
       - name: In den Branch auto-update legen
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
