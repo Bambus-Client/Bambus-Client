@@ -336,6 +336,8 @@ final class Sprache {
 		g("SICHERHEIT", "SECURITY"); g("Alle Mods auf Schadsoftware prüfen", "Check all mods for malware");
 		g("Mod-Scanner: Vor jedem Start werden alle Mods auf Schadsoftware geprüft – gefährliche kommen in Quarantäne", "Mod scanner: before every start all mods are checked for malware – dangerous ones go to quarantine");
 		g("Start abgebrochen – gefährliche Mod gefunden.", "Start cancelled – dangerous mod found.");
+		g("Dein Profil: Anmeldung, Statistik und PIN", "Your profile: sign-in, statistics and PIN");
+		g("Profil: Profilbild und Rang oben rechts, Statistik, An- und Abmelden und freiwillige Launcher-PIN", "Profile: picture and rank at the top right, statistics, sign in and out, and an optional launcher PIN");
 		g("RECHTLICHES", "LEGAL"); g("Das Rechtliche noch einmal lesen", "Read the legal text again");
 		g("NAVIGATION", "NAVIGATION"); g("Kein offizielles Minecraft-Produkt.", "Not an official Minecraft product.");
 		g("Nicht von Mojang oder Microsoft genehmigt", "Not approved by or associated with");
