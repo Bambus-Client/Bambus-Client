@@ -50,6 +50,8 @@ final class Profil {
 
 	Quelle quelle = Quelle.KEINE;
 	String name = "";
+	/** UUID des Kontos, falls bekannt – damit lädt der echte Skin auch nach einer Namensänderung. */
+	String uuid = "";
 	BufferedImage kopf;
 
 	private Profil() {}
@@ -70,11 +72,13 @@ final class Profil {
 		if (l.konto.angemeldet() && !l.konto.name().isEmpty()) {
 			p.quelle = Quelle.MICROSOFT;
 			p.name = l.konto.name();
+			p.uuid = l.konto.uuid();
 		} else {
 			String[] offiziell = new SkinLader(l.installer.mcOrdner, l.installer.spielOrdner).kontoAusLauncher();
 			if (offiziell != null && offiziell[1] != null && !offiziell[1].isEmpty()) {
 				p.quelle = Quelle.LAUNCHER;
 				p.name = offiziell[1];
+				p.uuid = offiziell[0] == null ? "" : offiziell[0];
 			} else {
 				String n = eingetragenerName();
 				if (n.isEmpty()) {
@@ -149,7 +153,9 @@ final class Profil {
 			return;
 		}
 		Files.createDirectories(skinOrdner());
-		SkinLader.Skin s = new SkinLader(skinOrdner(), skinOrdner()).lade(name);
+		// über die UUID (fest, auch nach Namensänderung), sonst über den Namen
+		String id = uuid != null && uuid.replace("-", "").matches("[0-9a-fA-F]{32}") ? uuid : name;
+		SkinLader.Skin s = new SkinLader(skinOrdner(), skinOrdner()).lade(id);
 		kopf = kopf(s.bild);
 	}
 

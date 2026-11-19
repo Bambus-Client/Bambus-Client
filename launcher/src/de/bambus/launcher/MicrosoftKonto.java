@@ -108,6 +108,12 @@ final class MicrosoftKonto {
 		return o instanceof String ? (String) o : "";
 	}
 
+	/** UUID des Minecraft-Kontos (ohne Bindestriche) oder "". */
+	String uuid() {
+		Object o = daten.get("uuid");
+		return o instanceof String ? (String) o : "";
+	}
+
 	boolean direktStart() {
 		return !Boolean.FALSE.equals(daten.get("direktStart"));
 	}
