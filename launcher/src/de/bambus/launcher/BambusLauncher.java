@@ -75,6 +75,9 @@ public final class BambusLauncher extends JFrame {
 	volatile String updateStatus = "";
 	private UpdateChip updateChip;
 	private BlaetterChip blaetterChip;
+	private ProfilChip profilChip;
+	/** Aktuelles Spieler-Profil (Name, Profilbild, Rang) – siehe {@link Profil}. */
+	volatile Profil profil;
 	boolean taskleisteTippGesehen = false;
 	private String seite = "start";
 
@@ -115,6 +118,14 @@ public final class BambusLauncher extends JFrame {
 			if (args.length == 0) Startbild.zeige();   // bei Screenshot-Aufrufen stört es nur
 			BambusLauncher l = new BambusLauncher();
 			Startbild.melde("Fertig", 100);
+			// Freiwillige Launcher-PIN: erst nach richtiger Eingabe wird das Fenster gezeigt
+			if (args.length == 0 && Profil.pinGesetzt()) {
+				Startbild.schliesse();
+				if (!ProfilDialog.PinAbfrage.pruefe(null, Sprache.englisch() ? "Enter PIN" : "PIN eingeben", true)) {
+					System.exit(0);
+					return;
+				}
+			}
 			l.setVisible(true);
 			Startbild.schliesse();
 			Selbststart.gestartet();   // die geladene Version läuft – Sicherheitsnetz zurücksetzen
@@ -175,9 +186,9 @@ public final class BambusLauncher extends JFrame {
 		}
 
 		// Fensterknöpfe
-		KontoChip chip = new KontoChip();
-		chip.setBounds(BREITE - 330, 8, 226, 30);
-		wurzel.add(chip);
+		profilChip = new ProfilChip();
+		profilChip.setBounds(BREITE - 330, 8, 226, 30);
+		wurzel.add(profilChip);
 		blaetterChip = new BlaetterChip();
 		blaetterChip.setBounds(BREITE - 452, 8, 112, 30);
 		wurzel.add(blaetterChip);
@@ -247,6 +258,7 @@ public final class BambusLauncher extends JFrame {
 
 		Startbild.melde("Letzte Handgriffe …", 85);
 		pruefeEntwickler();
+		aktualisiereProfil();
 
 		zeige("start");
 		if (Updater.aktiv()) {
@@ -897,17 +909,39 @@ public final class BambusLauncher extends JFrame {
 		}
 	}
 
-	private final class KontoChip extends javax.swing.JComponent {
+	/** Profil neu ermitteln (Name, Rang) und das Profilbild im Hintergrund nachladen. */
+	void aktualisiereProfil() {
+		Profil p = Profil.ermittle(this);
+		profil = p;
+		if (profilChip != null) profilChip.repaint();
+		if (p.kopf == null) {
+			Thread t = new Thread(() -> {
+				try {
+					p.ladeKopf();
+				} catch (Exception ex) {
+					p.kopf = Profil.kopf(SkinLader.standard().bild);
+				}
+				SwingUtilities.invokeLater(() -> { if (profilChip != null) profilChip.repaint(); });
+			}, "Bambus-Profilbild");
+			t.setDaemon(true);
+			t.start();
+		}
+	}
+
+	/** Oben rechts neben den Blättern: Profilbild, Name und Rang – ein Klick öffnet das Profil. */
+	private final class ProfilChip extends javax.swing.JComponent {
 		private boolean ueber;
 
-		KontoChip() {
+		ProfilChip() {
 			setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+			setToolTipText(Sprache.t("Dein Profil: Anmeldung, Statistik und PIN"));
 			addMouseListener(new MouseAdapter() {
 				@Override public void mouseEntered(MouseEvent e) { ueber = true; repaint(); }
 				@Override public void mouseExited(MouseEvent e) { ueber = false; repaint(); }
 				@Override public void mouseClicked(MouseEvent e) {
-					new MicrosoftDialog(BambusLauncher.this, konto, KontoChip.this::repaint).setVisible(true);
-					pruefeEntwickler();   // nach An-/Abmelden
+					new ProfilDialog(BambusLauncher.this, BambusLauncher.this::aktualisiereProfil).setVisible(true);
+					aktualisiereProfil();
+					pruefeEntwickler();
 					repaint();
 				}
 			});
@@ -916,18 +950,37 @@ public final class BambusLauncher extends JFrame {
 		@Override
 		protected void paintComponent(java.awt.Graphics graphics) {
 			java.awt.Graphics2D g = NeonUI.glatt(graphics);
-			boolean drin = konto.angemeldet();
-			java.awt.Color c = drin ? NeonUI.NEON : konto.freigeschaltet() ? NeonUI.CYAN : NeonUI.GRAU;
+			Profil p = profil;
+			boolean en = Sprache.englisch();
+			boolean admin = p != null && p.admin();
+			java.awt.Color c = admin ? new java.awt.Color(0xFFC83D) : p != null && p.bestaetigt() ? NeonUI.NEON : NeonUI.GRAU;
+			int h = getHeight();
 			g.setColor(ueber ? NeonUI.KARTE_HOVER : NeonUI.KARTE);
-			g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+			g.fillRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
 			g.setColor(ueber ? c : NeonUI.LINIE);
-			g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
-			g.setColor(c);
-			g.fillOval(12, getHeight() / 2 - 4, 8, 8);
-			g.setFont(NeonUI.mono(11));
-			String t = drin ? konto.name() : "MICROSOFT · ANMELDEN";
-			g.setColor(drin ? NeonUI.TEXT : NeonUI.GRAU);
-			g.drawString(t, 28, getHeight() / 2 + 4);
+			g.drawRoundRect(0, 0, getWidth() - 1, h - 1, 14, 14);
+			Profil.zeichneKopf(g, p == null ? null : p.kopf, 6, 5, h - 10);
+			g.setColor(NeonUI.alpha(c, 160));
+			g.drawRect(5, 4, h - 9, h - 9);
+			int x = h + 4;
+			if (p == null || !p.hatName()) {
+				g.setFont(NeonUI.mono(11));
+				g.setColor(NeonUI.GRAU);
+				g.drawString(en ? "PROFILE · SIGN IN" : "PROFIL · ANMELDEN", x, h / 2 + 4);
+			} else {
+				String rolle = p.rolle(en);
+				g.setFont(NeonUI.mono(9));
+				int rb = g.getFontMetrics().stringWidth(rolle) + 12;
+				int rx = getWidth() - rb - 6;
+				g.setColor(NeonUI.alpha(c, 40));
+				g.fillRoundRect(rx, 7, rb, h - 14, 10, 10);
+				g.setColor(c);
+				g.drawRoundRect(rx, 7, rb, h - 14, 10, 10);
+				g.drawString(rolle, rx + 6, h / 2 + 3);
+				g.setFont(NeonUI.mono(11));
+				g.setColor(NeonUI.TEXT);
+				g.drawString(NeonUI.passend(g, p.name + (p.bestaetigt() ? "" : " ?"), rx - x - 6), x, h / 2 + 4);
+			}
 			g.dispose();
 		}
 	}
