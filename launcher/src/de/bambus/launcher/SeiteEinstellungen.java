@@ -76,7 +76,8 @@ final class SeiteEinstellungen extends JPanel {
 			add(k);
 		}
 
-		NeonUI.UmrissKnopf zuruecksetzen = new NeonUI.UmrissKnopf("CLIENT-EINSTELLUNGEN ZURÜCKSETZEN", NeonUI.PINK);
+		NeonUI.UmrissKnopf zuruecksetzen = new NeonUI.UmrissKnopf("ZURÜCKSETZEN", NeonUI.PINK);
+		zuruecksetzen.setToolTipText(Sprache.t("Client-Einstellungen zurücksetzen"));
 		// Sprache + Willkommens-Seite (oben rechts)
 		NeonUI.UmrissKnopf de = new NeonUI.UmrissKnopf("DEUTSCH", Sprache.englisch() ? NeonUI.GRAU : NeonUI.NEON);
 		NeonUI.UmrissKnopf en = new NeonUI.UmrissKnopf("ENGLISH", Sprache.englisch() ? NeonUI.NEON : NeonUI.GRAU);
@@ -116,9 +117,14 @@ final class SeiteEinstellungen extends JPanel {
 		Farbwahl farben = new Farbwahl();
 		farben.setBounds(X, 452, 696, 36);
 		add(farben);
-		zuruecksetzen.setBounds(X, 532, 250, 40);
+		zuruecksetzen.setBounds(X, 532, 150, 40);
 		zuruecksetzen.addActionListener(e -> zuruecksetzen());
 		add(zuruecksetzen);
+		NeonUI.UmrissKnopf sicherheit = new NeonUI.UmrissKnopf("SICHERHEIT", NeonUI.NEON);
+		sicherheit.setBounds(X + 158, 532, 94, 40);
+		sicherheit.setToolTipText(Sprache.t("Alle Mods auf Schadsoftware prüfen"));
+		sicherheit.addActionListener(e -> l.sicherheitspruefungZeigen());
+		add(sicherheit);
 		NeonUI.UmrissKnopf recht = new NeonUI.UmrissKnopf("RECHTLICHES", NeonUI.GRAU);
 		recht.setBounds(X + 258, 532, 112, 40);
 		recht.setToolTipText(Sprache.t("Das Rechtliche noch einmal lesen"));

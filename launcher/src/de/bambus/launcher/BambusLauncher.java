@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -433,6 +434,13 @@ public final class BambusLauncher extends JFrame {
 			try {
 				Installer.Fortschritt f = (text, prozent) -> SwingUtilities.invokeLater(() -> start.fortschritt(text, prozent));
 				installer.installiere(ram, mod, f);
+				if (!sicherheitspruefung(f)) {
+					SwingUtilities.invokeLater(() -> {
+						start.beschaeftigt(false);
+						start.fortschritt("Start abgebrochen – gefährliche Mod gefunden.", 0);
+					});
+					return;
+				}
 				if (direkt) {
 					// Mit Microsoft angemeldet: Minecraft direkt aus Bambus starten
 					MicrosoftKonto.Sitzung s = konto.sitzung();
@@ -448,6 +456,89 @@ public final class BambusLauncher extends JFrame {
 		}, "Bambus-Installation");
 		arbeit.setDaemon(true);
 		arbeit.start();
+	}
+
+	/**
+	 * Mod-Scanner vor dem Start ({@link ModScanner}). Gefährliche Dateien werden gemeldet: in Quarantäne
+	 * verschieben (empfohlen), trotzdem starten oder abbrechen. false = nicht starten.
+	 */
+	private boolean sicherheitspruefung(Installer.Fortschritt f) {
+		ModScanner.Bericht b = ModScanner.pruefe(installer.modsOrdner, text -> f.melde(text, 88));
+		if (!b.gefahr()) return true;
+		final boolean[] weiter = {false};
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				boolean en = Sprache.englisch();
+				List<ModScanner.Ergebnis> gefaehrlich = b.mit(ModScanner.Stufe.GEFAEHRLICH);
+				StringBuilder s = new StringBuilder(en
+						? "Bamboo found dangerous files in your mods folder:\n"
+						: "Bambus hat gefährliche Dateien in deinem mods-Ordner gefunden:\n");
+				for (ModScanner.Ergebnis e : gefaehrlich) {
+					s.append("\n✖ ").append(e.name()).append("\n    ").append(String.join(", ", e.gruende));
+				}
+				s.append(en
+						? "\n\nSuch mods can steal your accounts or passwords. Recommended: move them to quarantine.\n"
+								+ "Nothing is deleted – the files go to ~/.bambus-launcher/quarantaene."
+						: "\n\nSolche Mods können Konten oder Passwörter stehlen. Empfohlen: in Quarantäne verschieben.\n"
+								+ "Gelöscht wird nichts – die Dateien kommen nach ~/.bambus-launcher/quarantaene.");
+				Object[] knoepfe = en
+						? new Object[] {"Quarantine and play", "Play anyway", "Cancel"}
+						: new Object[] {"In Quarantäne und spielen", "Trotzdem spielen", "Abbrechen"};
+				int wahl = JOptionPane.showOptionDialog(this, s.toString(), en ? "Security check" : "Sicherheitsprüfung",
+						JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, knoepfe, knoepfe[0]);
+				if (wahl == 0) {
+					try {
+						ModScanner.inQuarantaene(gefaehrlich);
+						weiter[0] = true;
+					} catch (IOException ex) {
+						JOptionPane.showMessageDialog(this, (en ? "Could not move the files: " : "Verschieben ging nicht: ")
+								+ ex.getMessage(), en ? "Security check" : "Sicherheitsprüfung", JOptionPane.ERROR_MESSAGE);
+					}
+				} else if (wahl == 1) {
+					int sicher = JOptionPane.showConfirmDialog(this, en
+							? "Really start with the dangerous mods?\nOnly do this if you are absolutely sure they are harmless."
+							: "Wirklich mit den gefährlichen Mods starten?\nNur, wenn du ganz sicher bist, dass sie harmlos sind.",
+							en ? "Security check" : "Sicherheitsprüfung", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					weiter[0] = sicher == JOptionPane.YES_OPTION;
+				}
+			});
+		} catch (Exception ex) {
+			return false;
+		}
+		return weiter[0];
+	}
+
+	/** Prüfung von Hand (EINSTELLUNGEN → SICHERHEIT). */
+	void sicherheitspruefungZeigen() {
+		boolean en = Sprache.englisch();
+		Thread t = new Thread(() -> {
+			ModScanner.Bericht b = ModScanner.pruefe(installer.modsOrdner, null);
+			SwingUtilities.invokeLater(() -> {
+				String titel = en ? "Security check" : "Sicherheitsprüfung";
+				String text = ModScanner.text(b, en) + (en
+						? "\n\nBamboo checks every mod before each start. Updates are digitally signed."
+						: "\n\nBambus prüft alle Mods vor jedem Start. Updates sind digital unterschrieben.");
+				if (b.gefahr()) {
+					Object[] knoepfe = en ? new Object[] {"Move to quarantine", "Close"} : new Object[] {"In Quarantäne verschieben", "Schließen"};
+					int wahl = JOptionPane.showOptionDialog(this, text, titel, JOptionPane.DEFAULT_OPTION,
+							JOptionPane.ERROR_MESSAGE, null, knoepfe, knoepfe[0]);
+					if (wahl == 0) {
+						try {
+							Path ordner = ModScanner.inQuarantaene(b.mit(ModScanner.Stufe.GEFAEHRLICH));
+							JOptionPane.showMessageDialog(this, (en ? "Moved to:\n" : "Verschoben nach:\n") + ordner, titel,
+									JOptionPane.INFORMATION_MESSAGE);
+						} catch (IOException ex) {
+							JOptionPane.showMessageDialog(this, ex.getMessage(), titel, JOptionPane.ERROR_MESSAGE);
+						}
+					}
+				} else {
+					JOptionPane.showMessageDialog(this, text, titel, b.mit(ModScanner.Stufe.VERDAECHTIG).isEmpty()
+							? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+				}
+			});
+		}, "Bambus-Sicherheitsprüfung");
+		t.setDaemon(true);
+		t.start();
 	}
 
 	private void fertigDirekt() {

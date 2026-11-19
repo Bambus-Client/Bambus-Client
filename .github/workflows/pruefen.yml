@@ -50,6 +50,15 @@ jobs:
       - name: Mod und Launcher für 1.21.11 bauen
         run: bash ./gradlew build --no-daemon
 
+      - name: Selbsttest Mod-Scanner
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/scan/klassen" "$RUNNER_TEMP/scan/home"
+          javac --release 8 -Xlint:-options -encoding UTF-8 -d "$RUNNER_TEMP/scan/klassen" \
+            launcher/src/de/bambus/launcher/*.java $(find gemeinsam/src -name "*.java") \
+            werkzeuge/tests/de/bambus/launcher/ModScannerTest.java
+          java -Duser.home="$RUNNER_TEMP/scan/home" -cp "$RUNNER_TEMP/scan/klassen" de.bambus.launcher.ModScannerTest
+
       - name: Mod für Minecraft 26.x bauen
         run: |
           cd versionen/neu

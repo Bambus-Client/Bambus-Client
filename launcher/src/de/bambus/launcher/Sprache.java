@@ -333,6 +333,9 @@ final class Sprache {
 		g("Auf Englisch heißt Bambus jetzt Bamboo", "In English, Bambus is now called Bamboo");
 		g("Neue Lizenz: alle Rechte bei den Entwicklern – privat spielen erlaubt, Kopieren und Weitergeben nur mit Erlaubnis", "New licence: all rights belong to the developers – private play allowed, copying and sharing only with permission");
 		g("Sicherheits-Update: Updates sind digital unterschrieben, Mods werden auf Veränderungen geprüft, Downloads nur über https", "Security update: updates are digitally signed, mods are checked for tampering, downloads only via https");
+		g("SICHERHEIT", "SECURITY"); g("Alle Mods auf Schadsoftware prüfen", "Check all mods for malware");
+		g("Mod-Scanner: Vor jedem Start werden alle Mods auf Schadsoftware geprüft – gefährliche kommen in Quarantäne", "Mod scanner: before every start all mods are checked for malware – dangerous ones go to quarantine");
+		g("Start abgebrochen – gefährliche Mod gefunden.", "Start cancelled – dangerous mod found.");
 		g("RECHTLICHES", "LEGAL"); g("Das Rechtliche noch einmal lesen", "Read the legal text again");
 		g("NAVIGATION", "NAVIGATION"); g("Kein offizielles Minecraft-Produkt.", "Not an official Minecraft product.");
 		g("Nicht von Mojang oder Microsoft genehmigt", "Not approved by or associated with");
@@ -533,7 +536,7 @@ final class Sprache {
 		// ---------------------------------------------------------------- Einstellungen
 		g("ARBEITSSPEICHER", "MEMORY"); g("ORDNER", "FOLDERS"); g("HINTERGRUND", "BACKGROUND"); g("SPRACHE", "LANGUAGE");
 		g("4–6 GB reichen für die meisten Computer. Nicht mehr als die Hälfte deines RAMs wählen.", "4–6 GB is enough for most computers. Don't choose more than half of your RAM.");
-		g("Bambus-Spielordner", "Bambus game folder"); g("Mods", "Mods"); g("CLIENT-EINSTELLUNGEN ZURÜCKSETZEN", "RESET CLIENT SETTINGS");
+		g("Bambus-Spielordner", "Bambus game folder"); g("Mods", "Mods"); g("CLIENT-EINSTELLUNGEN ZURÜCKSETZEN", "RESET CLIENT SETTINGS"); g("ZURÜCKSETZEN", "RESET"); g("Client-Einstellungen zurücksetzen", "Reset client settings");
 		g("AUTO-UPDATE: AN", "AUTO-UPDATE: ON"); g("AUTO-UPDATE: AUS", "AUTO-UPDATE: OFF"); g("JETZT PRÜFEN", "CHECK NOW");
 		g("AUF DEN DESKTOP", "TO DESKTOP"); g("INS STARTMENÜ", "TO START MENU"); g("GITTER", "GRID"); g("DATENREGEN", "DATA RAIN");
 		g("Taskleiste: Rechtsklick aufs Symbol → „Anheften“", "Taskbar: right-click the icon → “Pin”");
