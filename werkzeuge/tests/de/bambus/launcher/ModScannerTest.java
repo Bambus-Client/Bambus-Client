@@ -34,7 +34,9 @@ public final class ModScannerTest {
 		erwarte(b, "webhook.jar", ModScanner.Stufe.GEFAEHRLICH);
 		erwarte(b, "neko.jar", ModScanner.Stufe.GEFAEHRLICH);
 		erwarte(b, "base64.jar", ModScanner.Stufe.GEFAEHRLICH);
-		erwarte(b, "konto.jar", ModScanner.Stufe.VERDAECHTIG);   // ohne Internet: Herkunft unklar → nur verdächtig
+		// mit Internet (Herkunft bei Modrinth geprüft, unbekannt) gefährlich – ohne Internet nur verdächtig
+		erwarte(b, "konto.jar", b.herkunftGeprueft ? ModScanner.Stufe.GEFAEHRLICH : ModScanner.Stufe.VERDAECHTIG);
+		System.out.println(b.herkunftGeprueft ? "Herkunft bei Modrinth geprüft" : "ohne Internet getestet");
 		erwarte(b, "programm.jar", ModScanner.Stufe.VERDAECHTIG);
 		erwarte(b, "verschachtelt.jar", ModScanner.Stufe.GEFAEHRLICH);
 		erwarte(b, "kaputt.jar", ModScanner.Stufe.UNBEKANNT);
