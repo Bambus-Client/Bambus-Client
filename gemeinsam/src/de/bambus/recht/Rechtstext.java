@@ -13,7 +13,7 @@ package de.bambus.recht;
 public final class Rechtstext {
 
 	/** Stand des Textes. Höher = alle müssen neu zustimmen. */
-	public static final int VERSION = 2;
+	public static final int VERSION = 3;
 
 	public static final String STAND = "18.11.2026";
 
@@ -86,6 +86,7 @@ public final class Rechtstext {
 							+ "deine IP-Adresse:\n"
 							+ "• Microsoft und Mojang: Anmeldung, Spieldateien und Skins\n"
 							+ "• Fabric, Modrinth und CurseForge: Mods herunterladen und suchen\n"
+							+ "• Modrinth: Sicherheitsprüfung deiner Mods (dafür werden nur die Prüfsummen der Mod-Dateien gesendet, keine Dateien)\n"
 							+ "• GitHub: Updates für Launcher und Client\n"
 							+ "• lrclib.net: Liedtexte für den Musik-Player (dafür werden Titel und Interpret des Lieds gesendet)\n"
 							+ "• Minecraft-Server, die du einträgst: Abfrage von Spielerzahl und Ping\n"
@@ -151,6 +152,7 @@ public final class Rechtstext {
 							+ "To work, Bamboo connects directly to these services – like any website, they can see your IP address:\n"
 							+ "• Microsoft and Mojang: sign-in, game files and skins\n"
 							+ "• Fabric, Modrinth and CurseForge: downloading and searching mods\n"
+							+ "• Modrinth: security check of your mods (only the checksums of the mod files are sent, no files)\n"
 							+ "• GitHub: updates for the launcher and the client\n"
 							+ "• lrclib.net: song lyrics for the music player (the song's title and artist are sent)\n"
 							+ "• Minecraft servers you add: checking player count and ping\n"
